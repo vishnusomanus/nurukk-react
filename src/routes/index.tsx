@@ -185,7 +185,10 @@ function wrap(el: React.ReactNode) {
   return <Suspense fallback={<PageLoader />}>{el}</Suspense>
 }
 
-export const router = createBrowserRouter([
+const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined
+
+export const router = createBrowserRouter(
+  [
   {
     element: <RootLayout />,
     children: [
@@ -306,4 +309,6 @@ export const router = createBrowserRouter([
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
-])
+  ],
+  { basename: routerBasename },
+)
