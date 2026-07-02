@@ -1,0 +1,142 @@
+@theme {
+  --color-primary: #0d631b;
+  --color-on-primary: #ffffff;
+  --color-on-surface: #1b1c1c;
+  --color-on-surface-variant: #40493d;
+  --color-on-background: #1b1c1c;
+  --color-secondary: #964900;
+  --color-secondary-container: #fc820c;
+  --color-on-secondary-container: #5e2c00;
+  --color-tertiary-container: #4a7b00;
+  --color-on-tertiary-container: #d6ffa5;
+  --color-background: #fbf9f9;
+  --color-surface: #fbf9f9;
+
+  /* Stitch-only spacing — do NOT use sm/md/lg/xl names (they break Tailwind max-w-*, gap-*, etc.) */
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-tablet: 32px;
+  --spacing-gutter: 16px;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.stitch-auth-page {
+  color-scheme: light;
+  min-height: 100dvh;
+  width: 100%;
+  color: var(--color-on-background);
+}
+
+.stitch-body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+.text-headline-xl {
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.text-headline-lg-mobile {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.text-body-lg {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.text-body-md {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.text-label-md {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.stitch-glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+}
+
+.stitch-glass-card-otp {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stitch-btn-premium {
+  background: linear-gradient(135deg, #0d631b 0%, #064511 100%);
+  box-shadow: 0 10px 20px -5px rgba(13, 99, 27, 0.4);
+}
+
+.stitch-btn-premium:active {
+  transform: scale(0.98);
+  filter: brightness(0.95);
+}
+
+.stitch-btn-premium:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stitch-input-premium:focus-within {
+  border-color: #0d631b;
+}
+
+.stitch-login-bg {
+  background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLsd_QYWfHn6k3-0aq-CNZiXvAKUc-nBn9SMPok7ni8_dIq7g8NQpSxaPkVLJfPyADiTp9BO9mkrZqmO9dVkEBcmNVZSJ6sI_UXxcGkdKYhgOa70MsoePPWzV2sKG88v__2kQea2FTj192_5jTvVvidFeP2zJHZi7DToQJpah3HGJqPJ-FjLyMu--07v9OyIf5FNZM_-htqvh9bj6CHO2zrPearkghn0M3rFhk_OW407N8TnjjaulDXKnys');
+  background-size: cover;
+  background-position: center;
+}
+
+.stitch-login-overlay {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+}
+
+.stitch-otp-bg {
+  background-image: url('/images/stitch/otp-leaf-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.stitch-otp-input:focus {
+  outline: none;
+  border-color: rgba(13, 99, 27, 0.5);
+  box-shadow: 0 0 15px rgba(13, 99, 27, 0.3);
+}
+
+.stitch-success-checkmark {
+  animation: stitch-scale-up 0.3s ease-out forwards;
+}
+
+@keyframes stitch-scale-up {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
