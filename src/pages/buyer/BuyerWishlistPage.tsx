@@ -194,7 +194,8 @@ export function BuyerWishlistPage() {
           disabled={reorderAll.isPending}
           onClick={() => reorderAll.mutate(products)}
           className={cn(
-            'fixed right-4 bottom-24 z-40 flex h-14 items-center gap-3 rounded-full bg-primary px-6 font-bold text-on-primary shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-60 lg:right-8 lg:bottom-8',
+            'fixed right-4 z-40 flex h-14 items-center gap-3 rounded-full bg-primary px-6 font-bold text-on-primary shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-60 lg:right-8 lg:bottom-8',
+            'bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]',
           )}
         >
           <span className="material-symbols-outlined">shopping_basket</span>

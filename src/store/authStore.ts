@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { authStorageKey } from '@/config/appRole'
 
 export type AuthUser = {
   id: string
@@ -26,6 +27,6 @@ export const useAuthStore = create<AuthState>()(
       setAuth: ({ token, user }) => set({ token, user }),
       clearAuth: () => set({ token: null, user: null }),
     }),
-    { name: 'auth-storage' },
+    { name: authStorageKey() },
   ),
 )

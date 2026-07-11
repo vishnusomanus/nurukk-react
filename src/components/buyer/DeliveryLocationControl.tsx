@@ -124,13 +124,15 @@ export function DeliveryLocationControl({
               </span>
               <span
                 className={cn(
-                  'max-w-[8rem] truncate text-sm font-bold',
+                  'max-w-[5.5rem] truncate text-sm font-bold sm:max-w-[8rem]',
                   locating ? 'text-on-surface-variant' : stored?.serviceable === false ? 'text-error' : 'text-primary',
                 )}
               >
                 {label}
               </span>
-              <span className="max-w-[8rem] truncate text-[10px] text-on-surface-variant">{statusHint}</span>
+              <span className="max-w-[5.5rem] truncate text-[10px] text-on-surface-variant sm:max-w-[8rem]">
+                {statusHint}
+              </span>
             </div>
           </>
         ) : (

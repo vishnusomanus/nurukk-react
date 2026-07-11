@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { APP_NAME, appCopyright } from '@/constants/app'
 
 const shopLinks = [
@@ -31,8 +32,9 @@ export function BuyerFooter() {
     <footer className="mt-8 hidden w-full bg-surface-container-high lg:block">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-12 md:grid-cols-4 xl:px-8">
         <div className="md:col-span-1">
-          <Link to="/buyer" className="text-headline-lg mb-4 block font-bold text-primary">
-            {APP_NAME}
+          <Link to="/buyer" className="mb-4 flex items-center gap-2.5" aria-label={APP_NAME}>
+            <BrandLogo size="sm" className="h-11 w-auto max-w-[96px]" alt="" />
+            <span className="text-headline-lg font-bold text-primary">{APP_NAME}</span>
           </Link>
           <p className="text-body-md mb-6 text-on-surface-variant">
             Bringing the morning dew to your doorstep with 100% organic, traceable produce.

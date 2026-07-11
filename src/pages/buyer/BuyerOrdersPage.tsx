@@ -207,7 +207,7 @@ export function BuyerOrdersPage() {
   })
 
   return (
-    <BuyerAccountShell title="Orders">
+    <BuyerAccountShell title="Orders" backTo="/buyer" showBack={false}>
       <header className="mb-8">
         <h1 className="text-headline-xl mb-4 text-on-surface">Order History</h1>
         <div className="flex flex-col gap-4 border-b border-outline-variant sm:flex-row sm:items-center sm:justify-between">

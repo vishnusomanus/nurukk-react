@@ -244,18 +244,20 @@ export function ProductCard({
           className,
         )}
       >
-        <ProductLink block className="block h-40 w-full overflow-hidden lg:h-48">
+        <ProductLink block className="block h-32 w-full overflow-hidden sm:h-40 lg:h-48">
           {imageArea(
             'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110',
             'h-full w-full',
           )}
         </ProductLink>
-        <div className="flex flex-1 flex-col p-3 lg:p-4">
+        <div className="flex flex-1 flex-col p-2.5 sm:p-3 lg:p-4">
           <ProductLink>
-            <h4 className="text-body-lg truncate font-bold text-on-surface">{product.name}</h4>
-            <p className="text-body-md text-on-surface-variant">{product.unit ?? 'Fresh'}</p>
+            <h4 className="truncate text-sm font-bold text-on-surface sm:text-base">{product.name}</h4>
+            <p className="truncate text-xs text-on-surface-variant sm:text-sm">{product.unit ?? 'Fresh'}</p>
           </ProductLink>
-          <p className="text-price-display mt-auto pt-2 text-primary">{formatCurrency(price)}</p>
+          <p className="text-price-display mt-auto pt-1.5 text-sm text-primary sm:pt-2 sm:text-base">
+            {formatCurrency(price)}
+          </p>
         </div>
       </div>
     )

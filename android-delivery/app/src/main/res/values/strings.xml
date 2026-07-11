@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">nurukk Delivery</string>
+    <string name="title_activity_main">nurukk Delivery</string>
+    <string name="package_name">com.candlestack.nurukk.delivery</string>
+    <string name="custom_url_scheme">com.candlestack.nurukk.delivery</string>
+</resources>

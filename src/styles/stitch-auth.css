@@ -109,8 +109,87 @@
   background-position: center;
 }
 
+.stitch-login {
+  font-family: 'Outfit', 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
 .stitch-login-overlay {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.8) 100%);
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 55%),
+    linear-gradient(
+      180deg,
+      rgba(251, 249, 245, 0.28) 0%,
+      rgba(246, 248, 242, 0.55) 42%,
+      rgba(244, 247, 240, 0.92) 72%,
+      rgba(241, 245, 237, 0.98) 100%
+    );
+}
+
+.stitch-login-brand {
+  font-size: clamp(2.5rem, 9vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+.stitch-login-logo {
+  animation: stitch-login-float 5.5s ease-in-out infinite;
+}
+
+.stitch-login-field:focus-within {
+  box-shadow:
+    0 0 0 2px rgba(13, 99, 27, 0.35),
+    0 14px 44px -16px rgba(13, 99, 27, 0.45);
+}
+
+.stitch-login-cta {
+  background: linear-gradient(160deg, #128028 0%, #0d631b 55%, #064511 100%);
+  box-shadow: 0 14px 28px -10px rgba(13, 99, 27, 0.45);
+}
+
+.stitch-login-cta:hover:not(:disabled) {
+  box-shadow: 0 16px 32px -8px rgba(13, 99, 27, 0.5);
+}
+
+.stitch-login-cta:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.stitch-login-cta:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.stitch-login-enter {
+  animation: stitch-login-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes stitch-login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stitch-login-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-login-enter,
+  .stitch-login-logo {
+    animation: none;
+  }
 }
 
 .stitch-otp-bg {
@@ -120,10 +199,29 @@
   background-repeat: no-repeat;
 }
 
+.stitch-otp-row {
+  /* Keeps 6 OTP cells usable on ~360px viewports */
+  width: 100%;
+}
+
+.stitch-otp-input {
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .stitch-otp-input:focus {
   outline: none;
   border-color: rgba(13, 99, 27, 0.5);
-  box-shadow: 0 0 15px rgba(13, 99, 27, 0.3);
+  box-shadow: 0 0 0 2px rgba(13, 99, 27, 0.22);
+}
+
+@media (min-width: 400px) {
+  .stitch-otp-input {
+    font-size: 20px;
+  }
 }
 
 .stitch-success-checkmark {

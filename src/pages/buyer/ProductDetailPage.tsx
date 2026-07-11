@@ -60,9 +60,9 @@ export function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="pb-24 lg:pb-8">
+      <div className="app-page-pad-bottom-cta lg:pb-8">
         <BuyerPageHeader title="Product" />
-        <div className="buyer-page-container animate-pulse space-y-4 pt-20 lg:pt-8">
+        <div className="app-page-pad-top buyer-page-container animate-pulse space-y-4 lg:pt-8">
           <div className="h-72 rounded-xl bg-surface-container lg:aspect-square lg:h-auto" />
           <div className="h-8 w-2/3 rounded bg-surface-container" />
         </div>
@@ -72,9 +72,9 @@ export function ProductDetailPage() {
 
   if (error || !product) {
     return (
-      <div className="pb-24 lg:pb-8">
+      <div className="app-page-pad-bottom-cta lg:pb-8">
         <BuyerPageHeader title="Product" />
-        <p className="buyer-page-container pt-24 text-rose-700 lg:pt-8">
+        <p className="app-page-pad-top buyer-page-container text-rose-700 lg:pt-8">
           {getApiErrorMessage(error, 'Product not found')}
         </p>
       </div>
@@ -123,12 +123,12 @@ export function ProductDetailPage() {
   )
 
   return (
-    <div className="pb-28 lg:pb-8">
+    <div className="app-page-pad-bottom-cta lg:pb-8">
       <BuyerPageHeader title={product.name} />
 
       {/* Mobile layout */}
       <div className="lg:hidden">
-        <section ref={imageRef} className="relative h-80 w-full pt-16">
+        <section ref={imageRef} className="app-page-pad-top relative h-80 w-full">
           <RemoteImage src={images[activeImage]} alt={product.name} className="h-full w-full object-cover" />
         </section>
         <article className="relative z-10 -mt-6 rounded-t-[32px] bg-surface px-margin-mobile pt-6">
@@ -203,7 +203,7 @@ export function ProductDetailPage() {
         </section>
       ) : null}
 
-      <div className="fixed bottom-20 left-0 right-0 z-30 mx-auto max-w-lg px-margin-mobile lg:hidden">
+      <div className="app-cta-safe fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-lg px-margin-mobile pt-3 lg:hidden">
         {addToCartBtn}
         {addToCart.isError ? (
           <p className="mt-2 text-center text-sm text-error">{getApiErrorMessage(addToCart.error, 'Failed to add')}</p>

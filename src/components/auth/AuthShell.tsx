@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { APP_NAME, appCopyright } from '@/constants/app'
 import { cn } from '@/utils/cn'
 
@@ -50,31 +51,7 @@ export function AuthShell({
           )}
         >
           <div className={cn('relative', isPremiumLogin ? 'mb-6' : 'mb-6')}>
-            <div className="absolute inset-0 scale-110 rounded-3xl bg-white/20 blur-xl" />
-            <div
-              className={cn(
-                'relative flex items-center justify-center rounded-3xl border border-white/50 bg-white/40 backdrop-blur-md',
-                isPremiumLogin
-                  ? 'h-24 w-24 shadow-sm transition-transform duration-500 hover:scale-105'
-                  : 'h-24 w-24 shadow-sm',
-              )}
-            >
-              {isPremiumLogin ? (
-                <span
-                  className="material-symbols-outlined text-[48px] text-emerald-800"
-                  style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}
-                >
-                  eco
-                </span>
-              ) : (
-                <span
-                  className="material-symbols-outlined text-[48px] text-emerald-800"
-                  style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}
-                >
-                  eco
-                </span>
-              )}
-            </div>
+            <BrandLogo kind="buyer" size="lg" />
           </div>
           <h1
             className={cn(

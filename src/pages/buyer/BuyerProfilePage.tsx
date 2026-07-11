@@ -12,7 +12,8 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import { useOrderSavingsSummary } from '@/utils/buyerAccount'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { getHomePathForRole, isSellerRole } from '@/utils/authRole'
-import { canSwitchToSeller, hasDualMarketplaceRoles } from '@/utils/sellerAccess'
+import { allowsRoleSwitch } from '@/config/appRole'
+import { canSwitchToSeller } from '@/utils/sellerAccess'
 import { cn } from '@/utils/cn'
 
 const PROFILE_HERO_IMAGE =
@@ -267,7 +268,7 @@ export function BuyerProfilePage() {
 
   const displayName = user?.name?.trim() || 'Guest'
   const firstName = displayName.split(/\s+/)[0] ?? displayName
-  const canSell = canSwitchToSeller(user)
+  const canSell = allowsRoleSwitch() && canSwitchToSeller(user)
   const sellerMode = isSellerRole(user?.role)
 
   const switchRoleMutation = useMutation({
@@ -317,9 +318,9 @@ export function BuyerProfilePage() {
   return (
     <>
       <div className="lg:hidden">
-        <div className="pb-24">
-          <BuyerPageHeader title="Profile" backTo="/buyer" />
-          <main className="buyer-page-container space-y-8 pt-20 lg:space-y-10">
+        <div className="app-page-pad-bottom">
+          <BuyerPageHeader title="Profile" showBack={false} />
+          <main className="app-page-pad-top buyer-page-container space-y-8 lg:space-y-10">
             <section className="relative mb-2 h-40 overflow-hidden rounded-xl shadow-sm">
               <RemoteImage
                 priority
@@ -382,7 +383,7 @@ export function BuyerProfilePage() {
       </div>
 
       <div className="hidden lg:block">
-        <BuyerAccountShell title="Profile" backTo="/buyer">
+        <BuyerAccountShell title="Profile" showBack={false}>
           <DashboardContent {...sharedProps} />
         </BuyerAccountShell>
       </div>

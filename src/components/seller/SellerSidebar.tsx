@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { getHomePathForRole, isSellerRole } from '@/utils/authRole'
+import { allowsRoleSwitch } from '@/config/appRole'
 import { hasDualMarketplaceRoles } from '@/utils/sellerAccess'
 import { cn } from '@/utils/cn'
 
@@ -38,7 +39,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const user = useAuthStore((s) => s.user)
   const displayName = user?.name ?? user?.phone ?? 'Seller'
   const sellerMode = isSellerRole(user?.role)
-  const showRoleSwitch = hasDualMarketplaceRoles(user)
+  const showRoleSwitch = allowsRoleSwitch() && hasDualMarketplaceRoles(user)
 
   const switchRoleMutation = useMutation({
     mutationFn: (nextRole: 'buyer' | 'seller') => switchRole(nextRole),
@@ -149,14 +150,14 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function SellerSidebar({ mobileOpen, onClose }: SellerSidebarProps) {
   return (
     <>
-      <aside className="fixed top-0 left-0 z-40 hidden h-screen w-64 flex-col bg-surface-container-low py-6 md:flex">
+      <aside className="app-header-safe fixed top-0 left-0 z-40 hidden h-dvh w-64 flex-col bg-surface-container-low py-6 md:flex">
         <SidebarContent />
       </aside>
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden />
-          <aside className="absolute top-0 left-0 flex h-full w-72 flex-col bg-surface-container-low py-6 shadow-lg">
+          <aside className="app-header-safe absolute top-0 left-0 flex h-dvh w-72 flex-col bg-surface-container-low py-6 shadow-lg">
             <SidebarContent onNavigate={onClose} />
           </aside>
         </div>

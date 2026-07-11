@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
 import { NotificationsMenu } from '@/components/common/NotificationsMenu'
 import { DeliveryLocationControl } from '@/components/buyer/DeliveryLocationControl'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { useAuthStore } from '@/store/authStore'
 import { APP_NAME } from '@/constants/app'
 import { getCartBadgeCount } from '@/utils/cartCount'
@@ -37,8 +38,9 @@ export function BuyerDesktopHeader() {
     <header className="sticky top-0 z-50 hidden w-full bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.05)] lg:block">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4 xl:px-8">
         <div className="flex min-w-0 items-center gap-8 xl:gap-10">
-          <Link to="/buyer" className="shrink-0 text-headline-lg font-bold text-primary">
-            {APP_NAME}
+          <Link to="/buyer" className="flex shrink-0 items-center gap-2.5" aria-label={APP_NAME}>
+            <BrandLogo size="sm" className="h-10 w-auto max-w-[88px]" alt="" />
+            <span className="text-headline-lg font-bold text-primary">{APP_NAME}</span>
           </Link>
           <nav className="stitch-hide-scrollbar flex min-w-0 items-center gap-6 overflow-x-auto overflow-y-hidden pb-0.5">
             <NavLink

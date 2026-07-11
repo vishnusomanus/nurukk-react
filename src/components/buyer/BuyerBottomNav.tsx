@@ -18,12 +18,19 @@ const items: {
   { to: '/buyer/profile', label: 'Profile', icon: 'person', end: false },
 ]
 
+/** Routes that hide the bottom tab bar (full-screen flows). */
+export function isBuyerBottomNavHidden(pathname: string) {
+  return (
+    pathname.includes('/checkout/payment') ||
+    pathname.includes('/success') ||
+    pathname.includes('/invoice') ||
+    pathname.includes('/products/')
+  )
+}
+
 export function BuyerBottomNav() {
   const location = useLocation()
-  const hide =
-    location.pathname.includes('/checkout/payment') ||
-    location.pathname.includes('/success') ||
-    location.pathname.includes('/products/')
+  const hide = isBuyerBottomNavHidden(location.pathname)
 
   const { data } = useQuery({
     queryKey: ['buyer', 'cart'],
@@ -34,7 +41,7 @@ export function BuyerBottomNav() {
   if (hide) return null
 
   return (
-    <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-xl bg-surface px-1 py-2 shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] lg:hidden">
+    <nav className="app-bottom-nav-safe fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-xl bg-surface px-1 pt-2 shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] lg:hidden">
       {items.map((item) => (
         <NavLink
           key={item.to}

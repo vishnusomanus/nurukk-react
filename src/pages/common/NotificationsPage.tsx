@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { BuyerAccountShell } from '@/components/buyer/BuyerAccountShell'
 import { NotificationsPageContent } from '@/components/common/NotificationsPageContent'
 import { useAuthStore } from '@/store/authStore'
@@ -17,9 +18,16 @@ function RoleNotificationsShell({ children }: { children: React.ReactNode }) {
 
   if (isSellerRole(r)) {
     return (
-      <div className="stitch-marketplace px-4 py-6 md:px-8 md:py-8">
+      <div className="stitch-marketplace px-4 py-4 md:px-8 md:py-8">
         <div className="mx-auto max-w-3xl">
-          <h1 className="text-headline-lg mb-6 font-bold text-on-surface">Notifications</h1>
+          <div className="mb-4 hidden items-center gap-2 md:flex">
+            <Link to="/seller" className="text-label-md text-primary">
+              Dashboard
+            </Link>
+            <span className="text-outline">/</span>
+            <span className="text-label-md text-on-surface">Notifications</span>
+          </div>
+          <h1 className="mb-6 hidden text-headline-lg font-bold text-on-surface md:block">Notifications</h1>
           {children}
         </div>
       </div>
@@ -39,9 +47,9 @@ function RoleNotificationsShell({ children }: { children: React.ReactNode }) {
 
   if (r === 'delivery_agent' || r === 'seller_delivery') {
     return (
-      <div className="px-4 py-6 md:px-6">
+      <div className="px-4 py-4 md:px-6 md:py-6">
         <div className="mx-auto max-w-3xl">
-          <h1 className="text-headline-lg mb-6 font-bold text-on-surface">Notifications</h1>
+          <h1 className="mb-6 hidden text-headline-lg font-bold text-on-surface md:block">Notifications</h1>
           {children}
         </div>
       </div>

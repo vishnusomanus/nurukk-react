@@ -11,6 +11,15 @@ function resolveBase(env: Record<string, string>): string {
   return configured.endsWith('/') ? configured : `${configured}/`
 }
 
+function resolveOutDir(mode: string): string {
+  if (mode === 'buyer') return 'dist-buyer'
+  if (mode === 'seller') return 'dist-seller'
+  if (mode === 'delivery') return 'dist-delivery'
+  if (mode === 'pages') return 'dist'
+  if (mode === 'capacitor') return 'dist-buyer'
+  return 'dist'
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '')
   const proxyTarget = env.API_PROXY_TARGET || 'http://localhost:8000'
@@ -41,7 +50,8 @@ export default defineConfig(({ mode }) => {
       port: 4173,
     },
     build: {
-      outDir: 'dist',
+      outDir: resolveOutDir(mode),
+      emptyOutDir: true,
     },
   }
 })

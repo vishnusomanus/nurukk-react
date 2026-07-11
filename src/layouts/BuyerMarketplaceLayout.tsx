@@ -10,9 +10,9 @@ export function BuyerMarketplaceLayout() {
   return (
     <CartAddProvider>
       <DeliveryLocationProvider>
-        <div className="stitch-marketplace flex min-h-dvh w-full flex-col">
+        <div className="stitch-marketplace flex min-h-dvh w-full flex-col overflow-x-clip">
           <BuyerDesktopHeader />
-          <div className="mx-auto w-full max-w-lg flex-1 lg:max-w-none">
+          <div className="mx-auto w-full max-w-lg flex-1 overflow-x-clip lg:max-w-none">
             <Outlet />
           </div>
           <BuyerFooter />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
+import { BuyerPageHeader } from '@/components/buyer/BuyerPageHeader'
 import { OrderInvoiceDocument } from '@/components/buyer/OrderInvoiceDocument'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { downloadInvoicePdf } from '@/utils/buyerAccount'
@@ -33,10 +34,11 @@ export function OrderInvoicePage() {
   }
 
   return (
-    <div className="pb-24 lg:pb-8">
-      <div className="buyer-page-container py-6 lg:max-w-3xl">
+    <div className="app-page-pad-bottom-cta lg:pb-8">
+      <BuyerPageHeader title="Invoice" backTo={`/buyer/orders/${orderUuid}/success`} />
+      <div className="app-page-pad-top buyer-page-container py-6 lg:max-w-3xl lg:pt-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <div className="hidden lg:block">
             <Link
               to={`/buyer/orders/${orderUuid}/success`}
               className="text-label-md inline-flex items-center gap-1 text-primary"
@@ -49,6 +51,9 @@ export function OrderInvoicePage() {
               <p className="text-body-sm text-on-surface-variant">{orderNumber}</p>
             ) : null}
           </div>
+          {orderNumber ? (
+            <p className="text-body-sm text-on-surface-variant lg:hidden">{orderNumber}</p>
+          ) : null}
 
           {invoice ? (
             <button

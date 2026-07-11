@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { deliveryService } from '@/api/services'
 import { NotificationsMenu } from '@/components/common/NotificationsMenu'
@@ -13,10 +13,20 @@ const NAV_ITEMS = [
   { to: '/delivery/earnings', label: 'Earnings', icon: 'payments', end: false },
 ]
 
+function headerTitle(pathname: string) {
+  if (pathname.startsWith('/delivery/history')) return 'History'
+  if (pathname.startsWith('/delivery/earnings')) return 'Earnings'
+  if (pathname.startsWith('/delivery/notifications')) return 'Notifications'
+  return 'Deliveries'
+}
+
 export function DeliveryLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const logout = useAuth((s) => s.logout)
   const userRole = useAuthStore((s) => s.user?.role)
+  const isNotifications = location.pathname.includes('/notifications')
+  const title = headerTitle(location.pathname)
 
   const { isLoading, isError } = useQuery({
     queryKey: ['delivery', 'profile'],
@@ -32,17 +42,28 @@ export function DeliveryLayout() {
   }, [isError, isLoading, navigate, userRole])
 
   return (
-    <div className="min-h-dvh bg-surface-container-low pb-24 lg:pb-0">
-      <header className="border-b border-outline-variant bg-surface">
-        <div className="flex items-center justify-between px-4 py-4 md:px-6">
-          <h1 className="text-headline-lg font-bold text-primary">Delivery Console</h1>
+    <div className="min-h-dvh overflow-x-clip bg-surface-container-low pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+      <header className="app-header-safe sticky top-0 z-30 border-b border-outline-variant bg-surface">
+        <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4">
+          <div className="flex min-w-0 items-center gap-2">
+            {isNotifications ? (
+              <Link
+                to="/delivery"
+                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-container-low md:hidden"
+                aria-label="Go back"
+              >
+                <span className="material-symbols-outlined text-primary">arrow_back</span>
+              </Link>
+            ) : null}
+            <h1 className="truncate text-headline-lg font-bold text-primary">{title}</h1>
+          </div>
           <div className="flex items-center gap-2">
             <NotificationsMenu />
             <button
               type="button"
               onClick={async () => {
                 await logout()
-                navigate('/')
+                navigate('/login/delivery')
               }}
               className="text-label-md font-semibold text-error"
             >
@@ -75,9 +96,11 @@ export function DeliveryLayout() {
         </nav>
       </header>
 
-      <Outlet />
+      <div className="scroll-touch">
+        <Outlet />
+      </div>
 
-      <nav className="fixed right-0 bottom-0 left-0 z-20 border-t border-outline-variant bg-surface px-2 py-2 md:hidden">
+      <nav className="app-bottom-nav-safe fixed right-0 bottom-0 left-0 z-20 border-t border-outline-variant bg-surface px-2 pt-2 md:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-3 gap-1">
           {NAV_ITEMS.map((item) => (
             <NavLink

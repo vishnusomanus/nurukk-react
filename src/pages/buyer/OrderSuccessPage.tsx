@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buyerService, paymentService } from '@/api/services'
 import type { OnlinePaymentMethod } from '@/constants/paymentMethods'
+import { BuyerPageHeader } from '@/components/buyer/BuyerPageHeader'
 import { ProductImage } from '@/components/buyer/ProductImage'
 import { OrderRateForm } from '@/components/buyer/OrderRateForm'
 import { OrderStatusHeroIcon } from '@/components/buyer/OrderStatusHeroIcon'
@@ -156,8 +157,9 @@ export function OrderSuccessPage() {
   )
 
   return (
-    <div className="pb-24 lg:pb-8">
-      <main className="buyer-page-container relative z-10 flex flex-grow flex-col items-center pt-8 pb-32 lg:max-w-4xl lg:pb-8">
+    <div className="app-page-pad-bottom-cta lg:pb-8">
+      <BuyerPageHeader title="Order" backTo="/buyer/orders" />
+      <main className="app-page-pad-top buyer-page-container relative z-10 flex flex-grow flex-col items-center pb-8 lg:max-w-4xl lg:pt-8">
         <div className="mb-8 flex w-full flex-col items-center space-y-4 text-center">
           <OrderStatusHeroIcon active={active} delivered={delivered} cancelled={cancelled} />
           <h1 className="text-headline-xl text-primary">

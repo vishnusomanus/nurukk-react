@@ -7,6 +7,8 @@ import { ProductImage, RemoteImage } from '@/components/buyer/ProductImage'
 import { SellerCard } from '@/components/buyer/SellerCard'
 import { DeliveryLocationControl } from '@/components/buyer/DeliveryLocationControl'
 import { DeliveryRangeBanner } from '@/components/buyer/DeliveryRangeBanner'
+import { BrandLogo } from '@/components/brand/BrandLogo'
+import { HomeBannerSlider } from '@/components/buyer/HomeBannerSlider'
 import { APP_NAME } from '@/constants/app'
 import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
@@ -20,9 +22,6 @@ function categoryIcon(name?: string) {
   if (key.includes('exotic')) return 'star'
   return 'eco'
 }
-
-const HERO_BANNER_FALLBACK =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAlKAjSPa3Vr19krHpQyL0ntY3nqSvgTR7A6opdEno-izRftv-6otpX1-4ndZEJ0PaLzqrf_XQ4RUursLpPLkszrTzYEUU_A_17T4PGIW4QU_LJtWkwGK9IMfDk8zE4QTZGLlNLMgtCSbrdL36lycJPzwxq_OwtVGb42Dhq9LFlcR-Y9X7L4kMYHIvhxOFYhC2lFCndU9FX1D5bNXBYC-_8dv8byyV3gQRzEmz4BwWx7sGQB8H2XOsnWkwD4XF9IAetg29qxjzsy51b'
 
 export function BuyerHomePage() {
   const navigate = useNavigate()
@@ -48,20 +47,30 @@ export function BuyerHomePage() {
     if (q) navigate(`/buyer/search?q=${encodeURIComponent(q)}`)
   }
 
-  const heroImage = banners[0]?.image_url?.trim() || HERO_BANNER_FALLBACK
-
   return (
-    <div className="pb-24 lg:pb-8">
+    <div className="app-page-pad-bottom lg:pb-8">
       {/* Mobile header */}
-      <header className="fixed top-0 z-40 flex h-16 w-full max-w-lg items-center justify-between bg-surface px-margin-mobile shadow-sm lg:hidden">
-        <DeliveryLocationControl variant="mobile" />
-        <h1 className="text-headline-lg-mobile font-bold text-primary">{APP_NAME}</h1>
-        <button type="button" className="rounded-full p-2 hover:bg-surface-container-low">
-          <span className="material-symbols-outlined text-on-surface-variant">search</span>
-        </button>
+      <header className="app-header-safe fixed top-0 left-0 right-0 z-40 w-full bg-surface shadow-sm lg:hidden">
+        <div className="mx-auto grid h-14 w-full max-w-lg grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:h-16 sm:px-margin-mobile">
+          <div className="min-w-0 justify-self-start">
+            <DeliveryLocationControl variant="mobile" />
+          </div>
+          <h1 className="justify-self-center">
+            <span className="sr-only">{APP_NAME}</span>
+            <BrandLogo size="sm" className="h-9 w-auto max-w-[72px]" alt={APP_NAME} />
+          </h1>
+          <button
+            type="button"
+            onClick={() => navigate('/buyer/search')}
+            className="justify-self-end rounded-full p-2 hover:bg-surface-container-low"
+            aria-label="Search"
+          >
+            <span className="material-symbols-outlined text-on-surface-variant">search</span>
+          </button>
+        </div>
       </header>
 
-      <main className="buyer-page-container space-y-8 pt-20 lg:space-y-10 lg:pt-8">
+      <main className="app-page-pad-top buyer-page-container space-y-8 lg:space-y-10 lg:pt-8">
         {/* Search - mobile only inline; desktop in header */}
         <form className="lg:hidden" onSubmit={onSearch}>
           <div className="relative flex items-center">
@@ -83,34 +92,7 @@ export function BuyerHomePage() {
 
         <DeliveryRangeBanner className="mb-2" />
 
-        {/* Hero */}
-        <section className="relative aspect-[21/9] min-h-48 overflow-hidden rounded-xl shadow-sm md:aspect-[25/8] lg:rounded-3xl">
-          <RemoteImage
-            priority
-            src={heroImage}
-            fallbackSrc={HERO_BANNER_FALLBACK}
-            alt={banners[0]?.title ?? 'Fresh Morning Deals'}
-            className="absolute inset-0 z-0 h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-          />
-          <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
-          <div className="relative z-20 flex h-full max-w-2xl flex-col justify-center px-6 text-white lg:px-12 xl:px-32">
-            <span className="text-label-md mb-2 inline-block self-start rounded-full bg-secondary-container px-4 py-1 text-on-secondary-container">
-              EXCLUSIVE OFFERS
-            </span>
-            <h2 className="text-headline-xl mb-2">{banners[0]?.title ?? 'Fresh Morning Deals'}</h2>
-            <p className="text-body-lg mb-4 opacity-90 lg:mb-6">
-              Start your day with nutrients harvested at dawn. Up to 30% off on leafy greens.
-            </p>
-            <div className="hidden gap-4 lg:flex">
-              <Link to="/buyer/categories" className="rounded-2xl bg-primary px-8 py-3 font-bold text-white shadow-lg transition-all hover:bg-primary-container">
-                Shop Deals
-              </Link>
-              <Link to="/buyer/categories" className="rounded-2xl border border-white/40 bg-white/20 px-8 py-3 font-bold text-white backdrop-blur-md">
-                Explore Boxes
-              </Link>
-            </div>
-          </div>
-        </section>
+        <HomeBannerSlider banners={banners} />
 
         {/* Categories */}
         <section>
@@ -175,12 +157,12 @@ export function BuyerHomePage() {
                 <p className="text-body-md text-on-surface-variant">Shop directly from verified producers</p>
               </div>
             </div>
-            <div className="stitch-hide-scrollbar -mx-margin-mobile flex gap-4 overflow-x-auto px-margin-mobile pb-4 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-4">
+            <div className="stitch-hide-scrollbar -mx-margin-mobile flex snap-x snap-mandatory gap-3 overflow-x-auto px-margin-mobile pb-4 scroll-smooth lg:mx-0 lg:grid lg:snap-none lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-4">
               {isLoading
                 ? Array.from({ length: 4 }).map((_, i) => (
                     <div
                       key={i}
-                      className="min-w-[260px] h-64 animate-pulse rounded-xl bg-surface-container lg:min-w-0"
+                      className="h-64 min-w-[min(78vw,260px)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container sm:min-w-[260px] lg:min-w-0"
                     />
                   ))
                 : featuredSellers.map((seller) => (
@@ -188,7 +170,7 @@ export function BuyerHomePage() {
                       key={seller.uuid}
                       seller={seller}
                       layout="horizontal"
-                      className="lg:min-w-0 lg:hidden"
+                      className="min-w-[min(78vw,260px)] shrink-0 snap-start sm:min-w-[260px] lg:min-w-0 lg:hidden"
                     />
                   ))}
               {isLoading
@@ -205,10 +187,13 @@ export function BuyerHomePage() {
           <div className="mb-4 flex items-end justify-between lg:mb-6">
             <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Featured Products</h3>
           </div>
-          <div className="stitch-hide-scrollbar -mx-margin-mobile flex gap-4 overflow-x-auto px-margin-mobile pb-4 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-5">
+          <div className="stitch-hide-scrollbar -mx-margin-mobile flex snap-x snap-mandatory gap-3 overflow-x-auto px-margin-mobile pb-4 scroll-smooth lg:mx-0 lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-5">
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="min-w-[160px] h-52 animate-pulse rounded-xl bg-surface-container lg:min-w-0" />
+                  <div
+                    key={i}
+                    className="h-52 min-w-[min(42vw,160px)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container sm:min-w-[160px] lg:min-w-0"
+                  />
                 ))
               : featured.map((product) => (
                   <ProductCard
@@ -217,7 +202,7 @@ export function BuyerHomePage() {
                     layout="horizontal"
                     showFavorite
                     clickAddsToCart
-                    className="lg:min-w-0 lg:hidden"
+                    className="min-w-[min(42vw,160px)] shrink-0 snap-start sm:min-w-[160px] lg:min-w-0 lg:hidden"
                   />
                 ))}
             {isLoading

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useOtpStore } from '@/store/otpStore'
 import type { OtpRole } from '@/api/services/authService'
@@ -103,49 +104,50 @@ export function PremiumOtpTemplate({
   }
 
   return (
-    <div className="stitch-auth-page stitch-body stitch-otp-bg relative flex min-h-dvh flex-col text-on-background">
+    <div className="stitch-auth-page stitch-body stitch-otp-bg relative flex min-h-dvh flex-col overflow-x-clip text-on-background">
       <div className="pointer-events-none absolute inset-0 bg-white/20" aria-hidden />
 
-      <header className="sticky top-0 z-10 flex h-16 w-full items-center border-b border-white/20 bg-white/40 px-margin-mobile backdrop-blur-md">
-        <Link
-          to={backPath}
-          className="-ml-2 p-2 transition-transform duration-150 active:scale-95"
-          aria-label="Go back"
-        >
-          <span className="material-symbols-outlined text-on-surface">arrow_back</span>
-        </Link>
-        <h1 className="text-headline-lg-mobile ml-4 tracking-tight text-primary">{APP_NAME}</h1>
+      <header className="app-header-safe sticky top-0 z-10 w-full border-b border-white/20 bg-white/40 backdrop-blur-md">
+        <div className="flex h-14 items-center px-4 sm:h-16 sm:px-margin-mobile">
+          <Link
+            to={backPath}
+            className="-ml-1 shrink-0 p-2 transition-transform duration-150 active:scale-95"
+            aria-label="Go back"
+          >
+            <span className="material-symbols-outlined text-on-surface">arrow_back</span>
+          </Link>
+          <h1 className="ml-2 truncate text-lg font-bold tracking-tight text-primary sm:ml-4 sm:text-xl">
+            {APP_NAME}
+          </h1>
+        </div>
       </header>
 
-      <main className="relative z-10 flex grow flex-col items-center justify-center px-margin-mobile py-8">
-        <div className="stitch-glass-card-otp flex w-full max-w-md flex-col items-center rounded-[32px] p-8 shadow-2xl">
-          <div className="mb-10 w-full text-center">
-            <div className="mb-6 flex justify-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-                <span
-                  className="material-symbols-outlined text-5xl text-primary"
-                  style={{ fontVariationSettings: "'wght' 200, 'FILL' 1" }}
-                >
-                  domain_verification
-                </span>
-              </div>
+      <main className="safe-pb relative z-10 flex grow flex-col items-center justify-center overflow-y-auto px-3 py-5 scroll-touch sm:px-margin-mobile sm:py-8">
+        <div className="stitch-glass-card-otp flex w-full max-w-md flex-col items-center rounded-2xl p-4 shadow-xl sm:rounded-[32px] sm:p-8 sm:shadow-2xl">
+          <div className="mb-6 w-full text-center sm:mb-10">
+            <div className="mb-4 flex justify-center sm:mb-6">
+              <BrandLogo size="md" className="h-14 w-auto max-w-[140px] sm:h-20 sm:max-w-[180px]" />
             </div>
-            <h2 className="text-headline-xl mb-2 tracking-tight text-on-surface">Verify OTP</h2>
-            <p className="text-body-md text-on-surface-variant">We&apos;ve sent a 6-digit code to</p>
-            <div className="mt-1 flex items-center justify-center gap-2">
-              <span className="text-lg font-bold text-on-surface">+91 {phone}</span>
+            <h2 className="mb-1 text-2xl font-bold tracking-tight text-on-surface sm:mb-2 sm:text-[32px] sm:leading-10">
+              Verify OTP
+            </h2>
+            <p className="text-sm text-on-surface-variant">We&apos;ve sent a 6-digit code to</p>
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <span className="text-base font-bold tracking-wide text-on-surface sm:text-lg">
+                +91 {phone}
+              </span>
               <Link
                 to={backPath}
-                className="text-label-md rounded-full bg-primary/10 px-3 py-1 text-primary transition-all hover:bg-primary/20 active:scale-95"
+                className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-primary transition-all hover:bg-primary/20 active:scale-95 sm:px-3 sm:py-1 sm:text-xs"
               >
                 Edit
               </Link>
             </div>
           </div>
 
-          <form className="flex w-full flex-col gap-6" onSubmit={(e) => void onVerify(e)}>
+          <form className="flex w-full flex-col gap-4 sm:gap-6" onSubmit={(e) => void onVerify(e)}>
             <div>
-              <div className="flex justify-center gap-3">
+              <div className="stitch-otp-row grid w-full grid-cols-6 gap-1.5 sm:gap-3">
                 {digits.map((digit, index) => (
                   <input
                     key={index}
@@ -154,9 +156,11 @@ export function PremiumOtpTemplate({
                     }}
                     type="text"
                     inputMode="numeric"
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
                     maxLength={1}
                     pattern="\d*"
                     required
+                    aria-label={`Digit ${index + 1}`}
                     value={digit}
                     disabled={status !== 'idle'}
                     onChange={(e) => {
@@ -185,12 +189,14 @@ export function PremiumOtpTemplate({
                       inputsRef.current[focusIndex]?.focus()
                       maybeAutoSubmit(next)
                     }}
-                    className="stitch-otp-input text-headline-lg-mobile h-16 w-12 rounded-lg border border-white/50 bg-white/50 text-center shadow-sm transition-all focus:bg-white"
+                    className="stitch-otp-input h-12 w-full min-w-0 rounded-lg border border-white/50 bg-white/50 text-center text-lg font-bold shadow-sm transition-all focus:bg-white sm:h-16 sm:rounded-lg sm:text-xl"
                   />
                 ))}
               </div>
               <div className="mt-2 text-center">
-                <span className="text-label-md text-on-surface-variant opacity-60">{otp.length}/6</span>
+                <span className="text-[11px] font-semibold tracking-wide text-on-surface-variant opacity-60 sm:text-xs">
+                  {otp.length}/6
+                </span>
               </div>
             </div>
 
@@ -204,7 +210,7 @@ export function PremiumOtpTemplate({
               type="submit"
               disabled={status !== 'idle' || otp.length !== 6}
               className={cn(
-                'flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-xl font-bold shadow-lg transition-all duration-200 active:scale-[0.98]',
+                'flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl text-sm font-bold shadow-lg transition-all duration-200 active:scale-[0.98] sm:h-14 sm:gap-3 sm:text-base',
                 status === 'success'
                   ? 'bg-tertiary-container text-on-tertiary-container shadow-none'
                   : 'bg-gradient-to-br from-primary to-primary/80 text-on-primary shadow-primary/30',
@@ -213,29 +219,31 @@ export function PremiumOtpTemplate({
             >
               {status === 'verifying' ? (
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                  <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
                   Verifying...
                 </span>
               ) : status === 'success' ? (
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined stitch-success-checkmark">check_circle</span>
+                  <span className="material-symbols-outlined stitch-success-checkmark text-[20px]">
+                    check_circle
+                  </span>
                   Success
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   Verify &amp; Proceed
-                  <span className="material-symbols-outlined">arrow_forward</span>
+                  <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                 </span>
               )}
             </button>
           </form>
 
-          <div className="mt-12 w-full text-center">
-            <div className="inline-block w-full rounded-2xl border border-white/20 bg-white/30 px-6 py-4">
+          <div className="mt-6 w-full text-center sm:mt-12">
+            <div className="inline-block w-full rounded-xl border border-white/20 bg-white/30 px-3 py-3 sm:rounded-2xl sm:px-6 sm:py-4">
               {resendSeconds > 0 ? (
-                <p className="text-body-md text-on-surface-variant">
+                <p className="text-sm text-on-surface-variant">
                   Didn&apos;t receive the code?{' '}
-                  <span className="mt-1 block text-base font-bold text-secondary opacity-80">
+                  <span className="mt-1 block text-sm font-bold text-secondary opacity-80 sm:text-base">
                     Resend in 00:{String(resendSeconds).padStart(2, '0')}
                   </span>
                 </p>
@@ -243,7 +251,7 @@ export function PremiumOtpTemplate({
                 <button
                   type="button"
                   onClick={() => void resend()}
-                  className="py-1 text-base font-bold text-secondary transition-all hover:underline active:scale-95"
+                  className="py-1 text-sm font-bold text-secondary transition-all hover:underline active:scale-95 sm:text-base"
                 >
                   Resend OTP
                 </button>

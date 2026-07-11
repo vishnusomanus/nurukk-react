@@ -54,10 +54,10 @@ export function BuyerSellerStorePage() {
   const location = storeLocationLabel(store?.city, store?.pincode)
 
   return (
-    <div className="pb-24 lg:pb-8">
+    <div className="app-page-pad-bottom lg:pb-8">
       <BuyerPageHeader title={storeName} backTo="/buyer" />
 
-      <main className="buyer-page-container space-y-6 pt-20 lg:space-y-8 lg:pt-8">
+      <main className="app-page-pad-top buyer-page-container space-y-6 lg:space-y-8 lg:pt-8">
         <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-sm lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>

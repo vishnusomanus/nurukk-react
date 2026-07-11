@@ -1,5 +1,12 @@
 import { Link, Navigate } from 'react-router-dom'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { APP_NAME, appCopyright } from '@/constants/app'
+import {
+  APP_ROLE,
+  getAppHomePath,
+  getAppLoginPath,
+  isMultiPortalApp,
+} from '@/config/appRole'
 import { useAuthStore } from '@/store/authStore'
 import { getHomePathForRole } from '@/utils/authRole'
 import { cn } from '@/utils/cn'
@@ -38,6 +45,13 @@ const ROLE_PORTALS = [
 export function HomePage() {
   const user = useAuthStore((s) => s.user)
 
+  if (!isMultiPortalApp) {
+    if (user) {
+      return <Navigate to={getAppHomePath(APP_ROLE)} replace />
+    }
+    return <Navigate to={getAppLoginPath(APP_ROLE)} replace />
+  }
+
   if (user) {
     return <Navigate to={getHomePathForRole(user.role)} replace />
   }
@@ -48,12 +62,7 @@ export function HomePage() {
 
       <main className="relative z-10 flex w-full max-w-2xl flex-1 flex-col px-margin-mobile pt-12 pb-16">
         <header className="mb-10 flex flex-col items-center text-center">
-          <div className="group relative mb-6">
-            <div className="absolute inset-0 scale-110 rounded-3xl bg-white/20 blur-xl" />
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl border border-white/50 bg-white/40 shadow-sm backdrop-blur-md transition-transform duration-500 hover:scale-105">
-              <span className="material-symbols-outlined filled text-[48px] text-primary">eco</span>
-            </div>
-          </div>
+          <BrandLogo kind="buyer" className="mb-6" />
           <h1 className="text-headline-xl mb-2 tracking-tight text-primary">{APP_NAME}</h1>
           <p className="text-body-lg max-w-md font-medium leading-relaxed text-on-surface-variant">
             Premium organic produce from farm to your kitchen table.

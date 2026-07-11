@@ -271,7 +271,7 @@ export function PaymentSelectionPage() {
     <div className="pb-28 lg:pb-8">
       <BuyerPageHeader title="Payment Method" backTo="/buyer/checkout" />
 
-      <main className="buyer-page-container mb-24 flex-1 overflow-y-auto pt-20 lg:mb-0 lg:pt-8">
+      <main className="app-page-pad-top buyer-page-container mb-4 flex-1 scroll-touch lg:mb-0 lg:pt-8">
         <h1 className="text-headline-xl mb-6 hidden text-on-surface lg:block">Complete Payment</h1>
 
         {!addressesLoading && !hasAddress ? (
@@ -327,7 +327,7 @@ export function PaymentSelectionPage() {
         ) : null}
       </main>
 
-      <div className="fixed bottom-20 left-0 right-0 z-30 mx-auto max-w-lg px-margin-mobile lg:hidden">
+      <div className="app-cta-safe fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-lg px-margin-mobile pt-3 lg:hidden">
         {payBtn}
       </div>
     </div>

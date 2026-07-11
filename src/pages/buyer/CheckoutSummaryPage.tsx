@@ -203,7 +203,7 @@ export function CheckoutSummaryPage() {
     <div className="pb-32 lg:pb-8">
       <BuyerPageHeader title="Review Your Order" backTo="/buyer" />
 
-      <main className="buyer-page-container pt-20 pb-4 lg:pt-8">
+      <main className="app-page-pad-top buyer-page-container pb-28 lg:pt-8 lg:pb-8">
         <h1 className="text-headline-xl mb-8 hidden text-on-surface lg:block">Review Your Order</h1>
 
         {error ? (
@@ -301,7 +301,7 @@ export function CheckoutSummaryPage() {
       </main>
 
       {items.length > 0 ? (
-        <div className="fixed bottom-20 left-0 right-0 z-30 border-t border-surface-variant bg-surface/80 px-margin-mobile py-4 backdrop-blur-lg lg:hidden">
+      <div className="app-cta-above-nav fixed left-0 right-0 z-30 border-t border-surface-variant bg-surface/95 px-margin-mobile py-4 backdrop-blur-lg lg:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-4">
             <div className="shrink-0">
               <span className="text-label-md uppercase text-on-surface-variant">Total</span>

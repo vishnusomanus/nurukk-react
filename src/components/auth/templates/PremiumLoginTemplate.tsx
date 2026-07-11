@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useOtpStore } from '@/store/otpStore'
 import type { OtpRole } from '@/api/services/authService'
@@ -64,147 +65,152 @@ export function PremiumLoginTemplate({
     }
   }
 
-  return (
-    <div className="stitch-auth-page stitch-body stitch-login-bg relative flex min-h-dvh flex-col items-center">
-      <div className="stitch-login-overlay pointer-events-none fixed inset-0" aria-hidden />
+  const ready = phone.length === 10
+  const defaultSub =
+    mode === 'register'
+      ? 'Create your account with a one-time code.'
+      : 'Sign in with your mobile number.'
 
-      <main className="relative z-10 flex w-full max-w-md flex-1 flex-col px-margin-mobile pt-12 pb-16">
-        <header className="mb-12 flex flex-col items-center text-center">
-          <div className="group relative mb-6">
-            <div className="absolute inset-0 scale-110 rounded-3xl bg-white/20 blur-xl" />
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl border border-white/50 bg-white/40 shadow-sm backdrop-blur-md transition-transform duration-500 hover:scale-105">
-              <span className="material-symbols-outlined filled text-[48px] text-primary">eco</span>
-            </div>
-          </div>
-          <h1 className="text-headline-xl mb-2 tracking-tight text-primary">{headline ?? APP_NAME}</h1>
-          <p className="text-body-lg max-w-[280px] font-medium leading-relaxed text-on-surface-variant">
-            {subheadline ?? 'Premium organic produce from farm to your kitchen table.'}
+  return (
+    <div className="stitch-auth-page stitch-login stitch-login-bg relative flex min-h-dvh flex-col overflow-x-clip">
+      <div className="stitch-login-overlay pointer-events-none absolute inset-0" aria-hidden />
+
+      <main className="safe-pt safe-pb relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-6">
+        <header className="stitch-login-enter flex flex-1 flex-col items-center justify-end pb-10 text-center">
+          <BrandLogo role={role} size="lg" className="stitch-login-logo mb-5 drop-shadow-sm" />
+          <h1 className="stitch-login-brand mb-3 text-primary">{headline ?? APP_NAME}</h1>
+          <p className="max-w-[16rem] text-[15px] leading-snug text-on-surface-variant/90">
+            {subheadline ?? defaultSub}
           </p>
         </header>
 
-        <div className="flex flex-col gap-6">
-          <div className="stitch-glass-card rounded-[2rem] p-6">
-            {roleChoice ? (
-              <div className="mb-6 space-y-3">
-                <p className="text-label-md tracking-widest text-on-surface-variant opacity-80">
-                  DELIVERY ROLE
-                </p>
-                <div className="grid gap-2">
-                  {roleChoice.options.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => roleChoice.onChange(option.value)}
-                      className={cn(
-                        'rounded-2xl border px-4 py-3 text-left transition-all',
-                        roleChoice.value === option.value
-                          ? 'border-primary bg-primary/10 shadow-sm'
-                          : 'border-primary/10 bg-white/40 hover:border-primary/30',
-                      )}
-                    >
-                      <p className="text-body-md font-bold text-on-surface">{option.label}</p>
-                      {option.description ? (
-                        <p className="text-body-md mt-0.5 text-on-surface-variant">{option.description}</p>
-                      ) : null}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            <div className="mb-6 space-y-3">
-              <label
-                className="text-label-md mb-3 flex items-center gap-2 tracking-widest text-on-surface-variant opacity-80"
-                htmlFor="mobile-number"
-              >
-                <span className="material-symbols-outlined text-sm">phone_iphone</span>
-                MOBILE NUMBER
-              </label>
-              <div
-                className={cn(
-                  'stitch-input-premium flex items-center border-b-2 border-primary/10 bg-white/40 px-2 py-4 transition-all duration-300',
-                  inputError && 'border-red-500/50',
-                )}
-              >
-                <div className="flex items-center gap-2 border-r border-primary/10 pr-4 font-bold text-on-surface">
-                  <span className="font-bold text-primary">+91</span>
-                </div>
-                <input
-                  id="mobile-number"
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  placeholder="00000 00000"
-                  value={phone}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, '').slice(0, 10)
-                    setPhone(v)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void onSubmit()
-                  }}
-                  className="text-headline-lg-mobile ml-4 w-full border-none bg-transparent tracking-[0.1em] text-on-surface placeholder:font-normal placeholder:text-on-surface-variant/30 focus:ring-0 focus:outline-none"
-                />
-              </div>
+        <section
+          className="stitch-login-enter stitch-login-enter-delay pb-4"
+          style={{ animationDelay: '80ms' }}
+        >
+          {roleChoice ? (
+            <div className="mb-5 grid gap-2">
+              {roleChoice.options.map((option) => {
+                const selected = roleChoice.value === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => roleChoice.onChange(option.value)}
+                    className={cn(
+                      'rounded-2xl px-4 py-3 text-left transition-colors',
+                      selected
+                        ? 'bg-primary text-on-primary'
+                        : 'bg-white/70 text-on-surface ring-1 ring-primary/10 backdrop-blur-sm',
+                    )}
+                  >
+                    <p className="text-sm font-semibold">{option.label}</p>
+                    {option.description ? (
+                      <p
+                        className={cn(
+                          'mt-0.5 text-xs',
+                          selected ? 'text-on-primary/80' : 'text-on-surface-variant',
+                        )}
+                      >
+                        {option.description}
+                      </p>
+                    ) : null}
+                  </button>
+                )
+              })}
             </div>
+          ) : null}
 
-            {formError ? (
-              <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
-                {formError}
-              </div>
-            ) : null}
-
-            <button
-              type="button"
-              disabled={isSending}
-              onClick={() => void onSubmit()}
-              className={cn(
-                'stitch-btn-premium group relative flex h-16 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl text-headline-lg-mobile text-on-primary transition-all duration-300',
-                phone.length === 10 && 'ring-4 ring-primary/20',
-              )}
-            >
-              {isSending ? (
-                <>
-                  <span className="material-symbols-outlined relative z-10 animate-spin">sync</span>
-                  <span className="relative z-10 ml-2 font-bold tracking-wide">Verifying...</span>
-                </>
-              ) : (
-                <>
-                  <span className="relative z-10 font-bold tracking-wide">Send OTP</span>
-                  <span className="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1">
-                    arrow_forward
-                  </span>
-                  <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
-                </>
-              )}
-            </button>
+          <label className="sr-only" htmlFor="mobile-number">
+            Mobile number
+          </label>
+          <div
+            className={cn(
+              'stitch-login-field flex items-center gap-3 rounded-2xl bg-white/90 px-4 py-3.5 shadow-[0_12px_40px_-18px_rgba(13,99,27,0.35)] ring-1 ring-primary/10 backdrop-blur-md transition-[box-shadow,ring-color] duration-300',
+              inputError && 'ring-2 ring-rose-400',
+              ready && !inputError && 'ring-2 ring-primary/35',
+            )}
+          >
+            <span className="shrink-0 text-sm font-semibold tracking-wide text-primary">+91</span>
+            <span className="h-5 w-px bg-primary/15" aria-hidden />
+            <input
+              id="mobile-number"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              maxLength={10}
+              placeholder="Enter mobile number"
+              value={phone}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, '').slice(0, 10)
+                setPhone(v)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void onSubmit()
+              }}
+              className="min-w-0 flex-1 border-none bg-transparent text-lg font-semibold tracking-[0.12em] text-on-surface placeholder:tracking-normal placeholder:font-medium placeholder:text-on-surface-variant/40 focus:ring-0 focus:outline-none"
+            />
           </div>
-        </div>
-      </main>
 
-      <footer className="relative z-10 mt-auto flex w-full max-w-md flex-col gap-3 px-margin-mobile pb-8 text-center">
-        {extraFooter}
-        {!roleChoice ? (
-          <p className="text-body-md font-medium text-on-surface-variant/80">By continuing, you agree to our</p>
-        ) : (
-          <p className="text-body-md text-on-surface-variant/80">
-            <Link to="/" className="font-semibold text-primary hover:opacity-80">
-              Back to home
-            </Link>
+          {formError ? (
+            <p className="mt-3 text-center text-sm text-rose-700" role="alert">
+              {formError}
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            disabled={isSending}
+            onClick={() => void onSubmit()}
+            className={cn(
+              'stitch-login-cta group mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-semibold text-on-primary transition-[transform,opacity,box-shadow] duration-200',
+              ready ? 'opacity-100' : 'opacity-90',
+            )}
+          >
+            {isSending ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-[22px]">progress_activity</span>
+                Sending…
+              </>
+            ) : (
+              <>
+                Send OTP
+                <span className="material-symbols-outlined text-[22px] transition-transform duration-200 group-hover:translate-x-0.5">
+                  arrow_forward
+                </span>
+              </>
+            )}
+          </button>
+        </section>
+
+        <footer
+          className="stitch-login-enter mt-auto flex flex-col items-center gap-3 pb-8 pt-8 text-center"
+          style={{ animationDelay: '140ms' }}
+        >
+          {extraFooter}
+          {!roleChoice ? (
+            <p className="text-xs text-on-surface-variant/70">
+              By continuing, you agree to our{' '}
+              <a className="font-semibold text-primary/90 underline-offset-2 hover:underline" href="#">
+                Terms
+              </a>{' '}
+              &amp;{' '}
+              <a className="font-semibold text-primary/90 underline-offset-2 hover:underline" href="#">
+                Privacy
+              </a>
+            </p>
+          ) : (
+            <p className="text-xs text-on-surface-variant/70">
+              <Link to="/" className="font-semibold text-primary hover:opacity-80">
+                Back to home
+              </Link>
+            </p>
+          )}
+          <p className="text-[10px] tracking-[0.18em] text-on-surface-variant/35 uppercase">
+            {appCopyright()}
           </p>
-        )}
-        <div className="flex items-center justify-center gap-4">
-          <a className="text-label-md font-bold text-primary transition-opacity hover:opacity-70" href="#">
-            Terms &amp; Conditions
-          </a>
-          <span className="h-1 w-1 rounded-full bg-primary/20" />
-          <a className="text-label-md font-bold text-primary transition-opacity hover:opacity-70" href="#">
-            Privacy Policy
-          </a>
-        </div>
-        <p className="text-label-md mt-2 tracking-[0.2em] text-on-surface-variant/40 uppercase">
-          {appCopyright()}
-        </p>
-      </footer>
+        </footer>
+      </main>
     </div>
   )
 }

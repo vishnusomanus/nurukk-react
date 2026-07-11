@@ -8,32 +8,60 @@ export type SellerOutletContext = {
   setSearch: (value: string) => void
 }
 
+function resolveSellerChrome(pathname: string) {
+  if (pathname.match(/^\/seller\/orders\/[^/]+$/)) {
+    return { title: 'Order Detail', backTo: '/seller/orders', showSearch: false }
+  }
+  if (pathname === '/seller/products/new') {
+    return { title: 'New Product', backTo: '/seller/products', showSearch: false }
+  }
+  if (pathname.match(/^\/seller\/products\/[^/]+\/edit$/)) {
+    return { title: 'Edit Product', backTo: '/seller/products', showSearch: false }
+  }
+  if (pathname === '/seller/profile/edit') {
+    return { title: 'Edit Profile', backTo: '/seller/profile', showSearch: false }
+  }
+  if (pathname === '/seller/notifications') {
+    return { title: 'Notifications', backTo: '/seller', showSearch: false }
+  }
+  if (pathname === '/seller/products') {
+    return { title: 'Products', backTo: undefined, showSearch: true, searchPlaceholder: 'Search inventory...' }
+  }
+  if (pathname === '/seller/orders') {
+    return { title: 'Orders', backTo: undefined, showSearch: true, searchPlaceholder: 'Search orders...' }
+  }
+  if (pathname === '/seller/inventory') return { title: 'Inventory', showSearch: false }
+  if (pathname === '/seller/coupons') return { title: 'Coupons', showSearch: false }
+  if (pathname === '/seller/payouts') return { title: 'Payouts', showSearch: false }
+  if (pathname === '/seller/delivery') return { title: 'Delivery', showSearch: false }
+  if (pathname === '/seller/profile') return { title: 'Profile', showSearch: false }
+  if (pathname === '/seller') return { title: 'Dashboard', showSearch: false }
+  return { title: 'Seller', showSearch: false }
+}
+
 export function SellerMarketplaceLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [search, setSearch] = useState('')
   const location = useLocation()
 
-  const searchPlaceholder = useMemo(() => {
-    if (location.pathname.startsWith('/seller/products')) return 'Search inventory...'
-    if (location.pathname.startsWith('/seller/orders')) return 'Search orders...'
-    return 'Search orders, products...'
-  }, [location.pathname])
-
+  const chrome = useMemo(() => resolveSellerChrome(location.pathname), [location.pathname])
   const showAddProduct = location.pathname === '/seller/products'
 
   return (
-    <div className="stitch-marketplace min-h-dvh bg-background text-on-surface">
+    <div className="stitch-marketplace min-h-dvh overflow-x-clip bg-background text-on-surface">
       <SellerSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <div className="flex min-h-dvh flex-col md:ml-64">
         <SellerTopHeader
+          title={chrome.title}
+          backTo={chrome.backTo}
           onMenuClick={() => setMobileOpen(true)}
           searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder={searchPlaceholder}
+          onSearchChange={chrome.showSearch ? setSearch : undefined}
+          searchPlaceholder={chrome.searchPlaceholder}
           showAddProduct={showAddProduct}
         />
-        <main className="flex-1">
+        <main className="scroll-touch flex-1 overflow-x-clip">
           <Outlet context={{ search, setSearch } satisfies SellerOutletContext} />
         </main>
         <SellerFooter />
