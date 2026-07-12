@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
@@ -8,10 +8,12 @@ import { DeliveryRangeBanner } from '@/components/buyer/DeliveryRangeBanner'
 import { CategoryListingSidebar } from '@/components/buyer/CategoryListingSidebar'
 import { ProductCard } from '@/components/buyer/ProductCard'
 import { SellerCard } from '@/components/buyer/SellerCard'
+import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { extractPaginationMeta } from '@/utils/extractPaginationMeta'
 import { getCategoryNavIcon } from '@/utils/categoryNav'
 import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
+import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import {
   filterProductsByDietary,
   sortProducts,
@@ -64,6 +66,10 @@ export function CategoryListingView({
   const [sort, setSort] = useState<ProductSort>('featured')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(searchQuery ?? '')
+  const closeFilters = useCallback(() => setFiltersOpen(false), [])
+  const { handleProps: filterHandleProps, sheetStyle: filterSheetStyle } = useSwipeToClose(closeFilters, {
+    enabled: filtersOpen,
+  })
 
   useEffect(() => {
     setSearchDraft(searchQuery ?? '')
@@ -553,12 +559,17 @@ export function CategoryListingView({
             type="button"
             className="absolute inset-0 bg-black/40"
             aria-label="Close filters"
-            onClick={() => setFiltersOpen(false)}
+            onClick={closeFilters}
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-surface px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl">
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-outline-variant" />
+          <div
+            className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-surface px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-1 shadow-2xl"
+            style={filterSheetStyle}
+          >
+            <BottomSheetHandle {...filterHandleProps} />
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-on-surface">Filters & sort</h3>
+              <h3 className="touch-none text-lg font-bold text-on-surface" {...filterHandleProps}>
+                Filters & sort
+              </h3>
               <button
                 type="button"
                 onClick={() => {
@@ -575,7 +586,7 @@ export function CategoryListingView({
             {filterControls}
             <button
               type="button"
-              onClick={() => setFiltersOpen(false)}
+              onClick={closeFilters}
               className="mt-6 flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-bold text-on-primary"
             >
               Show results

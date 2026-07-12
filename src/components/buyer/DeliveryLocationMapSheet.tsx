@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useMutation } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
 import { AddressMapPicker, type MapPosition } from '@/components/buyer/AddressMapPicker'
+import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle'
 import type { DeliveryLocationMeta } from '@/context/DeliveryLocationProvider'
+import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import type { DeliveryCheckResult } from '@/utils/deliveryCheck'
 import { normalizeIndianPincode } from '@/utils/normalizeIndianPincode'
 import {
@@ -21,6 +24,12 @@ type DeliveryLocationMapSheetProps = {
   onConfirmed: (result: DeliveryCheckResult, meta: DeliveryLocationMeta) => void
 }
 
+const POSITION_EPS = 0.00005
+
+function nearlySamePosition(a: MapPosition, b: MapPosition) {
+  return Math.abs(a.lat - b.lat) < POSITION_EPS && Math.abs(a.lng - b.lng) < POSITION_EPS
+}
+
 export function DeliveryLocationMapSheet({
   open,
   onClose,
@@ -34,15 +43,47 @@ export function DeliveryLocationMapSheet({
   const [mapError, setMapError] = useState<string | null>(null)
   const geocodeTimerRef = useRef<number | null>(null)
   const geocodeRequestRef = useRef(0)
+  const lastGeocodedRef = useRef<MapPosition | null>(null)
+  const initialPositionRef = useRef(initialPosition)
+  const onCloseRef = useRef(onClose)
 
+  initialPositionRef.current = initialPosition
+  onCloseRef.current = onClose
+
+  const { handleProps, sheetStyle } = useSwipeToClose(onClose, { enabled: open })
+
+  // Reset state only when the sheet opens — avoid loops from unstable parent props.
   useEffect(() => {
     if (!open) return
-    setPosition(initialPosition ?? DEFAULT_MAP_CENTER)
+
+    const start = initialPositionRef.current ?? DEFAULT_MAP_CENTER
+    setPosition(start)
+    setMapSearch('')
     setMapError(null)
-  }, [open, initialPosition])
+    setGeocoding(false)
+    setLocating(false)
+    lastGeocodedRef.current = null
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCloseRef.current()
+    }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKeyDown)
+      if (geocodeTimerRef.current) window.clearTimeout(geocodeTimerRef.current)
+    }
+  }, [open])
 
   const runReverseGeocode = useCallback(async (coords: MapPosition) => {
+    const prev = lastGeocodedRef.current
+    if (prev && nearlySamePosition(prev, coords)) return
+
     const requestId = ++geocodeRequestRef.current
+    lastGeocodedRef.current = coords
     setGeocoding(true)
     setMapError(null)
     try {
@@ -60,11 +101,11 @@ export function DeliveryLocationMapSheet({
 
   const handlePositionChange = useCallback(
     (coords: MapPosition) => {
-      setPosition(coords)
+      setPosition((prev) => (nearlySamePosition(prev, coords) ? prev : coords))
       if (geocodeTimerRef.current) window.clearTimeout(geocodeTimerRef.current)
       geocodeTimerRef.current = window.setTimeout(() => {
         void runReverseGeocode(coords)
-      }, 450)
+      }, 500)
     },
     [runReverseGeocode],
   )
@@ -75,6 +116,7 @@ export function DeliveryLocationMapSheet({
     try {
       const pos = await getCurrentPosition()
       const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      lastGeocodedRef.current = null
       setPosition(coords)
       await runReverseGeocode(coords)
     } catch (err) {
@@ -97,6 +139,7 @@ export function DeliveryLocationMapSheet({
         return
       }
       const coords = { lat: hit.lat, lng: hit.lng }
+      lastGeocodedRef.current = null
       setPosition(coords)
       if (hit.displayName) setMapSearch(hit.displayName)
     } catch (err) {
@@ -133,22 +176,49 @@ export function DeliveryLocationMapSheet({
 
   if (!open) return null
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-      <button type="button" className="absolute inset-0 bg-black/50" aria-label="Close" onClick={onClose} />
-      <div className="relative z-10 flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl sm:rounded-2xl">
-        <div className="flex items-center justify-between border-b border-outline-variant px-4 py-3">
-          <div>
-            <h3 className="text-body-lg font-bold text-on-surface">Set delivery location</h3>
-            <p className="text-body-md text-on-surface-variant">Pin your exact location on the map</p>
+  const addressPreview = mapSearch.trim() || 'Move the map to set your delivery pin'
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[70] flex items-end justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Set delivery location"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/45"
+        aria-label="Close"
+        onClick={onClose}
+      />
+
+      <div
+        className="relative z-10 flex h-[min(94dvh,920px)] w-full max-w-lg flex-col overflow-hidden rounded-t-[1.75rem] bg-surface shadow-[0_-12px_40px_-8px_rgba(15,23,42,0.35)] sm:mb-6 sm:h-[min(88dvh,820px)] sm:rounded-[1.75rem]"
+        style={sheetStyle}
+      >
+        <div className="relative z-20 shrink-0 bg-surface px-4 pt-1 pb-2">
+          <BottomSheetHandle {...handleProps} />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface transition-transform active:scale-95"
+              aria-label="Back"
+            >
+              <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+            </button>
+            <div className="min-w-0 flex-1 touch-none" {...handleProps}>
+              <h3 className="text-base font-bold text-on-surface">Set delivery location</h3>
+              <p className="truncate text-xs text-on-surface-variant">
+                Drag the map so the pin sits on your building
+              </p>
+            </div>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full p-2 text-on-surface-variant hover:bg-surface-container">
-            <span className="material-symbols-outlined">close</span>
-          </button>
         </div>
 
         <AddressMapPicker
-          className="min-h-[320px] flex-1"
+          variant="sheet"
+          className="min-h-0 flex-1"
           position={position}
           onPositionChange={handlePositionChange}
           searchQuery={mapSearch}
@@ -158,30 +228,45 @@ export function DeliveryLocationMapSheet({
           locating={locating}
           loading={geocoding}
           error={mapError}
-          pinHint="Move the map so the pin sits on your building or street."
         />
 
-        <div className="space-y-2 border-t border-outline-variant p-4">
+        <div className="relative z-20 shrink-0 border-t border-black/[0.06] bg-surface px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="mb-3 flex min-h-[3.25rem] items-start gap-3">
+            <span
+              className="material-symbols-outlined mt-0.5 text-primary"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              location_on
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold tracking-wide text-on-surface-variant uppercase">
+                Delivering to
+              </p>
+              <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold text-on-surface">
+                {geocoding && !mapSearch.trim() ? 'Finding address…' : addressPreview}
+              </p>
+            </div>
+          </div>
+
           {confirmMutation.isError ? (
-            <p className="text-sm text-error">
+            <p className="mb-2 text-sm text-error">
               {getApiErrorMessage(confirmMutation.error, 'Could not confirm location')}
             </p>
           ) : null}
+
           <button
             type="button"
             disabled={confirmMutation.isPending || geocoding}
             onClick={() => confirmMutation.mutate()}
             className={cn(
-              'text-label-md w-full rounded-xl bg-primary py-3 font-bold text-on-primary disabled:opacity-60',
+              'flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-bold text-on-primary transition-transform active:scale-[0.98] disabled:opacity-60',
             )}
           >
             {confirmMutation.isPending ? 'Checking stores near you…' : 'Confirm location'}
           </button>
-          <p className="text-label-md text-center text-on-surface-variant">
-            Only stores within delivery range of this pin will appear.
-          </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

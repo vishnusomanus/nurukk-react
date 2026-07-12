@@ -269,7 +269,7 @@ export function ProductCard({
     <div
       {...cardClickProps}
       className={cn(
-        'min-w-[160px] overflow-hidden rounded-xl bg-white text-left shadow-[0px_4px_20px_rgba(0,0,0,0.05)]',
+        'min-w-0 overflow-hidden rounded-xl bg-white text-left shadow-[0px_4px_20px_rgba(0,0,0,0.05)]',
         clickAddsToCart && 'cursor-pointer aria-disabled:pointer-events-none aria-disabled:opacity-60',
         className,
       )}

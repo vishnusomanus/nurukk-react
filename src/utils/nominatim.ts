@@ -1,3 +1,5 @@
+import { hasGoogleMapsApiKey, loadGoogleMaps } from '@/utils/googleMapsLoader'
+
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org'
 const USER_AGENT = 'VegReactMarketplace/1.0'
 
@@ -104,44 +106,163 @@ export function parseNominatimSearch(result: NominatimSearchResult): GeocodedAdd
   }
 }
 
-export async function reverseGeocode(lat: number, lng: number) {
+function component(
+  components: google.maps.GeocoderAddressComponent[] | undefined,
+  type: string,
+  useShort = false,
+) {
+  const match = components?.find((entry) => entry.types.includes(type))
+  return useShort ? (match?.short_name ?? '') : (match?.long_name ?? '')
+}
+
+function parseGoogleResult(result: google.maps.GeocoderResult): GeocodedAddress {
+  const parts = result.address_components
+  const lat = result.geometry.location.lat()
+  const lng = result.geometry.location.lng()
+  const streetNumber = component(parts, 'street_number')
+  const route = component(parts, 'route')
+  const neighbourhood =
+    component(parts, 'neighborhood') ||
+    component(parts, 'sublocality_level_1') ||
+    component(parts, 'sublocality')
+  const addressLine = [streetNumber, route || neighbourhood].filter(Boolean).join(', ')
+  const city =
+    component(parts, 'locality') ||
+    component(parts, 'administrative_area_level_3') ||
+    component(parts, 'administrative_area_level_2') ||
+    neighbourhood
+
+  return {
+    lat,
+    lng,
+    addressLine: addressLine || result.formatted_address.split(',')[0]?.trim() || '',
+    city,
+    pincode: component(parts, 'postal_code'),
+    displayName: result.formatted_address,
+  }
+}
+
+async function googleReverseGeocode(lat: number, lng: number): Promise<GeocodedAddress> {
+  await loadGoogleMaps()
+  const geocoder = new google.maps.Geocoder()
+  const response = await geocoder.geocode({ location: { lat, lng } })
+  const result = response.results[0]
+  if (!result) throw new Error('No address found for this location.')
+  return parseGoogleResult(result)
+}
+
+async function googleSearchLocations(query: string, limit: number): Promise<GeocodedAddress[]> {
+  await loadGoogleMaps()
+  const geocoder = new google.maps.Geocoder()
+  const response = await geocoder.geocode({
+    address: query,
+    componentRestrictions: { country: 'IN' },
+  })
+  return (response.results ?? []).slice(0, limit).map(parseGoogleResult)
+}
+
+async function nominatimReverseGeocode(lat: number, lng: number) {
   const data = await nominatimFetch<NominatimReverseResponse>('/reverse', {
     lat: String(lat),
     lon: String(lng),
     format: 'json',
     addressdetails: '1',
   })
-
   return parseNominatimReverse(data)
+}
+
+async function nominatimSearchLocations(query: string, limit: number) {
+  const results = await nominatimFetch<NominatimSearchResult[]>('/search', {
+    q: query,
+    format: 'json',
+    addressdetails: '1',
+    limit: String(limit),
+    countrycodes: 'in',
+  })
+  return results.map(parseNominatimSearch)
+}
+
+export async function reverseGeocode(lat: number, lng: number) {
+  if (hasGoogleMapsApiKey()) {
+    try {
+      return await googleReverseGeocode(lat, lng)
+    } catch {
+      // Fall through to Nominatim if Google is unavailable / key restricted.
+    }
+  }
+  return nominatimReverseGeocode(lat, lng)
 }
 
 export async function searchLocations(query: string, limit = 5) {
   const trimmed = query.trim()
   if (trimmed.length < 3) return []
 
-  const results = await nominatimFetch<NominatimSearchResult[]>('/search', {
-    q: trimmed,
-    format: 'json',
-    addressdetails: '1',
-    limit: String(limit),
-    countrycodes: 'in',
-  })
-
-  return results.map(parseNominatimSearch)
+  if (hasGoogleMapsApiKey()) {
+    try {
+      return await googleSearchLocations(trimmed, limit)
+    } catch {
+      // Fall through to Nominatim if Google is unavailable / key restricted.
+    }
+  }
+  return nominatimSearchLocations(trimmed, limit)
 }
 
-export function getCurrentPosition() {
-  return new Promise<GeolocationPosition>((resolve, reject) => {
+export type DevicePosition = {
+  coords: {
+    latitude: number
+    longitude: number
+  }
+}
+
+export async function getCurrentPosition(): Promise<DevicePosition> {
+  const { Capacitor } = await import('@capacitor/core')
+
+  if (Capacitor.isNativePlatform()) {
+    const { Geolocation } = await import('@capacitor/geolocation')
+    const permission = await Geolocation.checkPermissions()
+    if (permission.location !== 'granted' && permission.coarseLocation !== 'granted') {
+      const requested = await Geolocation.requestPermissions({ permissions: ['location'] })
+      if (requested.location !== 'granted' && requested.coarseLocation !== 'granted') {
+        throw new Error('Location permission denied. Pin your location on the map instead.')
+      }
+    }
+
+    const position = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 60_000,
+    })
+
+    return {
+      coords: {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      },
+    }
+  }
+
+  return new Promise<DevicePosition>((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported on this device.'))
       return
     }
 
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 60_000,
-    })
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          coords: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          },
+        })
+      },
+      reject,
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60_000,
+      },
+    )
   })
 }
 

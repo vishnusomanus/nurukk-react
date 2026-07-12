@@ -53,6 +53,13 @@ const config: CapacitorConfig = {
   backgroundColor: selected.backgroundColor,
   server: {
     androidScheme: 'https',
+    allowNavigation: [
+      'checkout.razorpay.com',
+      'api.razorpay.com',
+      '*.razorpay.com',
+      '*.cashfree.com',
+      'sdk.cashfree.com',
+    ],
   },
   ios: {
     path: selected.iosPath,

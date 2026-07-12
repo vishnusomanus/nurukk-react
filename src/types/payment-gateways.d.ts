@@ -6,7 +6,7 @@ interface RazorpaySuccessResponse {
 
 interface RazorpayOptions {
   key: string
-  amount: number
+  amount: number | string
   currency: string
   order_id: string
   name?: string

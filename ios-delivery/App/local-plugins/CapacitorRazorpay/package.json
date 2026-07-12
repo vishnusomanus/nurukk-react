@@ -1,0 +1,11 @@
+{
+  "name": "capacitor-razorpay",
+  "version": "1.3.0-spm",
+  "description": "SPM-compatible Capacitor Razorpay Checkout plugin for iOS",
+  "license": "MIT",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}

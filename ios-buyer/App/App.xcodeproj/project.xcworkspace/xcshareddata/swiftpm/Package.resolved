@@ -9,6 +9,15 @@
         "revision" : "2231987d85b8b0b289320b1d0947b4ae8345cde4",
         "version" : "8.4.1"
       }
+    },
+    {
+      "identity" : "razorpay-pod",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/razorpay/razorpay-pod.git",
+      "state" : {
+        "revision" : "55825c43d5b7fad08e17201f6dfe6095703fcb30",
+        "version" : "1.5.4"
+      }
     }
   ],
   "version" : 3

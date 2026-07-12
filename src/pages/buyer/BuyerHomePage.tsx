@@ -184,12 +184,12 @@ export function BuyerHomePage() {
                 </Link>
               ) : null}
             </div>
-            <div className="stitch-hide-scrollbar -mx-margin-mobile flex snap-x snap-mandatory gap-3 overflow-x-auto px-margin-mobile pb-4 scroll-smooth lg:mx-0 lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-5">
+            <div className="stitch-hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 scroll-smooth lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-visible xl:grid-cols-5">
               {cutVegLoading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <div
                       key={i}
-                      className="h-52 min-w-[min(42vw,160px)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container sm:min-w-[160px] lg:min-w-0"
+                      className="h-52 w-[calc((100%-1.5rem)/2.5)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container lg:h-52 lg:w-auto lg:min-w-0"
                     />
                   ))
                 : cutVegProducts.map((product) => (
@@ -198,7 +198,7 @@ export function BuyerHomePage() {
                       product={product}
                       layout="horizontal"
                       showFavorite
-                      className="min-w-[min(42vw,160px)] shrink-0 snap-start sm:min-w-[160px] lg:min-w-0 lg:hidden"
+                      className="w-[calc((100%-1.5rem)/2.5)] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:hidden"
                     />
                   ))}
               {cutVegLoading
@@ -225,12 +225,12 @@ export function BuyerHomePage() {
                 <p className="text-body-md text-on-surface-variant">Shop directly from verified producers</p>
               </div>
             </div>
-            <div className="stitch-hide-scrollbar -mx-margin-mobile flex snap-x snap-mandatory gap-3 overflow-x-auto px-margin-mobile pb-4 scroll-smooth lg:mx-0 lg:grid lg:snap-none lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-4">
+            <div className="stitch-hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 scroll-smooth lg:grid lg:snap-none lg:grid-cols-3 lg:gap-6 lg:overflow-visible xl:grid-cols-4">
               {isLoading
                 ? Array.from({ length: 4 }).map((_, i) => (
                     <div
                       key={i}
-                      className="h-64 min-w-[min(78vw,260px)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container sm:min-w-[260px] lg:min-w-0"
+                      className="h-64 w-[calc((100%-0.75rem)/1.5)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container lg:h-64 lg:w-auto lg:min-w-0"
                     />
                   ))
                 : featuredSellers.map((seller) => (
@@ -238,7 +238,7 @@ export function BuyerHomePage() {
                       key={seller.uuid}
                       seller={seller}
                       layout="horizontal"
-                      className="min-w-[min(78vw,260px)] shrink-0 snap-start sm:min-w-[260px] lg:min-w-0 lg:hidden"
+                      className="w-[calc((100%-0.75rem)/1.5)] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:hidden"
                     />
                   ))}
               {isLoading
@@ -255,12 +255,12 @@ export function BuyerHomePage() {
           <div className="mb-4 flex items-end justify-between lg:mb-6">
             <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Featured Products</h3>
           </div>
-          <div className="stitch-hide-scrollbar -mx-margin-mobile flex snap-x snap-mandatory gap-3 overflow-x-auto px-margin-mobile pb-4 scroll-smooth lg:mx-0 lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-5">
+          <div className="stitch-hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 scroll-smooth lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-visible xl:grid-cols-5">
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-52 min-w-[min(42vw,160px)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container sm:min-w-[160px] lg:min-w-0"
+                    className="h-52 w-[calc((100%-1.5rem)/2.5)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container lg:h-52 lg:w-auto lg:min-w-0"
                   />
                 ))
               : featured.map((product) => (
@@ -270,7 +270,7 @@ export function BuyerHomePage() {
                     layout="horizontal"
                     showFavorite
                     clickAddsToCart
-                    className="min-w-[min(42vw,160px)] shrink-0 snap-start sm:min-w-[160px] lg:min-w-0 lg:hidden"
+                    className="w-[calc((100%-1.5rem)/2.5)] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:hidden"
                   />
                 ))}
             {isLoading

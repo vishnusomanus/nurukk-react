@@ -14,7 +14,7 @@ const sideItems = [
 /** Routes that hide the bottom tab bar (full-screen flows). */
 export function isBuyerBottomNavHidden(pathname: string) {
   return (
-    pathname.includes('/checkout/payment') ||
+    pathname.includes('/checkout') ||
     pathname.includes('/success') ||
     pathname.includes('/invoice') ||
     pathname.includes('/products/')
@@ -89,13 +89,17 @@ export function BuyerBottomNav() {
         {/* Soft elevation under the pill */}
         <div
           aria-hidden
-          className="absolute inset-x-2 bottom-1 h-12 rounded-full bg-black/[0.07] blur-md"
+          className="absolute inset-x-1 bottom-0 h-[3.75rem] rounded-full bg-black/20 blur-xl"
         />
-
-        {/* White pill with circular top notch */}
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 h-14 bg-white"
+          className="absolute inset-x-3 bottom-1 h-11 rounded-full bg-black/10 blur-md"
+        />
+
+        {/* Frosted pill with circular top notch */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-14 border border-black/[0.06] bg-white/80 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.28),0_2px_8px_-2px_rgba(15,23,42,0.12)] backdrop-blur-xl backdrop-saturate-150"
           style={{
             borderRadius: 9999,
             WebkitMaskImage:

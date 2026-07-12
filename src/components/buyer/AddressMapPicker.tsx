@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { cn } from '@/utils/cn'
+import { hasGoogleMapsApiKey, loadGoogleMaps } from '@/utils/googleMapsLoader'
 
 export type MapPosition = {
   lat: number
@@ -23,6 +24,8 @@ type AddressMapPickerProps = {
   /** When set, draws a delivery-radius circle around the pin (km). */
   radiusKm?: number
   pinHint?: string
+  /** Compact chrome for full-screen / bottom-sheet map pickers. */
+  variant?: 'default' | 'sheet'
 }
 
 const RADIUS_STYLE = {
@@ -31,6 +34,22 @@ const RADIUS_STYLE = {
   fillColor: '#0d631b',
   fillOpacity: 0.12,
 } as const
+
+const GOOGLE_RADIUS_STYLE: google.maps.CircleOptions = {
+  strokeColor: '#0d631b',
+  strokeOpacity: 1,
+  strokeWeight: 2,
+  fillColor: '#0d631b',
+  fillOpacity: 0.12,
+  clickable: false,
+}
+
+/** ~5m — ignore float noise / resize-driven map idle updates */
+const POSITION_EPS = 0.00005
+
+function nearlySamePosition(a: MapPosition, b: MapPosition) {
+  return Math.abs(a.lat - b.lat) < POSITION_EPS && Math.abs(a.lng - b.lng) < POSITION_EPS
+}
 
 export function AddressMapPicker({
   position,
@@ -46,45 +65,65 @@ export function AddressMapPicker({
   overlayClassName,
   radiusKm,
   pinHint = 'Drag the map to position the pin exactly on your delivery location.',
+  variant = 'default',
 }: AddressMapPickerProps) {
+  const isSheet = variant === 'sheet'
   const mapContainerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<L.Map | null>(null)
-  const radiusCircleRef = useRef<L.Circle | null>(null)
-  const skipMoveRef = useRef(false)
+  const leafletMapRef = useRef<L.Map | null>(null)
+  const leafletCircleRef = useRef<L.Circle | null>(null)
+  const googleMapRef = useRef<google.maps.Map | null>(null)
+  const googleCircleRef = useRef<google.maps.Circle | null>(null)
+  const googleIdleListenerRef = useRef<google.maps.MapsEventListener | null>(null)
+  const ignoreMovesUntilRef = useRef(0)
+  const lastEmittedRef = useRef<MapPosition | null>(null)
   const onPositionChangeRef = useRef(onPositionChange)
   const radiusKmRef = useRef(radiusKm)
+  const useGoogle = hasGoogleMapsApiKey()
 
   onPositionChangeRef.current = onPositionChange
   radiusKmRef.current = radiusKm
 
-  const syncRadiusCircle = (map: L.Map) => {
+  const suppressNextMoves = (ms = 200) => {
+    ignoreMovesUntilRef.current = Date.now() + ms
+  }
+
+  const shouldIgnoreMove = () => Date.now() < ignoreMovesUntilRef.current
+
+  const emitPositionChange = (next: MapPosition) => {
+    if (shouldIgnoreMove()) return
+    const prev = lastEmittedRef.current
+    if (prev && nearlySamePosition(prev, next)) return
+    lastEmittedRef.current = next
+    onPositionChangeRef.current(next)
+  }
+
+  const syncLeafletRadius = (map: L.Map) => {
     const km = radiusKmRef.current
     if (km == null || km <= 0) {
-      radiusCircleRef.current?.remove()
-      radiusCircleRef.current = null
+      leafletCircleRef.current?.remove()
+      leafletCircleRef.current = null
       return
     }
 
     const center = map.getCenter()
     const radiusMeters = km * 1000
 
-    if (radiusCircleRef.current) {
-      radiusCircleRef.current.setLatLng(center)
-      radiusCircleRef.current.setRadius(radiusMeters)
+    if (leafletCircleRef.current) {
+      leafletCircleRef.current.setLatLng(center)
+      leafletCircleRef.current.setRadius(radiusMeters)
       return
     }
 
-    radiusCircleRef.current = L.circle(center, {
+    leafletCircleRef.current = L.circle(center, {
       ...RADIUS_STYLE,
       radius: radiusMeters,
       interactive: false,
     }).addTo(map)
   }
 
-  const fitRadiusInView = (map: L.Map) => {
-    const circle = radiusCircleRef.current
+  const fitLeafletRadius = (map: L.Map) => {
+    const circle = leafletCircleRef.current
     if (!circle) return
-
     map.fitBounds(circle.getBounds(), {
       padding: [56, 56],
       animate: true,
@@ -92,116 +131,235 @@ export function AddressMapPicker({
     })
   }
 
+  const syncGoogleRadius = (map: google.maps.Map) => {
+    const km = radiusKmRef.current
+    const center = map.getCenter()
+    if (!center || km == null || km <= 0) {
+      googleCircleRef.current?.setMap(null)
+      googleCircleRef.current = null
+      return
+    }
+
+    const radiusMeters = km * 1000
+    if (googleCircleRef.current) {
+      googleCircleRef.current.setCenter(center)
+      googleCircleRef.current.setRadius(radiusMeters)
+      return
+    }
+
+    googleCircleRef.current = new google.maps.Circle({
+      ...GOOGLE_RADIUS_STYLE,
+      map,
+      center,
+      radius: radiusMeters,
+    })
+  }
+
+  const fitGoogleRadius = (map: google.maps.Map) => {
+    const circle = googleCircleRef.current
+    if (!circle) return
+    const bounds = circle.getBounds()
+    if (bounds) map.fitBounds(bounds, 56)
+  }
+
   useEffect(() => {
     const container = mapContainerRef.current
-    if (!container || mapRef.current) return
+    if (!container) return
 
-    const map = L.map(container, {
-      center: [position.lat, position.lng],
-      zoom: 16,
-      zoomControl: false,
-      attributionControl: true,
-      dragging: true,
-      touchZoom: true,
-      scrollWheelZoom: true,
-      doubleClickZoom: true,
-    })
+    let cancelled = false
+    let resizeObserver: ResizeObserver | null = null
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map)
+    const initLeaflet = () => {
+      if (cancelled || leafletMapRef.current) return
 
-    L.control.zoom({ position: 'bottomleft' }).addTo(map)
+      const map = L.map(container, {
+        center: [position.lat, position.lng],
+        zoom: 16,
+        zoomControl: false,
+        attributionControl: true,
+        dragging: true,
+        touchZoom: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+      })
 
-    const handleMapMove = () => {
-      syncRadiusCircle(map)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map)
+
+      L.control.zoom({ position: 'bottomleft' }).addTo(map)
+
+      const handleMapMove = () => syncLeafletRadius(map)
+      map.on('move', handleMapMove)
+      map.on('zoom', handleMapMove)
+      map.on('moveend', () => {
+        syncLeafletRadius(map)
+        if (shouldIgnoreMove()) return
+        const center = map.getCenter()
+        emitPositionChange({ lat: center.lat, lng: center.lng })
+      })
+
+      leafletMapRef.current = map
+      lastEmittedRef.current = { lat: position.lat, lng: position.lng }
+      resizeObserver = new ResizeObserver(() => {
+        suppressNextMoves()
+        map.invalidateSize({ animate: false })
+        syncLeafletRadius(map)
+      })
+      resizeObserver.observe(container)
+
+      map.whenReady(() => {
+        requestAnimationFrame(() => {
+          suppressNextMoves()
+          map.invalidateSize({ animate: false })
+          syncLeafletRadius(map)
+          if (radiusKmRef.current != null && radiusKmRef.current > 0) fitLeafletRadius(map)
+        })
+      })
+      window.setTimeout(() => {
+        suppressNextMoves()
+        map.invalidateSize({ animate: false })
+      }, 150)
     }
 
-    map.on('move', handleMapMove)
-    map.on('zoom', handleMapMove)
-
-    map.on('moveend', () => {
-      syncRadiusCircle(map)
-
-      if (skipMoveRef.current) {
-        skipMoveRef.current = false
+    const initGoogle = async () => {
+      try {
+        await loadGoogleMaps()
+      } catch {
+        if (!cancelled) initLeaflet()
         return
       }
+      if (cancelled || googleMapRef.current || !mapContainerRef.current) return
 
-      const center = map.getCenter()
-      onPositionChangeRef.current({ lat: center.lat, lng: center.lng })
-    })
-
-    mapRef.current = map
-
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize()
-      syncRadiusCircle(map)
-    })
-    resizeObserver.observe(container)
-
-    map.whenReady(() => {
-      requestAnimationFrame(() => {
-        map.invalidateSize()
-        syncRadiusCircle(map)
-        if (radiusKmRef.current != null && radiusKmRef.current > 0) {
-          fitRadiusInView(map)
-        }
+      const map = new google.maps.Map(mapContainerRef.current, {
+        center: { lat: position.lat, lng: position.lng },
+        zoom: 16,
+        disableDefaultUI: true,
+        zoomControl: true,
+        zoomControlOptions: { position: google.maps.ControlPosition.LEFT_BOTTOM },
+        gestureHandling: 'greedy',
+        clickableIcons: false,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
       })
-    })
 
-    window.setTimeout(() => map.invalidateSize(), 150)
+      googleIdleListenerRef.current = map.addListener('idle', () => {
+        syncGoogleRadius(map)
+        if (shouldIgnoreMove()) return
+        const center = map.getCenter()
+        if (!center) return
+        emitPositionChange({ lat: center.lat(), lng: center.lng() })
+      })
+
+      googleMapRef.current = map
+      lastEmittedRef.current = { lat: position.lat, lng: position.lng }
+      syncGoogleRadius(map)
+      if (radiusKmRef.current != null && radiusKmRef.current > 0) fitGoogleRadius(map)
+
+      resizeObserver = new ResizeObserver(() => {
+        suppressNextMoves()
+        google.maps.event.trigger(map, 'resize')
+        syncGoogleRadius(map)
+      })
+      resizeObserver.observe(mapContainerRef.current)
+    }
+
+    if (useGoogle) {
+      void initGoogle()
+    } else {
+      initLeaflet()
+    }
 
     return () => {
-      resizeObserver.disconnect()
-      map.off('move', handleMapMove)
-      map.off('zoom', handleMapMove)
-      radiusCircleRef.current?.remove()
-      radiusCircleRef.current = null
-      map.remove()
-      mapRef.current = null
+      cancelled = true
+      resizeObserver?.disconnect()
+      if (googleIdleListenerRef.current) {
+        google.maps.event.removeListener(googleIdleListenerRef.current)
+        googleIdleListenerRef.current = null
+      }
+      googleCircleRef.current?.setMap(null)
+      googleCircleRef.current = null
+      googleMapRef.current = null
+
+      leafletCircleRef.current?.remove()
+      leafletCircleRef.current = null
+      leafletMapRef.current?.remove()
+      leafletMapRef.current = null
     }
-  }, [])
+    // Initialize once; position/radius synced in later effects.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useGoogle])
 
   useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
+    const leafletMap = leafletMapRef.current
+    if (leafletMap) {
+      const center = leafletMap.getCenter()
+      if (nearlySamePosition({ lat: center.lat, lng: center.lng }, position)) return
 
-    const center = map.getCenter()
-    const latDiff = Math.abs(center.lat - position.lat)
-    const lngDiff = Math.abs(center.lng - position.lng)
-    if (latDiff < 0.00001 && lngDiff < 0.00001) return
+      suppressNextMoves()
+      lastEmittedRef.current = position
+      leafletMap.setView([position.lat, position.lng], leafletMap.getZoom(), { animate: false })
+      if (radiusKmRef.current != null && radiusKmRef.current > 0) {
+        syncLeafletRadius(leafletMap)
+        fitLeafletRadius(leafletMap)
+      }
+      return
+    }
 
-    skipMoveRef.current = true
-    map.setView([position.lat, position.lng], map.getZoom(), { animate: true })
+    const googleMap = googleMapRef.current
+    if (!googleMap) return
 
+    const center = googleMap.getCenter()
+    if (center && nearlySamePosition({ lat: center.lat(), lng: center.lng() }, position)) {
+      return
+    }
+
+    suppressNextMoves()
+    lastEmittedRef.current = position
+    googleMap.panTo({ lat: position.lat, lng: position.lng })
     if (radiusKmRef.current != null && radiusKmRef.current > 0) {
-      map.once('moveend', () => {
-        syncRadiusCircle(map)
-        fitRadiusInView(map)
+      google.maps.event.addListenerOnce(googleMap, 'idle', () => {
+        syncGoogleRadius(googleMap)
+        fitGoogleRadius(googleMap)
       })
     }
   }, [position.lat, position.lng])
 
   useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-
-    syncRadiusCircle(map)
-
-    if (radiusKm != null && radiusKm > 0) {
-      fitRadiusInView(map)
+    const leafletMap = leafletMapRef.current
+    if (leafletMap) {
+      syncLeafletRadius(leafletMap)
+      if (radiusKm != null && radiusKm > 0) {
+        fitLeafletRadius(leafletMap)
+      } else {
+        leafletCircleRef.current?.remove()
+        leafletCircleRef.current = null
+      }
       return
     }
 
-    radiusCircleRef.current?.remove()
-    radiusCircleRef.current = null
+    const googleMap = googleMapRef.current
+    if (!googleMap) return
+    syncGoogleRadius(googleMap)
+    if (radiusKm != null && radiusKm > 0) {
+      fitGoogleRadius(googleMap)
+    } else {
+      googleCircleRef.current?.setMap(null)
+      googleCircleRef.current = null
+    }
   }, [radiusKm])
 
   return (
-    <div className={cn('relative flex min-h-[280px] flex-col bg-surface-container', className)}>
+    <div
+      className={cn(
+        'relative flex flex-col bg-surface-container',
+        isSheet ? 'min-h-0 flex-1' : 'min-h-[280px]',
+        className,
+      )}
+    >
       <div ref={mapContainerRef} className="absolute inset-0 z-0 h-full w-full" />
 
       <div className={cn('pointer-events-none absolute inset-0 z-[15]', overlayClassName)}>
@@ -215,9 +373,17 @@ export function AddressMapPicker({
         </div>
       </div>
 
-      <div className="pointer-events-none relative z-20 flex h-full min-h-[280px] flex-col justify-between p-4 md:p-6">
+      <div
+        className={cn(
+          'pointer-events-none relative z-20 flex h-full flex-col justify-between',
+          isSheet ? 'min-h-0 p-3' : 'min-h-[280px] p-4 md:p-6',
+        )}
+      >
         <form
-          className="pointer-events-auto flex items-center gap-2 rounded-xl border border-outline-variant/30 bg-surface-container-lowest/90 p-3 shadow-sm backdrop-blur-md"
+          className={cn(
+            'pointer-events-auto flex items-center gap-2 border border-black/[0.06] bg-white/90 shadow-[0_8px_24px_-8px_rgba(15,23,42,0.28)] backdrop-blur-xl',
+            isSheet ? 'rounded-full px-4 py-2.5' : 'rounded-xl p-3',
+          )}
           onSubmit={(e) => {
             e.preventDefault()
             onSearchSubmit()
@@ -227,22 +393,29 @@ export function AddressMapPicker({
           <input
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            placeholder="Search for location..."
-            className="text-body-md w-full border-none bg-transparent outline-none focus:ring-0"
+            placeholder="Search area, landmark, pincode…"
+            enterKeyHint="search"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            className="w-full border-none bg-transparent text-[16px] leading-5 outline-none focus:ring-0"
           />
           {loading ? (
-            <span className="material-symbols-outlined animate-spin text-primary text-[20px]">
+            <span className="material-symbols-outlined animate-spin text-[20px] text-primary">
               progress_activity
             </span>
           ) : null}
         </form>
 
-        <div className="pointer-events-none flex flex-col gap-3">
+        <div className={cn('pointer-events-none flex flex-col', isSheet ? 'items-end gap-2' : 'gap-3')}>
           <button
             type="button"
             onClick={onLocate}
             disabled={locating}
-            className="pointer-events-auto flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-full bg-surface-container-lowest text-primary shadow-lg transition-all hover:bg-primary hover:text-on-primary active:scale-90 disabled:opacity-60"
+            className={cn(
+              'pointer-events-auto flex shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-[0_8px_20px_-6px_rgba(15,23,42,0.35)] transition-transform active:scale-90 disabled:opacity-60',
+              isSheet ? 'size-12' : 'h-12 w-12 self-end hover:bg-primary hover:text-on-primary',
+            )}
             title="Use current location"
           >
             <span
@@ -255,11 +428,17 @@ export function AddressMapPicker({
             </span>
           </button>
 
-          <div className="pointer-events-auto rounded-xl border border-outline-variant/30 bg-surface-container-lowest/90 p-4 shadow-sm backdrop-blur-md">
-            <p className="text-label-md mb-1 text-primary">{radiusKm ? 'STORE LOCATION' : 'ADJUST PIN'}</p>
-            <p className="text-body-md leading-tight text-on-surface-variant">{pinHint}</p>
-            {error ? <p className="text-body-md mt-2 text-error">{error}</p> : null}
-          </div>
+          {!isSheet ? (
+            <div className="pointer-events-auto rounded-xl border border-outline-variant/30 bg-surface-container-lowest/90 p-4 shadow-sm backdrop-blur-md">
+              <p className="text-label-md mb-1 text-primary">{radiusKm ? 'STORE LOCATION' : 'ADJUST PIN'}</p>
+              <p className="text-body-md leading-tight text-on-surface-variant">{pinHint}</p>
+              {error ? <p className="text-body-md mt-2 text-error">{error}</p> : null}
+            </div>
+          ) : error ? (
+            <div className="pointer-events-auto max-w-[min(100%,18rem)] rounded-2xl bg-white/95 px-3 py-2 text-sm text-error shadow-md backdrop-blur-md">
+              {error}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

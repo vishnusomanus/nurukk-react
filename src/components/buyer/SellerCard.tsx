@@ -35,7 +35,7 @@ export function SellerCard({
       <Link
         to={`/buyer/stores/${seller.uuid}`}
         className={cn(
-          'group flex min-w-[260px] shrink-0 flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.05)] transition-transform hover:-translate-y-0.5',
+          'group flex min-w-0 shrink-0 flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.05)] transition-transform hover:-translate-y-0.5',
           className,
         )}
       >

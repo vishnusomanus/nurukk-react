@@ -301,7 +301,7 @@ export function CheckoutSummaryPage() {
       </main>
 
       {items.length > 0 ? (
-      <div className="app-cta-above-nav fixed left-0 right-0 z-30 border-t border-surface-variant bg-surface/95 px-margin-mobile py-4 backdrop-blur-lg lg:hidden">
+      <div className="app-cta-safe fixed right-0 bottom-0 left-0 z-30 border-t border-surface-variant bg-surface/95 px-margin-mobile py-4 backdrop-blur-lg lg:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-4">
             <div className="shrink-0">
               <span className="text-label-md uppercase text-on-surface-variant">Total</span>

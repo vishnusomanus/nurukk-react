@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { adminPayoutsService } from '@/api/services'
 import type { AdminPayoutRecord } from '@/types/payout'
+import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle'
 import { Pagination } from '@/components/ui/Pagination'
+import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import { extractRows } from '@/utils/extractRows'
 import { extractPaginationMeta } from '@/utils/extractPaginationMeta'
 import { formatCurrency } from '@/utils/formatCurrency'
@@ -24,10 +26,15 @@ function statusBadge(status: string) {
 
 function PayoutDetailPanel({ payout, onClose }: { payout: AdminPayoutRecord; onClose: () => void }) {
   const payee = payout.payee
+  const { handleProps, sheetStyle } = useSwipeToClose(onClose)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 md:items-center">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-surface p-6 stitch-card-shadow">
+      <div
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-surface p-6 stitch-card-shadow md:rounded-2xl"
+        style={sheetStyle}
+      >
+        <BottomSheetHandle className="-mt-2 mb-2 md:hidden" {...handleProps} />
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-headline-lg text-on-surface">{formatCurrency(payout.amount)}</h2>

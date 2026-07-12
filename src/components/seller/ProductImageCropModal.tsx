@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
+import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle'
+import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import { cn } from '@/utils/cn'
 import { getCroppedImageBlob } from '@/utils/cropImage'
 
@@ -25,6 +27,11 @@ export function ProductImageCropModal({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const busy = saving || processing
+  const { handleProps, sheetStyle } = useSwipeToClose(onClose, {
+    enabled: open && !busy,
+  })
 
   useEffect(() => {
     if (!open) return
@@ -60,8 +67,6 @@ export function ProductImageCropModal({
 
   if (!open || !imageSrc) return null
 
-  const busy = saving || processing
-
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/60" onClick={busy ? undefined : onClose} aria-hidden />
@@ -70,8 +75,10 @@ export function ProductImageCropModal({
         aria-modal="true"
         aria-labelledby="product-crop-title"
         className="relative z-10 flex max-h-[95dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-outline-variant/40 bg-surface-container-lowest shadow-xl sm:rounded-2xl"
+        style={sheetStyle}
       >
-        <div className="border-b border-outline-variant/20 px-5 py-4">
+        <div className="border-b border-outline-variant/20 px-5 pt-1 pb-4 sm:pt-4">
+          <BottomSheetHandle className="sm:hidden" {...handleProps} />
           <h3 id="product-crop-title" className="text-headline-lg text-on-surface">
             {title}
           </h3>

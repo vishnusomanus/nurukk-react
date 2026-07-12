@@ -47,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>nurukk Delivery uses your location to show nearby orders and navigate to pickups.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>nurukk Delivery uses your location to show nearby orders and navigate to pickups.</string>
 </dict>
 </plist>

@@ -47,5 +47,20 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>nurukk uses your location to check delivery availability and help you pin your address.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>nurukk uses your location to check delivery availability and help you pin your address.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>phonepe</string>
+		<string>tez</string>
+		<string>paytmmp</string>
+		<string>bhim</string>
+		<string>upi</string>
+		<string>ppeme</string>
+		<string>amazonpay</string>
+		<string>credpay</string>
+	</array>
 </dict>
 </plist>

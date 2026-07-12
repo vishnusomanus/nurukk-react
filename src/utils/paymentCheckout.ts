@@ -1,5 +1,7 @@
+import { Capacitor } from '@capacitor/core'
+import { Checkout } from 'capacitor-razorpay'
 import { APP_NAME } from '@/constants/app'
-import type { CheckoutPaymentMethod, OnlinePaymentMethod } from '@/constants/paymentMethods'
+import type { OnlinePaymentMethod } from '@/constants/paymentMethods'
 import type {
   CashfreeClientPayload,
   PaymentGateway,
@@ -48,6 +50,9 @@ async function waitForGlobal<T>(
 }
 
 export async function preloadPaymentGateway(gateway?: PaymentGateway): Promise<void> {
+  // Native Capacitor uses the Razorpay Android/iOS SDK — no web script needed.
+  if (gateway === 'razorpay' && Capacitor.isNativePlatform()) return
+
   if (gateway === 'razorpay') {
     await loadScript(RAZORPAY_SCRIPT, 'razorpay-checkout-js')
     return
@@ -86,6 +91,107 @@ function cashfreeMode(environment?: string): 'sandbox' | 'production' {
   return environment === 'production' ? 'production' : 'sandbox'
 }
 
+function buildRazorpayOptions(
+  client: RazorpayClientPayload,
+  paymentMethod: OnlinePaymentMethod,
+  user: AuthUser | null,
+) {
+  const method = razorpayMethod(paymentMethod)
+  return {
+    key: client.key_id,
+    amount: String(client.amount),
+    currency: client.currency || 'INR',
+    order_id: client.order_id,
+    name: APP_NAME,
+    description: 'Order payment',
+    ...(method ? { method } : {}),
+    theme: { color: '#0d631b' },
+    prefill: {
+      name: user?.name ?? '',
+      email: user?.email ?? '',
+      contact: user?.phone ?? '',
+    },
+  }
+}
+
+function extractCapacitorErrorMessage(error: unknown): string {
+  if (typeof error === 'string') return error
+  if (!error || typeof error !== 'object') return String(error ?? '')
+
+  const record = error as Record<string, unknown>
+  const candidates = [record.message, record.errorMessage, record.code, record.error]
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) return candidate
+  }
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return 'Payment failed'
+  }
+}
+
+function isRazorpayUserCancel(error: unknown): boolean {
+  const raw = extractCapacitorErrorMessage(error)
+  return /cancel|dismissed|code["']?\s*:\s*2\b|payment canceled by user/i.test(raw)
+}
+
+function isNativePluginMissing(error: unknown): boolean {
+  const raw = extractCapacitorErrorMessage(error)
+  return /unimplemented|not implemented|\"Checkout\" plugin is not implemented|plugin_not_installed/i.test(
+    raw,
+  )
+}
+
+/** Native SDK avoids window.open / new-tab bank redirects that break in Capacitor WebViews. */
+async function openRazorpayNativeCheckout(
+  client: RazorpayClientPayload,
+  paymentMethod: OnlinePaymentMethod,
+  user: AuthUser | null,
+): Promise<PaymentCheckoutResult> {
+  try {
+    const result = await Checkout.open(
+      buildRazorpayOptions(client, paymentMethod, user) as { key: string; amount: string },
+    )
+    const response = (result as { response?: unknown })?.response
+    if (response) return 'paid'
+    return 'dismissed'
+  } catch (error) {
+    if (isRazorpayUserCancel(error)) return 'dismissed'
+    if (isNativePluginMissing(error)) {
+      // iOS SPM projects previously lacked the CocoaPods-only plugin — fall back to web SDK.
+      console.warn('[payments] Native Razorpay plugin unavailable; falling back to web checkout', error)
+      return openRazorpayWebCheckout(client, paymentMethod, user)
+    }
+    const detail = extractCapacitorErrorMessage(error)
+    throw new Error(detail || 'Payment failed')
+  }
+}
+
+async function openRazorpayWebCheckout(
+  client: RazorpayClientPayload,
+  paymentMethod: OnlinePaymentMethod,
+  user: AuthUser | null,
+): Promise<PaymentCheckoutResult> {
+  await loadScript(RAZORPAY_SCRIPT, 'razorpay-checkout-js')
+
+  const RazorpayCtor = await waitForGlobal(() => window.Razorpay, 'Razorpay')
+  const options = buildRazorpayOptions(client, paymentMethod, user)
+
+  return new Promise((resolve) => {
+    const rzp = new RazorpayCtor({
+      ...options,
+      amount: Number(options.amount),
+      handler: () => resolve('paid'),
+      modal: {
+        ondismiss: () => resolve('dismissed'),
+      },
+    })
+
+    rzp.on('payment.failed', () => resolve('failed'))
+    rzp.open()
+  })
+}
+
 async function openRazorpayCheckout(
   initiate: PaymentInitiateData,
   paymentMethod: OnlinePaymentMethod,
@@ -96,35 +202,11 @@ async function openRazorpayCheckout(
     throw new Error('Invalid Razorpay checkout payload')
   }
 
-  await loadScript(RAZORPAY_SCRIPT, 'razorpay-checkout-js')
+  if (Capacitor.isNativePlatform()) {
+    return openRazorpayNativeCheckout(client, paymentMethod, user)
+  }
 
-  const RazorpayCtor = await waitForGlobal(() => window.Razorpay, 'Razorpay')
-
-  return new Promise((resolve) => {
-    const method = razorpayMethod(paymentMethod)
-    const rzp = new RazorpayCtor({
-      key: client.key_id,
-      amount: client.amount,
-      currency: client.currency,
-      order_id: client.order_id,
-      name: APP_NAME,
-      description: 'Order payment',
-      method,
-      theme: { color: '#0d631b' },
-      prefill: {
-        name: user?.name,
-        email: user?.email,
-        contact: user?.phone,
-      },
-      handler: () => resolve('paid'),
-      modal: {
-        ondismiss: () => resolve('dismissed'),
-      },
-    })
-
-    rzp.on('payment.failed', () => resolve('failed'))
-    rzp.open()
-  })
+  return openRazorpayWebCheckout(client, paymentMethod, user)
 }
 
 async function openCashfreeCheckout(initiate: PaymentInitiateData): Promise<PaymentCheckoutResult> {
@@ -139,6 +221,7 @@ async function openCashfreeCheckout(initiate: PaymentInitiateData): Promise<Paym
   const mode = cashfreeMode(client.environment)
 
   const cashfree = CashfreeCtor({ mode })
+  // Keep checkout in-app. `_blank` opens a new tab/window that breaks Capacitor WebViews.
   const result = await cashfree.checkout({
     paymentSessionId: client.payment_session_id,
     redirectTarget: '_modal',
