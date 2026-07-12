@@ -3,6 +3,7 @@ import { apiClient } from '@/api/client'
 import type { CheckoutPaymentMethod } from '@/constants/paymentMethods'
 import type { GenericSuccess, Paginated } from '@/types/api'
 import type { OrderInvoiceResponse } from '@/types/orderInvoice'
+import { pickProductImageUrl } from '@/utils/categoryImage'
 import type { ProductNutrition } from '@/utils/productNutrition'
 
 export type BuyerCategory = {
@@ -10,6 +11,8 @@ export type BuyerCategory = {
   name: string
   slug?: string
   image_url?: string
+  /** Sample product image used when the category has no dedicated image. */
+  product_image_url?: string | null
   icon?: string
   [key: string]: unknown
 }
@@ -222,9 +225,81 @@ export type DeliveryScopeParams = {
   longitude?: number
 }
 
+async function enrichHomeCategoriesWithProductImages(
+  home: GenericSuccess<BuyerHomeData>,
+  params?: DeliveryScopeParams,
+): Promise<GenericSuccess<BuyerHomeData>> {
+  const categories = home.data?.categories ?? []
+  if (categories.length === 0) return home
+
+  const seedProducts = [
+    ...(home.data?.featured_products ?? []),
+    ...(home.data?.recently_purchased ?? []),
+  ]
+  const imageByCategory = new Map<string, string>()
+
+  for (const product of seedProducts) {
+    const categoryUuid = product.category?.uuid
+    const imageUrl = pickProductImageUrl(product)
+    if (categoryUuid && imageUrl && !imageByCategory.has(categoryUuid)) {
+      imageByCategory.set(categoryUuid, imageUrl)
+    }
+  }
+
+  for (const category of categories) {
+    const existing =
+      (typeof category.product_image_url === 'string' && category.product_image_url.trim()) ||
+      (typeof category.image_url === 'string' && category.image_url.trim()) ||
+      ''
+    if (existing && !imageByCategory.has(category.uuid)) {
+      imageByCategory.set(category.uuid, existing)
+    }
+  }
+
+  const missing = categories.filter((category) => !imageByCategory.has(category.uuid))
+  if (missing.length > 0) {
+    await Promise.all(
+      missing.map(async (category) => {
+        try {
+          const response = await listCategoryProducts(category.uuid, {
+            ...params,
+            page: 1,
+            per_page: 1,
+          })
+          const imageUrl = pickProductImageUrl(response.data?.[0])
+          if (imageUrl) imageByCategory.set(category.uuid, imageUrl)
+        } catch {
+          // Leave category without an image; UI shows a placeholder.
+        }
+      }),
+    )
+  }
+
+  return {
+    ...home,
+    data: {
+      ...home.data,
+      categories: categories.map((category) => {
+        const productImage = imageByCategory.get(category.uuid)
+        return {
+          ...category,
+          product_image_url: category.product_image_url || productImage || null,
+          image_url: category.image_url || productImage || undefined,
+        }
+      }),
+    },
+  }
+}
+
 export async function getHome(params?: DeliveryScopeParams) {
-  const { data } = await apiClient.get<GenericSuccess<BuyerHomeData>>('/v1/buyer/home', { params })
-  return data
+  const { data } = await apiClient.get<GenericSuccess<BuyerHomeData>>('/v1/buyer/home', {
+    params: {
+      ...params,
+      // Backend may return product_image_url per category when supported.
+      include_category_product_images: 1,
+    },
+  })
+  return enrichHomeCategoriesWithProductImages(data, params)
 }
 
 export async function listCategories() {

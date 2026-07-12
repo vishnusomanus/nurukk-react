@@ -16,20 +16,48 @@ import { APP_NAME } from '@/constants/app'
 import { useDeliveryLocation } from '@/context/DeliveryLocationProvider'
 import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
+import { getCategoryImageUrl } from '@/utils/categoryImage'
+import { cn } from '@/utils/cn'
 import { formatCurrency } from '@/utils/formatCurrency'
 import type { BuyerCategory } from '@/api/services/buyerService'
-
-function categoryIcon(name?: string) {
-  const key = String(name ?? '').toLowerCase()
-  if (key.includes('cut')) return 'restaurant'
-  if (key.includes('leaf')) return 'energy_savings_leaf'
-  if (key.includes('exotic')) return 'star'
-  return 'eco'
-}
 
 function isCutVegetableCategory(category: BuyerCategory) {
   const key = `${category.slug ?? ''} ${category.name ?? ''}`.toLowerCase()
   return key.includes('cut')
+}
+
+function CategoryGridTile({
+  category,
+  className,
+}: {
+  category?: BuyerCategory
+  className?: string
+}) {
+  const imageUrl = getCategoryImageUrl(category)
+
+  return (
+    <Link
+      to={category ? `/buyer/categories/${category.uuid}` : '/buyer/categories'}
+      className={cn('group flex flex-col', className)}
+    >
+      <div className="aspect-square overflow-hidden rounded-2xl bg-surface-container-high shadow-[0px_4px_16px_rgba(0,0,0,0.06)] transition-transform group-active:scale-[0.97] lg:rounded-3xl lg:group-hover:ring-2 lg:group-hover:ring-primary/40">
+        {imageUrl ? (
+          <RemoteImage
+            src={imageUrl}
+            alt={category?.name ?? ''}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-surface-container">
+            <span className="material-symbols-outlined text-3xl text-primary lg:text-5xl">eco</span>
+          </div>
+        )}
+      </div>
+      <p className="mt-1.5 line-clamp-2 text-center text-[11px] leading-tight font-semibold text-on-surface lg:mt-3 lg:text-body-lg lg:font-bold lg:group-hover:text-primary">
+        {category?.name ?? '…'}
+      </p>
+    </Link>
+  )
 }
 
 export function BuyerHomePage() {
@@ -112,57 +140,43 @@ export function BuyerHomePage() {
 
             {/* Categories */}
             <section>
-          <div className="mb-4 flex items-end justify-between lg:mb-6">
-            <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Shop by Category</h3>
-            <Link to="/buyer/categories" className="text-label-md flex items-center gap-1 font-bold text-primary lg:text-body-lg">
-              View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </Link>
-          </div>
-
-          {/* Mobile: icon grid */}
-          <div className="grid grid-cols-4 gap-3 text-center lg:hidden">
-            {(isLoading ? Array.from({ length: 4 }) : categories.slice(0, 4)).map((cat, i) => {
-              const category = cat as BuyerCategory | undefined
-              return (
-                <Link key={category?.uuid ?? i} to={category ? `/buyer/categories/${category.uuid}` : '/buyer/categories'} className="group">
-                  <div className="mb-1 flex aspect-square w-full items-center justify-center rounded-full bg-surface-container-high shadow-sm group-active:scale-90">
-                    <span className="material-symbols-outlined text-3xl text-primary">{categoryIcon(category?.name)}</span>
-                  </div>
-                  <p className="text-[11px] leading-tight font-semibold text-on-surface-variant">{category?.name ?? '…'}</p>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Desktop: image carousel */}
-          <div className="stitch-scrollbar stitch-hide-scrollbar -mx-1 hidden gap-6 overflow-x-auto pb-4 lg:flex">
-            {(isLoading ? Array.from({ length: 5 }) : categories).map((cat, i) => {
-              const category = cat as BuyerCategory | undefined
-              return (
+              <div className="mb-4 flex items-end justify-between lg:mb-6">
+                <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Shop by Category</h3>
                 <Link
-                  key={category?.uuid ?? i}
-                  to={category ? `/buyer/categories/${category.uuid}` : '#'}
-                  className="group w-44 flex-shrink-0 cursor-pointer"
+                  to="/buyer/categories"
+                  className="text-label-md flex items-center gap-1 font-bold text-primary lg:text-body-lg"
                 >
-                  <div className="mb-3 aspect-square overflow-hidden rounded-3xl border-2 border-transparent transition-all group-hover:border-primary">
-                    {category?.image_url ? (
-                      <RemoteImage
-                        src={category.image_url}
-                        alt={category.name ?? ''}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-surface-container-high">
-                        <span className="material-symbols-outlined text-5xl text-primary">{categoryIcon(category?.name)}</span>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-body-lg text-center font-bold group-hover:text-primary">{category?.name ?? '…'}</p>
+                  View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </Link>
-              )
-            })}
-          </div>
-        </section>
+              </div>
+
+              {/* Mobile: image + text grid */}
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:hidden">
+                {(isLoading ? Array.from({ length: 6 }) : categories.slice(0, 6)).map((cat, i) => {
+                  const category = cat as BuyerCategory | undefined
+                  return (
+                    <CategoryGridTile
+                      key={category?.uuid ?? i}
+                      category={category}
+                    />
+                  )
+                })}
+              </div>
+
+              {/* Desktop: image carousel */}
+              <div className="stitch-scrollbar stitch-hide-scrollbar -mx-1 hidden gap-6 overflow-x-auto pb-4 lg:flex">
+                {(isLoading ? Array.from({ length: 5 }) : categories).map((cat, i) => {
+                  const category = cat as BuyerCategory | undefined
+                  return (
+                    <CategoryGridTile
+                      key={category?.uuid ?? i}
+                      category={category}
+                      className="w-44 shrink-0"
+                    />
+                  )
+                })}
+              </div>
+            </section>
 
         {/* Cut vegetables showcase */}
         {showCutVegSection ? (
@@ -268,7 +282,6 @@ export function BuyerHomePage() {
                     product={product}
                     layout="horizontal"
                     showFavorite
-                    clickAddsToCart
                     className="w-[calc((100%-1.5rem)/2.5)] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:hidden"
                   />
                 ))}
@@ -280,7 +293,6 @@ export function BuyerHomePage() {
                     product={product}
                     layout="desktop"
                     showFavorite
-                    clickAddsToCart
                     className="hidden lg:block"
                   />
                 ))}
@@ -297,7 +309,7 @@ export function BuyerHomePage() {
               </button>
             </div>
             <div className="space-y-3">
-              {recent.map((product) => (
+              {recent.slice(0, 3).map((product) => (
                 <div
                   key={product.uuid}
                   className="flex items-center gap-4 rounded-xl bg-surface-container-lowest p-3 shadow-sm lg:bg-transparent lg:p-4 lg:shadow-none lg:hover:bg-surface-container-low"

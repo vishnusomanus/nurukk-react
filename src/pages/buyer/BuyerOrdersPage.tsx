@@ -25,6 +25,45 @@ import { cn } from '@/utils/cn'
 
 type OrderTab = 'active' | 'completed'
 
+function StatusPill({
+  order,
+  active,
+}: {
+  order: BuyerOrder
+  active: boolean
+}) {
+  const cancelled = isCancelledOrderStatus(order.status)
+
+  if (active) {
+    return (
+      <div className="flex max-w-[58%] items-center gap-1.5 rounded-full bg-primary-container/10 px-2.5 py-1 text-primary-container">
+        <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary-container" />
+        <span className="truncate text-[11px] font-semibold lg:text-xs">
+          {activeStatusLabel(order.status, { tracking: resolveOrderTracking(order), order })}
+        </span>
+      </div>
+    )
+  }
+
+  if (cancelled) {
+    return (
+      <div className="flex items-center gap-1 rounded-full bg-error-container px-2.5 py-1 text-error">
+        <span className="material-symbols-outlined text-[14px]">cancel</span>
+        <span className="text-[11px] font-semibold lg:text-xs">Cancelled</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-1 rounded-full bg-surface-container-high px-2.5 py-1 text-on-surface-variant">
+      <span className="material-symbols-outlined text-[14px]">check_circle</span>
+      <span className="truncate text-[11px] font-semibold capitalize lg:text-xs">
+        {order.status.replace(/_/g, ' ')}
+      </span>
+    </div>
+  )
+}
+
 function OrderCard({
   order,
   items,
@@ -43,83 +82,90 @@ function OrderCard({
   const dateLabel = orderDateLabel(order)
   const showTrackOrder = active && canTrackBuyerOrder(order)
   const cancelled = isCancelledOrderStatus(order.status)
+  const detailTo = `/buyer/orders/${order.uuid}/success`
+  const itemSummary =
+    items.length > 0
+      ? `${items.length} item${items.length === 1 ? '' : 's'}`
+      : null
 
   return (
-    <div className="stitch-card-shadow stitch-order-card-hover rounded-2xl bg-surface-container-lowest p-4 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:p-6 lg:shadow-none">
-      <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-center lg:mb-6 lg:gap-4">
-        <div className="flex flex-wrap items-center gap-2 lg:gap-4">
-          <span className="text-base font-bold text-on-background lg:text-headline-lg">{orderLabel(order)}</span>
-          {active ? (
-            <div className="flex items-center gap-1 rounded-full bg-primary-container/10 px-3 py-1 text-primary-container lg:px-4">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-primary-container" />
-              <span className="text-xs font-semibold lg:text-label-md">
-                {activeStatusLabel(order.status, { tracking: resolveOrderTracking(order), order })}
-              </span>
+    <article className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:shadow-none">
+      <Link to={detailTo} className="block p-4 active:bg-surface-container-low/40 lg:p-5">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-[15px] font-bold text-on-surface lg:text-base">
+                {orderLabel(order)}
+              </h3>
             </div>
-          ) : cancelled ? (
-            <div className="flex items-center gap-1 rounded-full bg-error-container px-3 py-1 text-error lg:px-4">
-              <span className="material-symbols-outlined text-[16px]">cancel</span>
-              <span className="text-xs font-semibold lg:text-label-md">Cancelled</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-1 text-on-surface-variant lg:px-4">
-              <span className="material-symbols-outlined text-[16px]">check_circle</span>
-              <span className="text-xs font-semibold capitalize lg:text-label-md">
-                {order.status.replace(/_/g, ' ')}
-              </span>
-            </div>
-          )}
-          {dateLabel ? (
-            <span className="w-full text-xs text-on-surface-variant lg:w-auto lg:text-body-md">
-              Ordered on {dateLabel}
-            </span>
-          ) : null}
-        </div>
-        <div className="text-lg font-bold text-on-background lg:text-price-display">
-          {formatCurrency(order.total)}
-        </div>
-      </div>
-
-      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center lg:gap-6">
-        <div className="flex items-center overflow-hidden -space-x-3 lg:-space-x-4">
-          {visibleItems.map((item, index) => (
-            <div
-              key={`${item.product?.uuid ?? item.product_name ?? index}`}
-              className="h-12 w-12 overflow-hidden rounded-xl border-2 border-surface bg-surface-container lg:h-16 lg:w-16"
-            >
-              <ProductImage
-                product={item.product}
-                className={cn('h-full w-full object-cover', !active && !cancelled && 'grayscale-[15%]')}
-              />
-            </div>
-          ))}
-          {extraCount > 0 ? (
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-surface bg-surface-container-high text-xs font-semibold text-on-surface-variant lg:h-16 lg:w-16 lg:text-label-md">
-              +{extraCount}
-            </div>
-          ) : null}
+            {dateLabel ? (
+              <p className="mt-0.5 text-xs text-on-surface-variant">
+                {dateLabel}
+                {itemSummary ? ` · ${itemSummary}` : ''}
+              </p>
+            ) : itemSummary ? (
+              <p className="mt-0.5 text-xs text-on-surface-variant">{itemSummary}</p>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <StatusPill order={order} active={active} />
+            <p className="text-[15px] font-bold text-on-surface lg:text-base">
+              {formatCurrency(order.total)}
+            </p>
+          </div>
         </div>
 
-        <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:gap-3">
-          <Link
-            to={`/buyer/orders/${order.uuid}/success`}
-            className="flex flex-1 items-center justify-center rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/5 lg:flex-none lg:px-6 lg:text-label-md"
-          >
-            Details
-          </Link>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center overflow-hidden -space-x-2.5">
+            {visibleItems.length > 0 ? (
+              <>
+                {visibleItems.map((item, index) => (
+                  <div
+                    key={`${item.product?.uuid ?? item.product_name ?? index}`}
+                    className="h-11 w-11 overflow-hidden rounded-xl border-2 border-surface-container-lowest bg-surface-container lg:h-12 lg:w-12"
+                  >
+                    <ProductImage
+                      product={item.product}
+                      className={cn(
+                        'h-full w-full object-cover',
+                        !active && !cancelled && 'grayscale-[15%]',
+                      )}
+                    />
+                  </div>
+                ))}
+                {extraCount > 0 ? (
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-surface-container-lowest bg-surface-container-high text-[11px] font-bold text-on-surface-variant lg:h-12 lg:w-12">
+                    +{extraCount}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-container-high text-outline lg:h-12 lg:w-12">
+                <span className="material-symbols-outlined text-[20px]">shopping_bag</span>
+              </div>
+            )}
+          </div>
+          <span className="material-symbols-outlined text-outline lg:hidden">chevron_right</span>
+          <span className="hidden text-sm font-semibold text-primary lg:inline">View details</span>
+        </div>
+      </Link>
+
+      {showTrackOrder || (!active && !cancelled) ? (
+        <div className="flex gap-2 border-t border-outline-variant/40 px-3 py-2.5 lg:px-5 lg:py-3">
           {showTrackOrder ? (
             <Link
-              to={`/buyer/orders/${order.uuid}/success`}
-              className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition-all hover:shadow-lg active:scale-95 lg:flex-none lg:px-6 lg:text-label-md"
+              to={detailTo}
+              className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-bold text-on-primary transition-transform active:scale-[0.98]"
             >
               <span className="material-symbols-outlined text-[18px]">local_shipping</span>
-              Track
+              Track order
             </Link>
-          ) : !active && !cancelled ? (
+          ) : null}
+          {!active && !cancelled ? (
             <>
               <Link
                 to={`/buyer/orders/${order.uuid}/invoice`}
-                className="flex flex-1 items-center justify-center rounded-xl border border-outline px-4 py-2.5 text-sm font-semibold text-on-surface-variant transition-all hover:bg-surface-container-low lg:flex-none lg:px-6 lg:text-label-md"
+                className="hidden h-10 flex-1 items-center justify-center rounded-xl border border-outline-variant text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-low lg:flex"
               >
                 Invoice
               </Link>
@@ -127,16 +173,16 @@ function OrderCard({
                 type="button"
                 disabled={reordering}
                 onClick={() => onReorder(order.uuid)}
-                className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/5 disabled:opacity-50 lg:flex-none lg:px-6 lg:text-label-md"
+                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary/8 text-sm font-bold text-primary transition-transform active:scale-[0.98] disabled:opacity-50 lg:bg-primary lg:text-on-primary"
               >
-                <span className="material-symbols-outlined text-[18px]">reorder</span>
+                <span className="material-symbols-outlined text-[18px]">replay</span>
                 {reordering ? 'Adding…' : 'Reorder'}
               </button>
             </>
           ) : null}
         </div>
-      </div>
-    </div>
+      ) : null}
+    </article>
   )
 }
 
@@ -214,79 +260,98 @@ export function BuyerOrdersPage() {
 
   return (
     <BuyerAccountShell title="Orders" backTo="/buyer" showBack={false}>
-      <header className="mb-4 lg:mb-8">
-        <h1 className="text-headline-xl mb-4 hidden text-on-surface lg:block">Order History</h1>
-        <div className="flex flex-col gap-3 border-b border-outline-variant/50 sm:flex-row sm:items-center sm:justify-between lg:gap-4">
-          <div className="flex gap-1 rounded-xl bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] sm:gap-8 sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none">
+      <header className="mb-4 space-y-3 lg:mb-8 lg:space-y-5">
+        <div className="hidden lg:block">
+          <h1 className="text-headline-xl mb-1 text-primary">Order History</h1>
+          <p className="text-body-lg text-on-surface-variant">
+            Track deliveries and reorder past harvests.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex flex-1 gap-1 rounded-full bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:max-w-sm lg:rounded-xl">
             <button
               type="button"
               onClick={() => setTab('active')}
               className={cn(
-                'relative flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors sm:flex-none sm:rounded-none sm:px-0 sm:pb-4 sm:text-label-md',
-                tab === 'active' ? 'bg-primary text-on-primary sm:bg-transparent sm:text-primary' : 'text-on-surface-variant hover:text-primary',
+                'flex-1 rounded-full px-3 py-2.5 text-sm font-bold transition-colors lg:rounded-lg',
+                tab === 'active'
+                  ? 'bg-primary text-on-primary'
+                  : 'text-on-surface-variant active:bg-surface-container-low',
               )}
             >
               Active
-              {tab === 'active' ? (
-                <span className="absolute bottom-0 left-0 hidden h-0.5 w-full bg-primary sm:block" />
-              ) : null}
             </button>
             <button
               type="button"
               onClick={() => setTab('completed')}
               className={cn(
-                'relative flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors sm:flex-none sm:rounded-none sm:px-0 sm:pb-4 sm:text-label-md',
-                tab === 'completed' ? 'bg-primary text-on-primary sm:bg-transparent sm:text-primary' : 'text-on-surface-variant hover:text-primary',
+                'flex-1 rounded-full px-3 py-2.5 text-sm font-bold transition-colors lg:rounded-lg',
+                tab === 'completed'
+                  ? 'bg-primary text-on-primary'
+                  : 'text-on-surface-variant active:bg-surface-container-low',
               )}
             >
               Completed
-              {tab === 'completed' ? (
-                <span className="absolute bottom-0 left-0 hidden h-0.5 w-full bg-primary sm:block" />
-              ) : null}
             </button>
           </div>
-          <div className="mb-0 flex items-center gap-4 sm:mb-0">
-            <button
-              type="button"
-              onClick={() => setRecentOnly((value) => !value)}
-              className={cn(
-                'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors lg:text-label-md lg:px-4',
-                recentOnly
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-low',
-              )}
-            >
-              <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-              Last 3 Months
-            </button>
-          </div>
+
+          <button
+            type="button"
+            onClick={() => setRecentOnly((value) => !value)}
+            className={cn(
+              'flex h-11 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-bold transition-colors',
+              recentOnly
+                ? 'bg-primary/10 text-primary'
+                : 'bg-surface-container-lowest text-on-surface-variant shadow-[0_2px_12px_rgba(15,40,20,0.06)]',
+            )}
+            aria-pressed={recentOnly}
+            title={recentOnly ? 'Showing last 3 months' : 'Showing all orders'}
+          >
+            <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+            <span className="hidden sm:inline">3 mo</span>
+          </button>
         </div>
       </header>
 
       {error ? (
-        <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+        <p className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {getApiErrorMessage(error, 'Failed to load orders')}
         </p>
       ) : null}
 
       {actionError ? (
-        <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+        <p className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {actionError}
         </p>
       ) : null}
 
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-48 animate-pulse rounded-xl bg-surface-container" />
+            <div
+              key={i}
+              className="h-36 animate-pulse rounded-2xl bg-surface-container lg:h-40 lg:rounded-xl"
+            />
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
-        <p className="py-16 text-center text-on-surface-variant">
-          {tab === 'active' ? 'No active orders.' : 'No completed orders yet.'}
-        </p>
+        <div className="rounded-2xl bg-surface-container-lowest py-14 text-center shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/40 lg:shadow-none">
+          <span
+            className="material-symbols-outlined mb-3 text-5xl text-outline"
+            style={{ fontVariationSettings: "'FILL' 0" }}
+          >
+            receipt_long
+          </span>
+          <p className="text-sm text-on-surface-variant lg:text-body-lg">
+            {tab === 'active' ? 'No active orders right now.' : 'No completed orders yet.'}
+          </p>
+          <Link to="/buyer" className="mt-4 inline-block text-sm font-bold text-primary hover:underline">
+            Browse the marketplace
+          </Link>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 lg:space-y-4">
           {filteredOrders.map((order) => (
             <OrderCard
               key={order.uuid}
@@ -305,32 +370,32 @@ export function BuyerOrdersPage() {
           type="button"
           disabled={isFetchingNextPage}
           onClick={() => void fetchNextPage()}
-          className="mt-6 w-full rounded-xl border-2 border-dashed border-outline-variant py-4 font-bold text-on-surface-variant transition-all hover:bg-surface-container disabled:opacity-50"
+          className="mt-4 w-full rounded-2xl bg-surface-container-lowest py-3.5 text-sm font-bold text-on-surface-variant shadow-[0_2px_12px_rgba(15,40,20,0.06)] transition-colors active:bg-surface-container-low disabled:opacity-50 lg:mt-6 lg:rounded-xl lg:border lg:border-dashed lg:border-outline-variant lg:shadow-none"
         >
-          {isFetchingNextPage ? 'Loading…' : 'Load More History'}
+          {isFetchingNextPage ? 'Loading…' : 'Load more'}
         </button>
       ) : null}
 
       {!isLoading && allOrders.length > 0 ? (
-        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 lg:mt-10 lg:gap-4">
-          <div className="flex items-center gap-4 rounded-2xl bg-primary-container/10 px-4 py-4 lg:gap-6 lg:border lg:border-primary/20 lg:p-6">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary lg:h-16 lg:w-16">
-              <span className="material-symbols-outlined text-2xl lg:text-3xl">savings</span>
+        <div className="mt-6 hidden gap-4 lg:mt-10 lg:grid lg:grid-cols-2">
+          <div className="flex items-center gap-6 rounded-xl border border-primary/20 bg-primary-container/10 p-6">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary">
+              <span className="material-symbols-outlined text-3xl">savings</span>
             </div>
             <div>
-              <h4 className="mb-0.5 text-base font-bold text-primary lg:mb-1 lg:text-headline-lg">Harvest Savings</h4>
-              <p className="text-sm text-on-surface-variant lg:text-body-md">
+              <h4 className="mb-1 text-headline-lg font-bold text-primary">Harvest Savings</h4>
+              <p className="text-body-md text-on-surface-variant">
                 You&apos;ve saved {formatCurrency(savings)} across your orders.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 rounded-2xl bg-secondary-container/10 px-4 py-4 lg:gap-6 lg:border lg:border-secondary/20 lg:p-6">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-on-secondary lg:h-16 lg:w-16">
-              <span className="material-symbols-outlined text-2xl lg:text-3xl">eco</span>
+          <div className="flex items-center gap-6 rounded-xl border border-secondary/20 bg-secondary-container/10 p-6">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-secondary text-on-secondary">
+              <span className="material-symbols-outlined text-3xl">eco</span>
             </div>
             <div>
-              <h4 className="mb-0.5 text-base font-bold text-secondary lg:mb-1 lg:text-headline-lg">Orders Placed</h4>
-              <p className="text-sm text-on-surface-variant lg:text-body-md">
+              <h4 className="mb-1 text-headline-lg font-bold text-secondary">Orders Placed</h4>
+              <p className="text-body-md text-on-surface-variant">
                 {allOrders.length} orders in your harvest history.
               </p>
             </div>

@@ -11,7 +11,12 @@ import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
 import { useAuthStore } from '@/store/authStore'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
-import { canBuyerCancelOrder, canTrackBuyerOrder, isActiveOrderStatus, isCancelledOrderStatus } from '@/utils/buyerAccount'
+import {
+  canBuyerCancelOrder,
+  canTrackBuyerOrder,
+  isActiveOrderStatus,
+  isCancelledOrderStatus,
+} from '@/utils/buyerAccount'
 import { formatOrderStatusLabel, resolveOrderTracking } from '@/utils/orderTracking'
 import { openPaymentGateway } from '@/utils/paymentCheckout'
 import { cn } from '@/utils/cn'
@@ -26,6 +31,9 @@ function formatTimelineDate(value: string) {
     minute: '2-digit',
   })
 }
+
+const softCard =
+  'rounded-2xl bg-surface-container-lowest p-4 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:p-5 lg:shadow-none'
 
 export function OrderSuccessPage() {
   const { orderUuid = '' } = useParams()
@@ -122,83 +130,95 @@ export function OrderSuccessPage() {
     order.payment_method !== 'cod' &&
     order.payment_status !== 'paid'
 
-  const actions = (
-    <div className="mt-8 flex w-full flex-col gap-3 lg:mt-0 lg:flex-row lg:flex-wrap lg:justify-center">
-      <Link
-        to="/buyer/orders"
-        className="flex h-12 items-center justify-center rounded-xl border-2 border-primary font-bold text-primary lg:min-w-[180px]"
-      >
-        All Orders
-      </Link>
-      {canCancel ? (
-        <button
-          type="button"
-          disabled={cancelMutation.isPending}
-          onClick={() => cancelMutation.mutate()}
-          className="flex h-12 items-center justify-center rounded-xl border-2 border-error font-bold text-error disabled:opacity-50 lg:min-w-[180px]"
-        >
-          {cancelMutation.isPending ? 'Cancelling…' : 'Cancel Order'}
-        </button>
-      ) : !active && !cancelled ? (
-        <Link
-          to={`/buyer/orders/${orderUuid}/invoice`}
-          className="flex h-12 items-center justify-center rounded-xl border-2 border-outline font-bold text-on-surface-variant lg:min-w-[180px]"
-        >
-          View Invoice
-        </Link>
-      ) : null}
-      <Link
-        to="/buyer"
-        className="flex h-12 items-center justify-center rounded-xl bg-primary font-bold text-on-primary lg:min-w-[180px]"
-      >
-        Continue Shopping
-      </Link>
-    </div>
-  )
+  const statusTitle = cancelled
+    ? 'Order Cancelled'
+    : active
+      ? tracking.status_label ?? 'Order In Progress'
+      : delivered
+        ? 'Delivered'
+        : 'Order Details'
+
+  const statusSubtitle = cancelled
+    ? 'This order was cancelled.'
+    : delivered && deliveryDurationLabel
+      ? `Completed in ${deliveryDurationLabel}`
+      : active && liveTracking && tracking.eta_label
+        ? tracking.eta_label
+        : active
+          ? tracking.status_label ?? 'Your order is being processed.'
+          : 'Order details and delivery info'
+
+  const headerTitle = order?.order_number
+    ? `#${order.order_number}`
+    : order
+      ? `#${order.uuid.slice(0, 8).toUpperCase()}`
+      : 'Order'
 
   return (
-    <div className="app-page-pad-bottom-cta lg:pb-8">
-      <BuyerPageHeader title="Order" backTo="/buyer/orders" />
-      <main className="app-page-pad-top buyer-page-container relative z-10 flex flex-grow flex-col items-center pb-8 lg:max-w-4xl lg:pt-8">
-        <div className="mb-8 flex w-full flex-col items-center space-y-4 text-center">
-          <OrderStatusHeroIcon active={active} delivered={delivered} cancelled={cancelled} />
-          <h1 className="text-headline-xl text-primary">
-            {cancelled
-              ? 'Order Cancelled'
-              : active
-                ? tracking.status_label ?? 'Order In Progress'
-                : 'Order Details'}
-          </h1>
-          <p className="text-body-lg px-4 text-on-surface-variant">
-            {cancelled
-              ? 'This order was cancelled. You can view the details below or place a new order.'
-              : delivered && deliveryDurationLabel
-              ? `Delivery completed in ${deliveryDurationLabel}`
-              : active && liveTracking && tracking.eta_label
-                ? tracking.eta_label
-                : active
-                  ? tracking.status_label ?? 'Your order is being processed.'
-                  : 'Your order details and delivery information are below.'}
-          </p>
-          {active && tracking.delivery_agent_name ? (
-            <p className="text-body-md text-on-surface-variant">
-              Courier: {tracking.delivery_agent_name}
-            </p>
-          ) : null}
-        </div>
+    <div className="app-page-pad-bottom-cta pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8">
+      <BuyerPageHeader
+        title={headerTitle}
+        backTo="/buyer/orders"
+        right={
+          !active && !cancelled && orderUuid ? (
+            <Link
+              to={`/buyer/orders/${orderUuid}/invoice`}
+              className="flex h-10 items-center gap-1 rounded-full px-2.5 text-sm font-bold text-primary"
+            >
+              <span className="material-symbols-outlined text-[20px]">receipt</span>
+              <span className="sr-only sm:not-sr-only">Invoice</span>
+            </Link>
+          ) : null
+        }
+      />
 
+      <main className="app-page-pad-top buyer-page-container relative z-10 mx-auto w-full max-w-lg lg:max-w-4xl lg:pt-8">
         {error ? (
-          <p className="text-sm text-rose-700">{getApiErrorMessage(error, 'Could not load order')}</p>
-        ) : isLoading ? (
-          <div className="h-40 w-full animate-pulse rounded-xl bg-surface-container" />
+          <p className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+            {getApiErrorMessage(error, 'Could not load order')}
+          </p>
+        ) : null}
+
+        {isLoading ? (
+          <div className="space-y-3">
+            <div className="h-36 animate-pulse rounded-2xl bg-surface-container" />
+            <div className="h-28 animate-pulse rounded-2xl bg-surface-container" />
+            <div className="h-48 animate-pulse rounded-2xl bg-surface-container" />
+          </div>
         ) : order ? (
-          <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
+          <div className="space-y-3 lg:grid lg:grid-cols-12 lg:gap-6 lg:space-y-0">
+            {/* Status hero */}
+            <section className={cn(softCard, 'text-center lg:col-span-12 lg:flex lg:items-center lg:gap-6 lg:text-left')}>
+              <div className="mx-auto w-fit shrink-0 lg:mx-0 [&_.order-status-hero]:mb-0 [&_.order-status-hero]:h-20 [&_.order-status-hero]:w-20 lg:[&_.order-status-hero]:h-24 lg:[&_.order-status-hero]:w-24">
+                <OrderStatusHeroIcon active={active} delivered={delivered} cancelled={cancelled} />
+              </div>
+              <div className="mt-3 min-w-0 lg:mt-0 lg:flex-1">
+                <p className="text-[11px] font-bold tracking-wide text-outline uppercase lg:text-label-md">
+                  {active ? 'Live status' : 'Status'}
+                </p>
+                <h1 className="mt-0.5 text-xl font-bold text-primary lg:text-headline-xl">{statusTitle}</h1>
+                <p className="mt-1 text-sm text-on-surface-variant lg:text-body-lg">{statusSubtitle}</p>
+                {tracking.delivery_agent_name ? (
+                  <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 text-xs font-semibold text-on-surface">
+                    <span className="material-symbols-outlined text-[16px]">delivery_dining</span>
+                    {tracking.delivery_agent_name}
+                  </p>
+                ) : null}
+              </div>
+              {active && liveTracking ? (
+                <div className="mt-3 hidden shrink-0 items-center gap-1 rounded-full bg-primary-container/15 px-3 py-1.5 text-xs font-bold text-primary lg:mt-0 lg:flex">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                  Tracking
+                </div>
+              ) : null}
+            </section>
+
             {needsOnlinePayment ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 lg:col-span-12">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-950 shadow-[0_2px_12px_rgba(15,40,20,0.04)] lg:col-span-12 lg:rounded-xl">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="font-semibold">Payment pending</p>
-                    <p className="text-body-md">
+                    <p className="font-bold">Payment pending</p>
+                    <p className="mt-0.5 text-amber-900/80">
                       {paymentOutcome === 'failed'
                         ? 'Your last payment attempt failed.'
                         : 'Complete payment to confirm your order.'}
@@ -208,7 +228,7 @@ export function OrderSuccessPage() {
                     type="button"
                     disabled={retryPaymentMutation.isPending}
                     onClick={() => retryPaymentMutation.mutate()}
-                    className="rounded-xl bg-primary px-4 py-2 font-bold text-on-primary disabled:opacity-60"
+                    className="h-11 rounded-xl bg-primary px-5 font-bold text-on-primary transition-transform active:scale-[0.98] disabled:opacity-60"
                   >
                     {retryPaymentMutation.isPending ? 'Opening checkout…' : 'Pay Now'}
                   </button>
@@ -220,95 +240,103 @@ export function OrderSuccessPage() {
                 ) : null}
               </div>
             ) : null}
-            <div className="flex flex-col gap-4 lg:col-span-7 lg:gap-6">
-              <div className="rounded-xl border border-primary/5 bg-surface-container-low p-4 shadow-sm lg:p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-primary-fixed p-2 text-on-primary-fixed">
-                      <span className="material-symbols-outlined">local_shipping</span>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-label-md uppercase text-primary">Current Status</p>
-                      <p className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">
-                        {tracking.status_label ?? formatOrderStatusLabel(currentStatus)}
-                      </p>
-                      {active && liveTracking && tracking.eta_label ? (
-                        <p className="text-body-md mt-1 text-on-surface-variant">{tracking.eta_label}</p>
-                      ) : null}
-                      {delivered && deliveryDurationLabel ? (
-                        <p className="text-body-md mt-1 text-on-surface-variant">
-                          Delivery completed in {deliveryDurationLabel}
-                        </p>
-                      ) : null}
-                      {tracking.delivery_agent_name ? (
-                        <p className="text-body-md mt-1 text-on-surface-variant">
-                          Courier: {tracking.delivery_agent_name}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                  {active ? (
-                    <span className="hidden rounded-full bg-secondary-fixed px-3 py-1 text-label-md text-on-secondary-fixed lg:inline">
-                      {(tracking.status_label ?? formatOrderStatusLabel(currentStatus)).toUpperCase()}
-                    </span>
-                  ) : null}
+
+            <div className="space-y-3 lg:col-span-7 lg:space-y-4">
+              {/* Timeline */}
+              <section className={softCard}>
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px] text-primary">timeline</span>
+                  <h2 className="text-[15px] font-bold text-on-surface lg:text-base">Order timeline</h2>
                 </div>
                 {timeline.length > 0 ? (
-                  <div className="space-y-3 border-t border-outline-variant/30 pt-4">
-                    {timeline.map((entry, index) => (
-                      <div key={`${entry.status}-${entry.at}-${index}`} className="flex items-start gap-3 text-left">
-                        <span
-                          className={cn(
-                            'mt-1 h-2.5 w-2.5 rounded-full',
-                            index === timeline.length - 1 ? 'bg-primary' : 'bg-outline-variant',
-                          )}
-                        />
-                        <div>
-                          <p className="text-body-md font-semibold text-on-surface">
-                            {formatOrderStatusLabel(String(entry.status))}
-                          </p>
-                          <p className="text-label-md text-on-surface-variant">
-                            {formatTimelineDate(entry.at)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ol className="relative space-y-0 pl-1">
+                    {timeline.map((entry, index) => {
+                      const isLatest = index === timeline.length - 1
+                      return (
+                        <li key={`${entry.status}-${entry.at}-${index}`} className="relative flex gap-3 pb-4 last:pb-0">
+                          {index < timeline.length - 1 ? (
+                            <span className="absolute top-3 left-[7px] h-[calc(100%-6px)] w-px bg-outline-variant/60" />
+                          ) : null}
+                          <span
+                            className={cn(
+                              'relative z-[1] mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2',
+                              isLatest
+                                ? 'border-primary bg-primary ring-4 ring-primary/15'
+                                : 'border-outline-variant bg-surface-container-lowest',
+                            )}
+                          />
+                          <div className="min-w-0 flex-1 pt-0.5">
+                            <p
+                              className={cn(
+                                'text-sm font-semibold',
+                                isLatest ? 'text-primary' : 'text-on-surface',
+                              )}
+                            >
+                              {formatOrderStatusLabel(String(entry.status))}
+                            </p>
+                            <p className="text-xs text-on-surface-variant">{formatTimelineDate(entry.at)}</p>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ol>
                 ) : (
-                  <div className="hidden h-2 w-full overflow-hidden rounded-full bg-surface-container-highest lg:block">
-                    <div className="h-full w-2/3 bg-primary" />
+                  <div className="flex items-center gap-3 rounded-xl bg-surface-container-low/80 px-3 py-3">
+                    <span className="material-symbols-outlined text-primary">
+                      {cancelled ? 'cancel' : active ? 'hourglass_top' : 'check_circle'}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-on-surface">
+                        {tracking.status_label ?? formatOrderStatusLabel(currentStatus)}
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        {active ? 'Updates will appear here as the order moves.' : 'No timeline events yet.'}
+                      </p>
+                    </div>
                   </div>
                 )}
-              </div>
+              </section>
 
-              <div className="flex flex-col gap-4 rounded-xl border border-surface-variant/30 bg-surface-container-lowest p-4 shadow-sm lg:gap-6 lg:bg-surface lg:p-6">
-                <div className="grid grid-cols-2 gap-4 border-b border-outline-variant pb-4 lg:gap-6 lg:pb-6">
-                  <div className="text-left">
-                    <p className="text-label-md mb-1 text-outline uppercase">Order ID</p>
-                    <p className="text-body-lg font-bold text-on-surface">
+              {/* Meta + address */}
+              <section className={softCard}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-surface-container-low/80 px-3 py-2.5">
+                    <p className="text-[10px] font-bold tracking-wide text-outline uppercase">Order ID</p>
+                    <p className="mt-0.5 truncate text-sm font-bold text-on-surface">
                       #{order.order_number ?? order.uuid.slice(0, 8)}
                     </p>
                   </div>
-                  <div className="text-left">
-                    <p className="text-label-md mb-1 text-outline uppercase">Items</p>
-                    <p className="text-body-lg font-bold text-on-surface">{items.length} Items</p>
+                  <div className="rounded-xl bg-surface-container-low/80 px-3 py-2.5">
+                    <p className="text-[10px] font-bold tracking-wide text-outline uppercase">Items</p>
+                    <p className="mt-0.5 text-sm font-bold text-on-surface">
+                      {items.length} item{items.length === 1 ? '' : 's'}
+                    </p>
                   </div>
                   {delivered && deliveryDurationLabel ? (
-                    <div className="col-span-2 text-left">
-                      <p className="text-label-md mb-1 text-outline uppercase">Delivery Duration</p>
-                      <p className="text-body-lg font-bold text-on-surface">{deliveryDurationLabel}</p>
+                    <div className="col-span-2 rounded-xl bg-surface-container-low/80 px-3 py-2.5">
+                      <p className="text-[10px] font-bold tracking-wide text-outline uppercase">
+                        Delivery duration
+                      </p>
+                      <p className="mt-0.5 text-sm font-bold text-on-surface">{deliveryDurationLabel}</p>
                     </div>
                   ) : null}
                 </div>
 
                 {order.address ? (
-                  <div className="flex gap-4 text-left">
-                    <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      location_on
-                    </span>
-                    <div>
-                      <p className="text-label-md mb-1 text-outline uppercase">Delivery Address</p>
-                      <p className="text-body-md leading-relaxed text-on-surface">
+                  <div className="mt-3 flex gap-3 border-t border-outline-variant/40 pt-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <span
+                        className="material-symbols-outlined text-[20px]"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        location_on
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold tracking-wide text-outline uppercase">
+                        Delivery address
+                      </p>
+                      <p className="mt-0.5 text-sm leading-snug text-on-surface">
                         {[order.address.label, addressLine, order.address.city, order.address.pincode]
                           .filter(Boolean)
                           .join(', ')}
@@ -316,32 +344,36 @@ export function OrderSuccessPage() {
                     </div>
                   </div>
                 ) : null}
-              </div>
+              </section>
             </div>
 
-            {items.length > 0 ? (
-              <div className="lg:col-span-5">
-                <div className="rounded-xl border border-surface-variant/30 bg-surface-container-lowest p-4 shadow-sm lg:sticky lg:top-28 lg:border-outline-variant/30 lg:bg-surface lg:p-6">
-                  <p className="text-label-md mb-4 text-outline uppercase lg:text-headline-lg lg:normal-case lg:text-on-surface">
-                    Order Summary
-                  </p>
-                  <div className="space-y-3">
+            {/* Items + totals */}
+            <div className="space-y-3 lg:col-span-5 lg:space-y-4">
+              {items.length > 0 ? (
+                <section className={cn(softCard, 'lg:sticky lg:top-28')}>
+                  <h2 className="mb-3 text-[15px] font-bold text-on-surface lg:text-base">Items</h2>
+                  <div className="space-y-2.5">
                     {items.map((item, index) => (
-                      <div key={`${item.product?.uuid ?? item.product_name ?? index}`} className="flex items-center gap-3">
-                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container lg:h-16 lg:w-16">
+                      <div
+                        key={`${item.product?.uuid ?? item.product_name ?? index}`}
+                        className="flex items-center gap-3 rounded-xl bg-surface-container-low/60 p-2 pr-3"
+                      >
+                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-surface-container">
                           <ProductImage product={item.product} className="h-full w-full object-cover" />
                         </div>
-                        <div className="flex-1 text-left">
-                          <p className="text-body-md font-semibold text-on-surface lg:text-body-lg">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-on-surface">
                             {item.product?.name ?? item.product_name}
                           </p>
-                          <p className="text-label-md text-on-surface-variant">× {item.quantity}</p>
+                          <p className="text-xs text-on-surface-variant">Qty {item.quantity}</p>
                         </div>
-                        <p className="text-price-display text-on-surface">{formatCurrency(item.subtotal)}</p>
+                        <p className="shrink-0 text-sm font-bold text-on-surface">
+                          {formatCurrency(item.subtotal)}
+                        </p>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 border-t border-dashed border-outline-variant/30 pt-3 lg:mt-6 lg:pt-4">
+                  <div className="mt-4 border-t border-dashed border-outline-variant/40 pt-3">
                     <OrderSummaryCard
                       subtotal={Number(order.subtotal ?? 0)}
                       delivery={Number(order.delivery_charge ?? 0)}
@@ -351,29 +383,90 @@ export function OrderSuccessPage() {
                       itemCount={items.length}
                       couponCode={typeof order.coupon_code === 'string' ? order.coupon_code : undefined}
                       title=""
-                      className="[&_h3]:hidden"
+                      className="[&_h3]:hidden [&_.space-y-4]:space-y-2.5"
                     />
                   </div>
-                </div>
-              </div>
-            ) : null}
+                </section>
+              ) : null}
 
-            {!active && currentStatus.toLowerCase() === 'delivered' && !hasRated ? (
-              <div className="lg:col-span-12">
+              {!active && delivered && !hasRated ? (
                 <OrderRateForm orderUuid={orderUuid} onRated={() => setHasRated(true)} />
+              ) : null}
+
+              {/* Desktop actions */}
+              <div className="hidden flex-col gap-2 lg:flex">
+                {canCancel ? (
+                  <button
+                    type="button"
+                    disabled={cancelMutation.isPending}
+                    onClick={() => cancelMutation.mutate()}
+                    className="flex h-11 items-center justify-center rounded-xl border border-error font-bold text-error disabled:opacity-50"
+                  >
+                    {cancelMutation.isPending ? 'Cancelling…' : 'Cancel Order'}
+                  </button>
+                ) : null}
+                {!active && !cancelled ? (
+                  <Link
+                    to={`/buyer/orders/${orderUuid}/invoice`}
+                    className="flex h-11 items-center justify-center rounded-xl border border-outline-variant font-bold text-on-surface-variant"
+                  >
+                    View Invoice
+                  </Link>
+                ) : null}
+                <Link
+                  to="/buyer"
+                  className="flex h-11 items-center justify-center rounded-xl bg-primary font-bold text-on-primary"
+                >
+                  Continue Shopping
+                </Link>
+                <Link
+                  to="/buyer/orders"
+                  className="flex h-11 items-center justify-center rounded-xl text-sm font-bold text-primary"
+                >
+                  All Orders
+                </Link>
               </div>
-            ) : null}
+            </div>
           </div>
         ) : null}
 
         {cancelMutation.isError ? (
-          <p className="mt-4 text-sm text-rose-700">
+          <p className="mt-3 text-sm text-rose-700">
             {getApiErrorMessage(cancelMutation.error, 'Could not cancel order')}
           </p>
         ) : null}
-
-        <div className="w-full lg:mt-10">{actions}</div>
       </main>
+
+      {/* Mobile sticky CTA */}
+      {order ? (
+        <div className="app-cta-safe fixed right-0 bottom-0 left-0 z-30 border-t border-outline-variant/40 bg-surface/95 px-4 py-3 backdrop-blur-md lg:hidden">
+          <div className="mx-auto flex max-w-lg gap-2">
+            {canCancel ? (
+              <button
+                type="button"
+                disabled={cancelMutation.isPending}
+                onClick={() => cancelMutation.mutate()}
+                className="flex h-12 flex-1 items-center justify-center rounded-xl border border-error text-sm font-bold text-error disabled:opacity-50"
+              >
+                {cancelMutation.isPending ? '…' : 'Cancel'}
+              </button>
+            ) : (
+              <Link
+                to="/buyer/orders"
+                className="flex h-12 flex-1 items-center justify-center rounded-xl border border-outline-variant text-sm font-bold text-on-surface-variant"
+              >
+                All Orders
+              </Link>
+            )}
+            <Link
+              to="/buyer"
+              className="flex h-12 flex-[1.4] items-center justify-center rounded-xl bg-primary text-sm font-bold text-on-primary transition-transform active:scale-[0.98]"
+            >
+              Continue Shopping
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

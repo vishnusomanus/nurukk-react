@@ -37,6 +37,14 @@ const MANAGEMENT_CARDS = [
     to: '/buyer/addresses',
   },
   {
+    icon: 'favorite',
+    iconWrap: 'bg-secondary-fixed',
+    iconColor: 'text-on-secondary-fixed',
+    title: 'Wishlist',
+    description: 'See products you saved and reorder your favorites anytime.',
+    to: '/buyer/wishlist',
+  },
+  {
     icon: 'payments',
     iconWrap: 'bg-secondary-fixed',
     iconColor: 'text-on-secondary-fixed',

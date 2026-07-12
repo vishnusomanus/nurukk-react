@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
 import type { BuyerProduct } from '@/api/services/buyerService'
 import { BuyerAccountShell } from '@/components/buyer/BuyerAccountShell'
@@ -11,7 +11,6 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import { buildClientPaginationMeta, paginateSlice } from '@/utils/clientPagination'
 import { extractRows } from '@/utils/extractRows'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
-import { cn } from '@/utils/cn'
 
 const PAGE_SIZE = 12
 
@@ -21,11 +20,8 @@ function normalizeWishlistProducts(data: unknown): BuyerProduct[] {
 }
 
 export function BuyerWishlistPage() {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const [reorderError, setReorderError] = useState<string | null>(null)
 
   useEffect(() => {
     setPage(1)
@@ -71,24 +67,6 @@ export function BuyerWishlistPage() {
     return recent.filter((product) => product.uuid && !wishlistIds.has(product.uuid)).slice(0, 6)
   }, [homeData?.data?.recently_purchased, wishlistIds])
 
-  const reorderAll = useMutation({
-    mutationFn: async (items: BuyerProduct[]) => {
-      for (const product of items) {
-        if (product.is_available === false) continue
-        await buyerService.addCartItem({ product_uuid: product.uuid, quantity: 1 })
-      }
-    },
-    onSuccess: () => {
-      setReorderError(null)
-      queryClient.invalidateQueries({ queryKey: ['buyer', 'cart'] })
-      queryClient.invalidateQueries({ queryKey: ['buyer', 'checkout-preview'] })
-      navigate('/buyer/checkout')
-    },
-    onError: (err) => setReorderError(getApiErrorMessage(err, 'Failed to reorder favorites')),
-  })
-
-  const availableCount = products.filter((p) => p.is_available !== false).length
-
   return (
     <BuyerAccountShell title="Favorites">
       <header className="mb-2 space-y-3 lg:mb-8 lg:flex lg:flex-row lg:items-end lg:justify-between lg:gap-4 lg:space-y-0">
@@ -115,12 +93,6 @@ export function BuyerWishlistPage() {
       {error ? (
         <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {getApiErrorMessage(error, 'Failed to load favorites')}
-        </p>
-      ) : null}
-
-      {reorderError ? (
-        <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
-          {reorderError}
         </p>
       ) : null}
 
@@ -186,24 +158,6 @@ export function BuyerWishlistPage() {
             ))}
           </div>
         </section>
-      ) : null}
-
-      {products.length > 0 && availableCount > 0 ? (
-        <button
-          type="button"
-          disabled={reorderAll.isPending}
-          onClick={() => reorderAll.mutate(products)}
-          className={cn(
-            'fixed right-4 z-40 flex h-14 items-center gap-3 rounded-full bg-primary px-6 font-bold text-on-primary shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-60 lg:right-8 lg:bottom-8',
-            'bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]',
-          )}
-        >
-          <span className="material-symbols-outlined">shopping_basket</span>
-          <span className="hidden sm:inline">
-            {reorderAll.isPending ? 'Adding to cart…' : 'Reorder All Favorites'}
-          </span>
-          <span className="sm:hidden">{reorderAll.isPending ? 'Adding…' : 'Reorder All'}</span>
-        </button>
       ) : null}
     </BuyerAccountShell>
   )
