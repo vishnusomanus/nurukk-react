@@ -6,12 +6,14 @@ import type { BuyerProduct, MarketplaceSearchResponse } from '@/api/services/buy
 import { BuyerPageHeader } from '@/components/buyer/BuyerPageHeader'
 import { DeliveryRangeBanner } from '@/components/buyer/DeliveryRangeBanner'
 import { CategoryListingSidebar } from '@/components/buyer/CategoryListingSidebar'
+import { NoStoresNearbyCard } from '@/components/buyer/NoStoresNearbyCard'
 import { ProductCard } from '@/components/buyer/ProductCard'
 import { SellerCard } from '@/components/buyer/SellerCard'
 import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { extractPaginationMeta } from '@/utils/extractPaginationMeta'
 import { getCategoryNavIcon } from '@/utils/categoryNav'
+import { useDeliveryLocation } from '@/context/DeliveryLocationProvider'
 import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
 import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import {
@@ -58,6 +60,8 @@ export function CategoryListingView({
   const trimmedSearch = searchQuery?.trim() ?? ''
   const isSearchMode = searchQuery !== undefined
   const deliveryScope = useDeliveryScopeParams()
+  const { stored } = useDeliveryLocation()
+  const noStoresInRange = Boolean(stored && !stored.serviceable)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX)
@@ -345,23 +349,31 @@ export function CategoryListingView({
         backTo={backTo}
         showBack={backTo != null || isSearchMode}
         right={
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(true)}
-            className="relative flex h-10 items-center gap-1 rounded-full px-2.5 text-primary hover:bg-surface-container-low md:hidden"
-            aria-label="Open filters and sort"
-          >
-            <span className="material-symbols-outlined text-[22px]">tune</span>
-            {activeFilterCount > 0 ? (
-              <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-white">
-                {activeFilterCount}
-              </span>
-            ) : null}
-          </button>
+          noStoresInRange ? undefined : (
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className="relative flex h-10 items-center gap-1 rounded-full px-2.5 text-primary hover:bg-surface-container-low md:hidden"
+              aria-label="Open filters and sort"
+            >
+              <span className="material-symbols-outlined text-[22px]">tune</span>
+              {activeFilterCount > 0 ? (
+                <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+            </button>
+          )
         }
       />
 
       <div className="app-page-pad-top buyer-page-container flex flex-col gap-4 md:flex-row md:gap-8 lg:gap-6 lg:pt-8">
+        {noStoresInRange ? (
+          <main className="min-w-0 flex-1">
+            <NoStoresNearbyCard />
+          </main>
+        ) : (
+          <>
         <CategoryListingSidebar
           categories={categories}
           activeCategoryUuid={categoryUuid}
@@ -555,6 +567,8 @@ export function CategoryListingView({
             </div>
           ) : null}
         </main>
+          </>
+        )}
       </div>
 
       {filtersOpen ? (

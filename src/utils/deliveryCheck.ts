@@ -30,8 +30,8 @@ export function formatDeliveryCheckMessage(result: DeliveryCheckResult) {
   }
 
   if (result.reason === 'outside_delivery_radius') {
-    return `Sorry, no farm stores deliver within ${maxKm ?? 'the service'} km of this location.`
+    return `We'll be available within ${maxKm ?? 'the service'} km of this location soon.`
   }
 
-  return 'Sorry, we do not deliver to this location yet.'
+  return "We'll be available here soon — try a nearby location or check back later."
 }

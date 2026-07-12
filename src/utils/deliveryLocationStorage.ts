@@ -43,5 +43,5 @@ export function deliveryCheckSubLabel(stored: StoredDeliveryCheck | null, locati
     }
     return 'Stores deliver here'
   }
-  return 'No stores in range'
+  return "We'll be here soon"
 }

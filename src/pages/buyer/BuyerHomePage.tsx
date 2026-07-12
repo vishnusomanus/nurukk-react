@@ -9,9 +9,11 @@ import { DeliveryLocationControl } from '@/components/buyer/DeliveryLocationCont
 import { DeliveryRangeBanner } from '@/components/buyer/DeliveryRangeBanner'
 import { HomeSearchBar } from '@/components/buyer/HomeSearchBar'
 import { HomeOffersSection } from '@/components/buyer/HomeOffersSection'
+import { NoStoresNearbyCard } from '@/components/buyer/NoStoresNearbyCard'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { HomeBannerSlider } from '@/components/buyer/HomeBannerSlider'
 import { APP_NAME } from '@/constants/app'
+import { useDeliveryLocation } from '@/context/DeliveryLocationProvider'
 import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { formatCurrency } from '@/utils/formatCurrency'
@@ -34,6 +36,8 @@ export function BuyerHomePage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const deliveryScope = useDeliveryScopeParams()
+  const { stored } = useDeliveryLocation()
+  const noStoresInRange = Boolean(stored && !stored.serviceable)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['buyer', 'home', deliveryScope.latitude, deliveryScope.longitude],
@@ -90,20 +94,24 @@ export function BuyerHomePage() {
       </header>
 
       <main className="app-page-pad-top buyer-page-container space-y-8 lg:space-y-10 lg:pt-8">
-        <HomeSearchBar value={search} onChange={setSearch} onSubmit={onSearch} />
-
         {error ? (
           <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
             {getApiErrorMessage(error, 'Failed to load home')}
           </p>
         ) : null}
 
-        <DeliveryRangeBanner className="mb-2" />
+        {noStoresInRange ? (
+          <NoStoresNearbyCard />
+        ) : (
+          <>
+            <HomeSearchBar value={search} onChange={setSearch} onSubmit={onSearch} />
 
-        <HomeBannerSlider banners={banners} />
+            <DeliveryRangeBanner className="mb-2" />
 
-        {/* Categories */}
-        <section>
+            <HomeBannerSlider banners={banners} />
+
+            {/* Categories */}
+            <section>
           <div className="mb-4 flex items-end justify-between lg:mb-6">
             <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Shop by Category</h3>
             <Link to="/buyer/categories" className="text-label-md flex items-center gap-1 font-bold text-primary lg:text-body-lg">
@@ -320,6 +328,8 @@ export function BuyerHomePage() {
         ) : null}
 
         <HomeOffersSection offers={offers} />
+          </>
+        )}
       </main>
     </div>
   )

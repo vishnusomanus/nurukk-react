@@ -8,9 +8,12 @@ import { CheckoutCouponCard } from '@/components/buyer/CheckoutCouponCard'
 import { CheckoutDeliveryAddress } from '@/components/buyer/CheckoutDeliveryAddress'
 import { CheckoutFreshnessCard } from '@/components/buyer/CheckoutFreshnessCard'
 import { ConfirmActionModal } from '@/components/buyer/ConfirmActionModal'
+import { DeliveryLocationControl } from '@/components/buyer/DeliveryLocationControl'
+import { NoStoresNearbyCard } from '@/components/buyer/NoStoresNearbyCard'
 import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
 import { useCheckoutAddress } from '@/hooks/useCheckoutAddress'
 import { ProductImage } from '@/components/buyer/ProductImage'
+import { useDeliveryLocation } from '@/context/DeliveryLocationProvider'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatCouponHint } from '@/utils/couponLabel'
 import { resolveCheckoutTotals } from '@/utils/checkoutSummary'
@@ -28,6 +31,8 @@ export function CheckoutSummaryPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { addressUuid, addresses, hasAddress, setAddressUuid } = useCheckoutAddress()
+  const { stored } = useDeliveryLocation()
+  const noStoresInRange = Boolean(stored && !stored.serviceable)
   const [removeTarget, setRemoveTarget] = useState<CartItem | null>(null)
   const [confirmClearOpen, setConfirmClearOpen] = useState(false)
 
@@ -212,6 +217,15 @@ export function CheckoutSummaryPage() {
           </p>
         ) : null}
 
+        {noStoresInRange ? (
+          <div className="mx-auto max-w-lg space-y-4">
+            <div className="rounded-xl bg-surface-container-lowest px-3 py-2.5 shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
+              <DeliveryLocationControl variant="mobile" />
+            </div>
+            <NoStoresNearbyCard />
+          </div>
+        ) : (
+          <>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-8">
           <div className="space-y-6 lg:col-span-8 lg:space-y-8">
             <section className="lg:rounded-xl lg:bg-surface lg:p-6 lg:shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
@@ -298,9 +312,11 @@ export function CheckoutSummaryPage() {
             </div>
           ) : null}
         </div>
+          </>
+        )}
       </main>
 
-      {items.length > 0 ? (
+      {items.length > 0 && !noStoresInRange ? (
       <div className="app-cta-safe fixed right-0 bottom-0 left-0 z-30 border-t border-surface-variant bg-surface/95 px-margin-mobile py-4 backdrop-blur-lg lg:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-4">
             <div className="shrink-0">
