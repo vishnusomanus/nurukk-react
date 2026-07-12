@@ -5,6 +5,7 @@ import { deliveryService } from '@/api/services'
 import { NotificationsMenu } from '@/components/common/NotificationsMenu'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
+import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { resolveBreadcrumbBack } from '@/utils/breadcrumbBack'
 import { cn } from '@/utils/cn'
 
@@ -64,7 +65,7 @@ export function DeliveryLayout() {
               type="button"
               onClick={async () => {
                 await logout()
-                navigate('/login/delivery')
+                navigate(getLogoutRedirectPath('/delivery', userRole), { replace: true })
               }}
               className="text-label-md font-semibold text-error"
             >

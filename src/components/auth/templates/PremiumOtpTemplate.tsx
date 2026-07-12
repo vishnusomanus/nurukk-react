@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useOtpStore } from '@/store/otpStore'
 import type { OtpRole } from '@/api/services/authService'
 import { APP_NAME } from '@/constants/app'
-import { getApiErrorMessage } from '@/utils/apiErrorMessage'
+import { getApiMessage } from '@/utils/apiErrorMessage'
 import { getHomePathForRole } from '@/utils/authRole'
 import { getOtpBackPath } from '@/utils/authPaths'
 import { useAuthStore } from '@/store/authStore'
@@ -72,7 +72,9 @@ export function PremiumOtpTemplate({
       } catch (err: unknown) {
         setStatus('idle')
         submittingRef.current = false
-        setFormError(getApiErrorMessage(err, 'OTP verification failed'))
+        setFormError(getApiMessage(err, 'Invalid OTP. Please try again.'))
+        setDigits(Array(6).fill(''))
+        window.setTimeout(() => inputsRef.current[0]?.focus(), 50)
       }
     },
     [phone, role, mode, verifyOtp, clearPending, navigate],
@@ -99,7 +101,7 @@ export function PremiumOtpTemplate({
       setDigits(Array(6).fill(''))
       inputsRef.current[0]?.focus()
     } catch (err: unknown) {
-      setFormError(getApiErrorMessage(err, 'Failed to resend OTP'))
+      setFormError(getApiMessage(err, 'Failed to resend OTP'))
     }
   }
 
@@ -147,7 +149,12 @@ export function PremiumOtpTemplate({
 
           <form className="flex w-full flex-col gap-4 sm:gap-6" onSubmit={(e) => void onVerify(e)}>
             <div>
-              <div className="stitch-otp-row grid w-full grid-cols-6 gap-1.5 sm:gap-3">
+              <div
+                className={cn(
+                  'stitch-otp-row grid w-full grid-cols-6 gap-1.5 sm:gap-3',
+                  formError && 'stitch-otp-shake',
+                )}
+              >
                 {digits.map((digit, index) => (
                   <input
                     key={index}
@@ -160,11 +167,14 @@ export function PremiumOtpTemplate({
                     maxLength={1}
                     pattern="\d*"
                     required
+                    aria-invalid={formError ? true : undefined}
+                    aria-describedby={formError ? 'otp-error' : undefined}
                     aria-label={`Digit ${index + 1}`}
                     value={digit}
                     disabled={status !== 'idle'}
                     onChange={(e) => {
                       const v = e.target.value.replace(/\D/g, '').slice(-1)
+                      if (formError) setFormError(null)
                       const next = [...digits]
                       next[index] = v
                       setDigits(next)
@@ -178,6 +188,7 @@ export function PremiumOtpTemplate({
                     }}
                     onPaste={(e) => {
                       e.preventDefault()
+                      if (formError) setFormError(null)
                       const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
                       if (!pasted) return
                       const next = Array(6).fill('')
@@ -189,7 +200,12 @@ export function PremiumOtpTemplate({
                       inputsRef.current[focusIndex]?.focus()
                       maybeAutoSubmit(next)
                     }}
-                    className="stitch-otp-input h-12 w-full min-w-0 rounded-lg border border-white/50 bg-white/50 text-center text-lg font-bold shadow-sm transition-all focus:bg-white sm:h-16 sm:rounded-lg sm:text-xl"
+                    className={cn(
+                      'stitch-otp-input h-12 w-full min-w-0 rounded-lg border bg-white/50 text-center text-lg font-bold shadow-sm transition-all focus:bg-white sm:h-16 sm:rounded-lg sm:text-xl',
+                      formError
+                        ? 'stitch-otp-input--error border-error/60'
+                        : 'border-white/50',
+                    )}
                   />
                 ))}
               </div>
@@ -201,9 +217,14 @@ export function PremiumOtpTemplate({
             </div>
 
             {formError ? (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+              <p
+                id="otp-error"
+                role="alert"
+                aria-live="assertive"
+                className="text-center text-sm font-semibold text-error"
+              >
                 {formError}
-              </div>
+              </p>
             ) : null}
 
             <button

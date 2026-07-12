@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { APP_NAME } from '@/constants/app'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
+import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { cn } from '@/utils/cn'
 
 type NavItem = {
@@ -38,8 +39,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const user = useAuthStore((s) => s.user)
 
   const handleLogout = async () => {
+    const role = user?.role
     await logout()
-    navigate('/login/admin')
+    navigate(getLogoutRedirectPath('/admin', role), { replace: true })
     onNavigate?.()
   }
 

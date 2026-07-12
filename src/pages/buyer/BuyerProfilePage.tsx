@@ -12,6 +12,7 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import { useOrderSavingsSummary } from '@/utils/buyerAccount'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { getHomePathForRole, isSellerRole } from '@/utils/authRole'
+import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { allowsRoleSwitch } from '@/config/appRole'
 import { canSwitchToSeller } from '@/utils/sellerAccess'
 import { cn } from '@/utils/cn'
@@ -270,7 +271,7 @@ function DashboardContent({
   toggleSellerMode: () => void
   switchPending: boolean
   switchError?: string | null
-  logout: () => void
+  logout: () => void | Promise<void>
   totalSavings: number
   orderCount: number
 }) {
@@ -330,7 +331,7 @@ function DashboardContent({
             className="text-label-md flex items-center gap-2 rounded-lg border border-error px-4 py-2 text-error transition-all hover:bg-error hover:text-white active:scale-[0.98]"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            Logout
+            Log out
           </button>
         </div>
       </div>
@@ -341,9 +342,15 @@ function DashboardContent({
 export function BuyerProfilePage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const logout = useAuth((s) => s.logout)
+  const logoutAuth = useAuth((s) => s.logout)
   const initUser = useAuth((s) => s.initUser)
   const switchRole = useAuth((s) => s.switchRole)
+
+  const logout = async () => {
+    const role = user?.role
+    await logoutAuth()
+    navigate(getLogoutRedirectPath('/buyer', role), { replace: true })
+  }
 
   const displayName = user?.name?.trim() || 'Guest'
   const firstName = displayName.split(/\s+/)[0] ?? displayName

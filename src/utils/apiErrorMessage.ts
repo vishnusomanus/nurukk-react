@@ -81,3 +81,11 @@ export function getApiErrorMessage(err: unknown, fallback: string): string {
 
   return parts.length ? parts.join('\n') : fallback
 }
+
+/** Only the top-level API `message` string (no field errors). */
+export function getApiMessage(err: unknown, fallback: string): string {
+  const payload = readApiPayload(err)
+  const msg = payload?.message
+  if (typeof msg === 'string' && msg.trim()) return msg.trim()
+  return fallback
+}

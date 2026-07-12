@@ -14,6 +14,7 @@ import { ProductBadgeSettingsForm } from '@/components/admin/ProductBadgeSetting
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
+import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { cn } from '@/utils/cn'
 
 type SettingFieldType = 'text' | 'email' | 'password' | 'number' | 'boolean' | 'select'
@@ -348,8 +349,9 @@ export function AdminSettingsPage() {
   }
 
   const handleLogout = async () => {
+    const role = user?.role
     await logout()
-    navigate('/login/admin')
+    navigate(getLogoutRedirectPath('/admin', role), { replace: true })
   }
 
   return (

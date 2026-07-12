@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { getHomePathForRole, isSellerRole } from '@/utils/authRole'
+import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { allowsRoleSwitch } from '@/config/appRole'
 import { hasDualMarketplaceRoles } from '@/utils/sellerAccess'
 import { cn } from '@/utils/cn'
@@ -50,8 +51,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   })
 
   const handleLogout = async () => {
+    const role = user?.role
     await logout()
-    navigate('/login/seller')
+    navigate(getLogoutRedirectPath('/seller', role), { replace: true })
     onNavigate?.()
   }
 

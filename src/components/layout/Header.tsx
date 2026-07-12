@@ -4,6 +4,7 @@ import { useSidebarStore } from '@/store/sidebarStore'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { useRoleNav } from '@/hooks/useRoleNav'
+import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { Moon, Sun, Menu, LogOut } from 'lucide-react'
 
 export function Header() {
@@ -17,8 +18,9 @@ export function Header() {
   const title = isAdmin ? 'Admin' : isBuyer ? 'Buyer' : isSeller ? 'Seller' : 'Dashboard'
 
   const onLogout = async () => {
+    const role = user?.role
     await logout()
-    navigate('/', { replace: true })
+    navigate(getLogoutRedirectPath(undefined, role), { replace: true })
   }
 
   return (
