@@ -7,6 +7,8 @@ import { ProductImage, RemoteImage } from '@/components/buyer/ProductImage'
 import { SellerCard } from '@/components/buyer/SellerCard'
 import { DeliveryLocationControl } from '@/components/buyer/DeliveryLocationControl'
 import { DeliveryRangeBanner } from '@/components/buyer/DeliveryRangeBanner'
+import { HomeSearchBar } from '@/components/buyer/HomeSearchBar'
+import { HomeOffersSection } from '@/components/buyer/HomeOffersSection'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { HomeBannerSlider } from '@/components/buyer/HomeBannerSlider'
 import { APP_NAME } from '@/constants/app'
@@ -88,18 +90,7 @@ export function BuyerHomePage() {
       </header>
 
       <main className="app-page-pad-top buyer-page-container space-y-8 lg:space-y-10 lg:pt-8">
-        {/* Search - mobile only inline; desktop in header */}
-        <form className="lg:hidden" onSubmit={onSearch}>
-          <div className="relative flex items-center">
-            <span className="material-symbols-outlined absolute left-4 text-outline">search</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="text-body-md h-12 w-full rounded-full border-none bg-surface-container-low pr-4 pl-12 placeholder:text-outline focus:ring-2 focus:ring-primary-container"
-              placeholder="Search for fresh vegetables..."
-            />
-          </div>
-        </form>
+        <HomeSearchBar value={search} onChange={setSearch} onSubmit={onSearch} />
 
         {error ? (
           <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
@@ -288,84 +279,47 @@ export function BuyerHomePage() {
           </div>
         </section>
 
-        {/* Recently purchased + Active offers */}
-        {recent.length > 0 || offers.length > 0 ? (
-          <section className="space-y-8 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
-            {recent.length > 0 ? (
-              <div
-                className={
-                  offers.length > 0
-                    ? 'lg:col-span-2 lg:rounded-3xl lg:border lg:border-surface-container-highest lg:bg-white lg:p-8 lg:shadow-sm'
-                    : 'lg:col-span-3 lg:rounded-3xl lg:border lg:border-surface-container-highest lg:bg-white lg:p-8 lg:shadow-sm'
-                }
-              >
-                <div className="mb-4 flex items-center justify-between lg:mb-8">
-                  <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Recently Purchased</h3>
-                  <button type="button" className="text-label-md hidden font-bold text-primary lg:block">
-                    Reorder All
-                  </button>
+        {/* Recently purchased */}
+        {recent.length > 0 ? (
+          <section className="lg:rounded-3xl lg:border lg:border-surface-container-highest lg:bg-white lg:p-8 lg:shadow-sm">
+            <div className="mb-4 flex items-center justify-between lg:mb-8">
+              <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Recently Purchased</h3>
+              <button type="button" className="text-label-md hidden font-bold text-primary lg:block">
+                Reorder All
+              </button>
+            </div>
+            <div className="space-y-3">
+              {recent.map((product) => (
+                <div
+                  key={product.uuid}
+                  className="flex items-center gap-4 rounded-xl bg-surface-container-lowest p-3 shadow-sm lg:bg-transparent lg:p-4 lg:shadow-none lg:hover:bg-surface-container-low"
+                >
+                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg lg:rounded-xl">
+                    <ProductImage product={product} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-body-lg font-bold text-on-surface">{product.name}</h4>
+                    <p className="text-body-md text-on-surface-variant lg:hidden">
+                      {formatCurrency(product.discount_price ?? product.price)}
+                    </p>
+                    <p className="hidden text-body-md text-on-surface-variant lg:block">Purchased recently</p>
+                  </div>
+                  <span className="text-price-display hidden lg:inline">
+                    {formatCurrency(product.discount_price ?? product.price)}
+                  </span>
+                  <Link
+                    to={`/buyer/products/${product.uuid}`}
+                    className="rounded-lg border border-primary px-4 py-1 text-sm font-bold text-primary lg:rounded-full lg:bg-primary-container lg:px-4 lg:py-1 lg:text-on-primary-container lg:no-underline"
+                  >
+                    Reorder
+                  </Link>
                 </div>
-                <div className="space-y-3">
-                  {recent.map((product) => (
-                    <div
-                      key={product.uuid}
-                      className="flex items-center gap-4 rounded-xl bg-surface-container-lowest p-3 shadow-sm lg:bg-transparent lg:p-4 lg:shadow-none lg:hover:bg-surface-container-low"
-                    >
-                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg lg:rounded-xl">
-                        <ProductImage product={product} className="h-full w-full object-cover" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-body-lg font-bold text-on-surface">{product.name}</h4>
-                        <p className="text-body-md text-on-surface-variant lg:hidden">
-                          {formatCurrency(product.discount_price ?? product.price)}
-                        </p>
-                        <p className="hidden text-body-md text-on-surface-variant lg:block">Purchased recently</p>
-                      </div>
-                      <span className="text-price-display hidden lg:inline">
-                        {formatCurrency(product.discount_price ?? product.price)}
-                      </span>
-                      <Link
-                        to={`/buyer/products/${product.uuid}`}
-                        className="rounded-lg border border-primary px-4 py-1 text-sm font-bold text-primary lg:rounded-full lg:bg-primary-container lg:px-4 lg:py-1 lg:text-on-primary-container lg:no-underline"
-                      >
-                        Reorder
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {offers.length > 0 ? (
-              <div
-                className={
-                  recent.length > 0
-                    ? 'lg:col-span-1 lg:flex lg:flex-col lg:rounded-3xl lg:border lg:border-primary/10 lg:bg-primary-container/20 lg:p-8'
-                    : 'lg:col-span-3'
-                }
-              >
-                <div className="mb-4 lg:mb-6">
-                  <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">Active Offers</h3>
-                </div>
-                <div className="space-y-3 lg:flex-1">
-                  {offers.map((offer, index) => (
-                    <div
-                      key={`${offer.code ?? offer.title ?? index}`}
-                      className="rounded-xl border border-secondary/20 bg-secondary-container/30 p-4 lg:bg-white/60"
-                    >
-                      <p className="text-headline-lg-mobile text-on-surface">{offer.title ?? 'Special offer'}</p>
-                      {offer.code ? (
-                        <p className="text-label-md mt-2 font-bold tracking-wider text-primary uppercase">
-                          Code: {offer.code}
-                        </p>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+              ))}
+            </div>
           </section>
         ) : null}
+
+        <HomeOffersSection offers={offers} />
       </main>
     </div>
   )

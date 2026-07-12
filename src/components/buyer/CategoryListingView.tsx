@@ -385,13 +385,17 @@ export function CategoryListingView({
               <label className="sr-only" htmlFor="buyer-search-input">
                 Search products and farms
               </label>
-              <div className="relative flex items-center">
-                <span className="material-symbols-outlined pointer-events-none absolute left-3.5 text-outline">
+              <div
+                className={cn(
+                  'flex h-12 items-center gap-3 rounded-2xl border border-black/[0.06] bg-white px-3.5 shadow-[0_6px_20px_-8px_rgba(15,40,20,0.18)] [color-scheme:light]',
+                )}
+              >
+                <span className="material-symbols-outlined shrink-0 text-[22px] text-[#6b7568]">
                   search
                 </span>
                 <input
                   id="buyer-search-input"
-                  type="search"
+                  type="text"
                   enterKeyHint="search"
                   autoComplete="off"
                   autoCapitalize="off"
@@ -399,7 +403,7 @@ export function CategoryListingView({
                   autoFocus={!trimmedSearch}
                   value={searchDraft}
                   onChange={(e) => setSearchDraft(e.target.value)}
-                  className="h-12 w-full rounded-full border-none bg-surface-container-low pr-12 pl-11 text-sm placeholder:text-outline focus:ring-2 focus:ring-primary-container sm:text-base"
+                  className="h-11 min-w-0 flex-1 border-none bg-transparent text-[16px] leading-5 text-[#1b1c1c] outline-none placeholder:text-[#6b7568] placeholder:opacity-100 focus:ring-0"
                   placeholder="Search vegetables, farms…"
                 />
                 {searchDraft ? (
@@ -409,10 +413,10 @@ export function CategoryListingView({
                       setSearchDraft('')
                       onSearchQueryChange('')
                     }}
-                    className="absolute right-2 flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-[#6b7568] transition-transform active:scale-95"
                     aria-label="Clear search"
                   >
-                    <span className="material-symbols-outlined text-[20px]">cancel</span>
+                    <span className="material-symbols-outlined text-[18px]">close</span>
                   </button>
                 ) : null}
               </div>

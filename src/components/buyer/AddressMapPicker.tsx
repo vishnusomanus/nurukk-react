@@ -381,15 +381,15 @@ export function AddressMapPicker({
       >
         <form
           className={cn(
-            'pointer-events-auto flex items-center gap-2 border border-black/[0.06] bg-white/90 shadow-[0_8px_24px_-8px_rgba(15,23,42,0.28)] backdrop-blur-xl',
-            isSheet ? 'rounded-full px-4 py-2.5' : 'rounded-xl p-3',
+            'pointer-events-auto flex items-center gap-2 border border-black/10 bg-white shadow-[0_8px_24px_-8px_rgba(15,23,42,0.28)] [color-scheme:light]',
+            isSheet ? 'rounded-full px-4 py-2.5' : 'rounded-xl p-3 backdrop-blur-xl',
           )}
           onSubmit={(e) => {
             e.preventDefault()
             onSearchSubmit()
           }}
         >
-          <span className="material-symbols-outlined text-primary">search</span>
+          <span className="material-symbols-outlined shrink-0 text-[#0d631b]">search</span>
           <input
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
@@ -398,10 +398,10 @@ export function AddressMapPicker({
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
-            className="w-full border-none bg-transparent text-[16px] leading-5 outline-none focus:ring-0"
+            className="w-full border-none bg-transparent text-[16px] leading-5 text-[#1b1c1c] outline-none placeholder:text-[#6b7568] placeholder:opacity-100 focus:ring-0"
           />
           {loading ? (
-            <span className="material-symbols-outlined animate-spin text-[20px] text-primary">
+            <span className="material-symbols-outlined animate-spin text-[20px] text-[#0d631b]">
               progress_activity
             </span>
           ) : null}
