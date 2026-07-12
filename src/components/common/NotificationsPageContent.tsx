@@ -67,19 +67,19 @@ export function NotificationsPageContent() {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-1 rounded-xl bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] sm:gap-2 sm:bg-transparent sm:p-0 sm:shadow-none">
           {(['all', 'unread'] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setFilter(tab)}
               className={cn(
-                'text-label-md rounded-full px-4 py-2 capitalize transition-colors',
+                'flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold capitalize transition-colors sm:flex-none sm:rounded-full sm:text-label-md',
                 filter === tab
                   ? 'bg-primary text-on-primary'
-                  : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface',
+                  : 'text-on-surface-variant hover:text-on-surface sm:bg-surface-container-high',
               )}
             >
               {tab}
@@ -92,38 +92,38 @@ export function NotificationsPageContent() {
           type="button"
           disabled={markAll.isPending || unread === 0}
           onClick={() => markAll.mutate()}
-          className="text-label-md self-start font-semibold text-primary disabled:opacity-50 sm:self-auto"
+          className="self-start text-sm font-semibold text-primary disabled:opacity-50 sm:self-auto sm:text-label-md"
         >
           {markAll.isPending ? 'Updating…' : 'Mark all as read'}
         </button>
       </div>
 
       {isLoading ? (
-        <div className="rounded-xl border border-outline-variant bg-surface p-10 text-center text-on-surface-variant">
+        <div className="rounded-2xl bg-surface-container-lowest p-10 text-center text-sm text-on-surface-variant shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant lg:bg-surface lg:shadow-none">
           Loading notifications…
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-error/30 bg-error/5 p-6 text-error">
+        <div className="rounded-2xl border border-error/30 bg-error/5 p-4 text-sm text-error lg:p-6">
           {getApiErrorMessage(error, 'Could not load notifications')}
         </div>
       ) : null}
 
       {!isLoading && !error && notifications.length === 0 ? (
-        <div className="rounded-xl border border-outline-variant bg-surface p-10 text-center">
+        <div className="rounded-2xl bg-surface-container-lowest py-14 text-center shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant lg:bg-surface lg:shadow-none">
           <span className="material-symbols-outlined mb-3 text-[40px] text-outline">notifications_off</span>
-          <p className="text-body-lg font-semibold text-on-surface">
+          <p className="text-base font-semibold text-on-surface lg:text-body-lg">
             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
           </p>
-          <p className="text-body-sm mt-1 text-on-surface-variant">
+          <p className="mt-1 text-sm text-on-surface-variant">
             Order updates and delivery alerts will appear here.
           </p>
         </div>
       ) : null}
 
       {notifications.length > 0 ? (
-        <div className="space-y-3">
+        <div className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:space-y-3 lg:overflow-visible lg:bg-transparent lg:shadow-none">
           {notifications.map((notification) => (
             <NotificationListItem
               key={notification.uuid}
@@ -141,7 +141,7 @@ export function NotificationsPageContent() {
             type="button"
             disabled={isFetchingNextPage}
             onClick={() => void fetchNextPage()}
-            className="text-label-md rounded-xl border border-outline px-6 py-2.5 text-on-surface-variant disabled:opacity-50"
+            className="rounded-xl border border-outline px-6 py-2.5 text-sm font-semibold text-on-surface-variant disabled:opacity-50 lg:text-label-md"
           >
             {isFetchingNextPage ? 'Loading…' : 'Load more'}
           </button>

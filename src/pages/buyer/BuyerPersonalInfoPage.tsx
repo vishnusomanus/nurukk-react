@@ -79,17 +79,20 @@ export function BuyerPersonalInfoPage() {
 
   return (
     <BuyerAccountShell title="Personal Info">
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="mb-8">
+      <div className="mx-auto w-full max-w-2xl space-y-4">
+        <div className="mb-4 hidden lg:mb-8 lg:block">
           <h1 className="text-headline-xl text-on-surface">Personal Information</h1>
           <p className="text-body-lg text-on-surface-variant">
             Update your name, email, and contact details.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="profile-name" className="text-label-md text-on-surface-variant">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 rounded-2xl bg-surface-container-lowest px-4 py-5 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:space-y-6 lg:bg-transparent lg:p-0 lg:shadow-none"
+        >
+          <div className="space-y-1.5">
+            <label htmlFor="profile-name" className="text-xs font-semibold text-on-surface-variant">
               Full name
             </label>
             <input
@@ -97,14 +100,14 @@ export function BuyerPersonalInfoPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="text-body-md h-12 w-full rounded-xl border border-outline-variant/40 bg-surface-container-lowest px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+              className="h-12 w-full rounded-xl border border-outline-variant/40 bg-surface px-4 text-sm text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none lg:bg-surface-container-lowest lg:text-base"
               placeholder="Your name"
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="profile-email" className="text-label-md text-on-surface-variant">
+          <div className="space-y-1.5">
+            <label htmlFor="profile-email" className="text-xs font-semibold text-on-surface-variant">
               Email
             </label>
             <input
@@ -112,17 +115,17 @@ export function BuyerPersonalInfoPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="text-body-md h-12 w-full rounded-xl border border-outline-variant/40 bg-surface-container-lowest px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+              className="h-12 w-full rounded-xl border border-outline-variant/40 bg-surface px-4 text-sm text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none lg:bg-surface-container-lowest lg:text-base"
               placeholder="you@example.com"
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="profile-phone" className="text-label-md text-on-surface-variant">
+          <div className="space-y-1.5">
+            <label htmlFor="profile-phone" className="text-xs font-semibold text-on-surface-variant">
               Mobile number
             </label>
-            <div className="flex items-center gap-3">
-              <span className="text-body-md rounded-xl border border-outline-variant/40 bg-surface-container-low px-4 py-3 font-bold text-primary">
+            <div className="flex items-center gap-2">
+              <span className="rounded-xl border border-outline-variant/40 bg-surface-container-low px-3 py-3 text-sm font-bold text-primary">
                 {phonePrefix}
               </span>
               <input
@@ -132,7 +135,7 @@ export function BuyerPersonalInfoPage() {
                 maxLength={10}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="text-body-md h-12 flex-1 rounded-xl border border-outline-variant/40 bg-surface-container-lowest px-4 text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                className="h-12 min-w-0 flex-1 rounded-xl border border-outline-variant/40 bg-surface px-4 text-sm text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none lg:bg-surface-container-lowest lg:text-base"
                 placeholder="00000 00000"
               />
             </div>
@@ -149,12 +152,12 @@ export function BuyerPersonalInfoPage() {
             </p>
           ) : null}
 
-          <div className="flex flex-wrap gap-3 pt-2">
+          <div className="flex gap-3 pt-1">
             <button
               type="submit"
               disabled={saveMutation.isPending}
               className={cn(
-                'text-label-md rounded-xl bg-primary px-6 py-3 font-semibold text-on-primary shadow-md transition-all hover:brightness-110 active:scale-95 disabled:opacity-60',
+                'flex-1 rounded-xl bg-primary py-3.5 text-sm font-semibold text-on-primary shadow-md transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 lg:flex-none lg:px-6',
               )}
             >
               {saveMutation.isPending ? 'Saving…' : 'Save changes'}
@@ -163,7 +166,7 @@ export function BuyerPersonalInfoPage() {
               type="button"
               onClick={handleDiscard}
               disabled={saveMutation.isPending}
-              className="text-label-md rounded-xl border border-outline-variant px-6 py-3 font-semibold text-on-surface-variant transition-all hover:bg-surface-container-low active:scale-95 disabled:opacity-60"
+              className="rounded-xl border border-outline-variant px-4 py-3.5 text-sm font-semibold text-on-surface-variant transition-all hover:bg-surface-container-low active:scale-[0.98] disabled:opacity-60 lg:px-6"
             >
               Discard
             </button>

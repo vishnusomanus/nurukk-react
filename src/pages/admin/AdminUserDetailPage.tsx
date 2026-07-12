@@ -8,6 +8,7 @@ import {
   unblockUser,
   type AdminUser,
 } from '@/api/services/adminUsersService'
+import { BreadcrumbBackLink } from '@/components/common/BreadcrumbBack'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatOrderDateTime } from '@/utils/formatRelativeTime'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
@@ -69,10 +70,7 @@ export function AdminUserDetailPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-8">
-      <Link to="/admin/users" className="text-label-md inline-flex items-center gap-1 font-bold text-primary hover:underline">
-        <span className="material-symbols-outlined text-sm">arrow_back</span>
-        Back to users
-      </Link>
+      <BreadcrumbBackLink backTo="/admin/users" label="Back to users" />
 
       {isLoading ? <div className="h-40 animate-pulse rounded-xl bg-surface-container" /> : null}
 

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
 import { BuyerPageHeader } from '@/components/buyer/BuyerPageHeader'
+import { BreadcrumbBackLink } from '@/components/common/BreadcrumbBack'
 import { OrderInvoiceDocument } from '@/components/buyer/OrderInvoiceDocument'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { downloadInvoicePdf } from '@/utils/buyerAccount'
@@ -39,13 +40,10 @@ export function OrderInvoicePage() {
       <div className="app-page-pad-top buyer-page-container py-6 lg:max-w-3xl lg:pt-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="hidden lg:block">
-            <Link
-              to={`/buyer/orders/${orderUuid}/success`}
-              className="text-label-md inline-flex items-center gap-1 text-primary"
-            >
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-              Back to order
-            </Link>
+            <BreadcrumbBackLink
+              backTo={`/buyer/orders/${orderUuid}/success`}
+              label="Back to order"
+            />
             <h1 className="text-headline-sm mt-2 font-bold text-on-surface">Invoice</h1>
             {orderNumber ? (
               <p className="text-body-sm text-on-surface-variant">{orderNumber}</p>

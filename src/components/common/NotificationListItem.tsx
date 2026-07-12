@@ -58,8 +58,14 @@ export function NotificationListItem({
   )
 
   const className = cn(
-    'flex w-full items-start gap-3 border-b border-outline-variant/40 text-left transition-colors last:border-0',
-    compact ? 'px-4 py-3 hover:bg-surface-container-low' : 'rounded-xl border border-outline-variant bg-surface p-4 hover:bg-surface-container-lowest',
+    'flex w-full items-start gap-3 text-left transition-colors',
+    compact
+      ? 'border-b border-outline-variant/40 px-4 py-3 last:border-0 hover:bg-surface-container-low'
+      : [
+          'border-b border-outline-variant/40 px-4 py-3.5 last:border-0 hover:bg-surface-container-low',
+          'lg:rounded-xl lg:border lg:border-outline-variant lg:bg-surface lg:p-4 lg:last:border lg:hover:bg-surface-container-lowest',
+        ],
+    unread && 'max-lg:bg-primary-container/10',
     unread && compact && 'bg-primary-container/10',
   )
 

@@ -16,9 +16,6 @@ import { allowsRoleSwitch } from '@/config/appRole'
 import { canSwitchToSeller } from '@/utils/sellerAccess'
 import { cn } from '@/utils/cn'
 
-const PROFILE_HERO_IMAGE =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAPHHilKMhyQ-cKgzDa5dN75fiGREeqQOnqBt44VYIrd-SFyRtTb_zntTe9K7e9iTmrZomyhcohWlD6CBctAsx0HQWQp7V59E5SkFykr647WKn59v5OwE_dwtgZY6eYbutcaPyi0PyRlRC2lgu2HGSBdJ9NTr2zN_aep14su-MdLNPoW13Xby3L7kCT9Acq2wyU8FkInrnTV2UNiM1nwjM6hKnNwcrqPx2ao-vYTOaEGfQKgKX9vaJCP0etBwQUcFZzokTtJuwmZ-A2'
-
 const PROFILE_AVATAR_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDP6pHoFxWdjIImPbkOMU-UgazhB4QukSXXA-eCEN5Hr-RBWkwLNfNfTfHAW-wE0VzEXlbbMah6Vp7_O06Cds3qcQqNQ3PvagD1n9zwfUR5fqSUUqAUQVKL3PwVVKVtT2Wy09neJP09IDiqtMZ4qYmPQxpa0-36jFtmq-z8k2yl6ZS5pOGLY7SkoMdByejP0K4i3oudUhCG49X-9xfyFeLEr4oAwEeZWZeSO2wLFH97gZgHwmCsZ_3XG52tjzNeyjNt_6pAQCX1sBFV'
 
@@ -119,29 +116,95 @@ function ProfileManagementCard({
   )
 }
 
+function MobileMenuRow({
+  icon,
+  iconWrap,
+  iconColor,
+  title,
+  to,
+}: {
+  icon: string
+  iconWrap: string
+  iconColor: string
+  title: string
+  to?: string
+}) {
+  const className =
+    'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-surface-container-high'
+
+  const content = (
+    <>
+      <span
+        className={cn(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+          iconWrap,
+        )}
+      >
+        <span className={cn('material-symbols-outlined text-[22px]', iconColor)}>{icon}</span>
+      </span>
+      <span className="min-w-0 flex-1 text-[15px] font-semibold text-on-surface">{title}</span>
+      <span className="material-symbols-outlined text-[20px] text-outline">chevron_right</span>
+    </>
+  )
+
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <button type="button" className={className}>
+      {content}
+    </button>
+  )
+}
+
 function ProfileSellerModeToggle({
   canSell,
   sellerMode,
   isPending,
   errorMessage,
   onToggle,
+  variant = 'list',
 }: {
   canSell: boolean
   sellerMode: boolean
   isPending: boolean
   errorMessage?: string | null
   onToggle: () => void
+  variant?: 'list' | 'panel'
 }) {
+  const isList = variant === 'list'
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between rounded-lg bg-surface-container-lowest p-3">
-        <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-secondary">storefront</span>
-          <div>
-            <p className="text-label-md text-on-surface">Seller Mode</p>
+      <div
+        className={cn(
+          'flex items-center justify-between gap-3',
+          isList ? 'px-4 py-3.5' : 'rounded-lg bg-surface-container-lowest p-3',
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          {isList ? (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-fixed">
+              <span className="material-symbols-outlined text-[22px] text-on-secondary-fixed">
+                storefront
+              </span>
+            </span>
+          ) : (
+            <span className="material-symbols-outlined text-secondary">storefront</span>
+          )}
+          <div className="min-w-0">
+            <p className={cn(isList ? 'text-[15px] font-semibold text-on-surface' : 'text-label-md text-on-surface')}>
+              Seller Mode
+            </p>
             <p
               className={cn(
-                'text-[10px] font-bold uppercase',
+                'font-bold uppercase',
+                isList ? 'text-[11px] tracking-wide' : 'text-[10px]',
                 sellerMode ? 'text-secondary' : 'text-outline',
               )}
             >
@@ -155,22 +218,29 @@ function ProfileSellerModeToggle({
           onClick={onToggle}
           aria-pressed={sellerMode}
           className={cn(
-            'relative ml-4 h-6 w-12 shrink-0 rounded-full transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50',
+            'relative shrink-0 rounded-full transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50',
+            isList ? 'h-7 w-12' : 'ml-4 h-6 w-12',
             sellerMode ? 'bg-secondary' : 'bg-outline-variant',
           )}
         >
           <span
             className={cn(
-              'absolute top-1 h-4 w-4 rounded-full bg-white transition-transform duration-300',
-              sellerMode ? 'left-7' : 'left-1',
+              'absolute rounded-full bg-white transition-transform duration-300',
+              isList
+                ? cn('top-0.5 h-6 w-6 shadow-sm', sellerMode ? 'left-[22px]' : 'left-0.5')
+                : cn('top-1 h-4 w-4', sellerMode ? 'left-7' : 'left-1'),
             )}
           />
         </button>
       </div>
       {!canSell ? (
-        <p className="text-body-md text-outline">Seller access is not enabled for this account.</p>
+        <p className={cn('text-outline', isList ? 'px-4 pb-2 text-xs' : 'text-body-md')}>
+          Seller access is not enabled for this account.
+        </p>
       ) : null}
-      {errorMessage ? <p className="text-sm text-error">{errorMessage}</p> : null}
+      {errorMessage ? (
+        <p className={cn('text-error', isList ? 'px-4 pb-2 text-sm' : 'text-sm')}>{errorMessage}</p>
+      ) : null}
     </div>
   )
 }
@@ -242,6 +312,7 @@ function DashboardContent({
                 isPending={switchPending}
                 errorMessage={switchError}
                 onToggle={toggleSellerMode}
+                variant="panel"
               />
             </div>
           ) : null}
@@ -268,6 +339,7 @@ export function BuyerProfilePage() {
 
   const displayName = user?.name?.trim() || 'Guest'
   const firstName = displayName.split(/\s+/)[0] ?? displayName
+  const contactLine = user?.phone?.trim() || user?.email?.trim() || null
   const canSell = allowsRoleSwitch() && canSwitchToSeller(user)
   const sellerMode = isSellerRole(user?.role)
 
@@ -320,64 +392,83 @@ export function BuyerProfilePage() {
       <div className="lg:hidden">
         <div className="app-page-pad-bottom">
           <BuyerPageHeader title="Profile" showBack={false} />
-          <main className="app-page-pad-top buyer-page-container space-y-8 lg:space-y-10">
-            <section className="relative mb-2 h-40 overflow-hidden rounded-xl shadow-sm">
-              <RemoteImage
-                priority
-                src={PROFILE_HERO_IMAGE}
-                alt=""
-                className="absolute inset-0 z-0 h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 z-10 bg-gradient-to-r from-primary/40 to-transparent" />
-              <div className="absolute bottom-4 left-4 z-20">
-                <h1 className="text-headline-xl text-white drop-shadow-md">Welcome back, {firstName}</h1>
-                <p className="text-body-lg text-white/90">Your fresh harvest is waiting for you.</p>
+          <main className="app-page-pad-top buyer-page-container space-y-4 pb-4">
+            {/* Identity */}
+            <section className="flex items-center gap-4 rounded-2xl bg-surface-container-lowest px-4 py-4 shadow-[0_2px_12px_rgba(15,40,20,0.06)]">
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-primary-fixed ring-2 ring-primary/15">
+                <RemoteImage
+                  src={PROFILE_AVATAR_IMAGE}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-lg font-bold text-on-surface">{displayName}</h2>
+                {contactLine ? (
+                  <p className="mt-0.5 truncate text-sm text-on-surface-variant">{contactLine}</p>
+                ) : (
+                  <p className="mt-0.5 text-sm text-on-surface-variant">Your account</p>
+                )}
+                <Link
+                  to="/buyer/profile/personal"
+                  className="mt-1 inline-flex items-center gap-0.5 text-xs font-bold text-primary"
+                >
+                  Edit profile
+                  <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                </Link>
               </div>
             </section>
 
-            <div className="rounded-xl bg-surface-container-lowest p-6 shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
-              <div className="mb-6 flex flex-col items-center text-center">
-                <div className="mb-4 rounded-full bg-primary-fixed p-1">
-                  <div className="h-24 w-24 overflow-hidden rounded-full">
-                    <RemoteImage
-                      src={PROFILE_AVATAR_IMAGE}
-                      alt={displayName}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                </div>
-                <h2 className="text-headline-lg text-on-surface">{displayName}</h2>
+            {/* Stats */}
+            <section className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-primary-container px-4 py-3.5 text-on-primary-container">
+                <p className="text-[11px] font-semibold tracking-wide uppercase opacity-80">
+                  Savings
+                </p>
+                <p className="mt-1 text-xl font-bold tabular-nums">{formatCurrency(savings)}</p>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {MANAGEMENT_CARDS.map((card) => (
-                <ProfileManagementCard key={card.title} {...card} />
-              ))}
-            </div>
-
-            {canSell ? (
-              <div className="rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
-                <ProfileSellerModeToggle
-                  canSell={canSell}
-                  sellerMode={sellerMode}
-                  isPending={switchRoleMutation.isPending}
-                  errorMessage={switchError}
-                  onToggle={toggleSellerMode}
-                />
+              <div className="rounded-2xl bg-surface-container-lowest px-4 py-3.5 shadow-[0_2px_12px_rgba(15,40,20,0.06)]">
+                <p className="text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase">
+                  Orders
+                </p>
+                <p className="mt-1 text-xl font-bold text-on-surface tabular-nums">{orders.length}</p>
               </div>
-            ) : null}
+            </section>
 
-            <div className="rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
+            {/* Account menu */}
+            <section className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)]">
+              <div className="divide-y divide-outline-variant/40">
+                {MANAGEMENT_CARDS.map((card) => (
+                  <MobileMenuRow key={card.title} {...card} />
+                ))}
+              </div>
+            </section>
+
+            {/* Seller + logout */}
+            <section className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)]">
+              {canSell ? (
+                <>
+                  <ProfileSellerModeToggle
+                    canSell={canSell}
+                    sellerMode={sellerMode}
+                    isPending={switchRoleMutation.isPending}
+                    errorMessage={switchError}
+                    onToggle={toggleSellerMode}
+                  />
+                  <div className="h-px bg-outline-variant/40" />
+                </>
+              ) : null}
               <button
                 type="button"
                 onClick={() => void logout()}
-                className="text-label-md flex w-full items-center justify-center gap-2 rounded-lg border border-error px-4 py-2 text-error"
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-error transition-colors active:bg-error/5"
               >
-                <span className="material-symbols-outlined text-[18px]">logout</span>
-                Logout
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-error/10">
+                  <span className="material-symbols-outlined text-[22px]">logout</span>
+                </span>
+                <span className="text-[15px] font-semibold">Log out</span>
               </button>
-            </div>
+            </section>
           </main>
         </div>
       </div>

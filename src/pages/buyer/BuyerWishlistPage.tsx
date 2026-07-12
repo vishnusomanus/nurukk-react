@@ -91,14 +91,14 @@ export function BuyerWishlistPage() {
 
   return (
     <BuyerAccountShell title="Favorites">
-      <header className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
-        <div>
+      <header className="mb-2 space-y-3 lg:mb-8 lg:flex lg:flex-row lg:items-end lg:justify-between lg:gap-4 lg:space-y-0">
+        <div className="hidden lg:block">
           <h1 className="text-headline-xl mb-1 text-primary">My Favorites</h1>
           <p className="text-body-lg text-on-surface-variant">
             Quickly reorder your most-loved fresh produce.
           </p>
         </div>
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full lg:max-w-md">
           <span className="material-symbols-outlined absolute top-1/2 left-3 -translate-y-1/2 text-on-surface-variant">
             search
           </span>
@@ -107,7 +107,7 @@ export function BuyerWishlistPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search your favorites..."
-            className="text-body-md h-11 w-full rounded-full border-none bg-surface-container-low pr-4 pl-10 text-on-surface outline-none transition-all placeholder:text-outline focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary"
+            className="h-11 w-full rounded-full border-none bg-surface-container-lowest pr-4 pl-10 text-sm text-on-surface shadow-[0_2px_12px_rgba(15,40,20,0.06)] outline-none transition-all placeholder:text-outline focus:ring-2 focus:ring-primary lg:bg-surface-container-low lg:text-base lg:shadow-none"
           />
         </div>
       </header>
@@ -125,60 +125,60 @@ export function BuyerWishlistPage() {
       ) : null}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-72 animate-pulse rounded-xl bg-surface-container" />
+            <div key={i} className="h-52 animate-pulse rounded-2xl bg-surface-container lg:h-72 lg:rounded-xl" />
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest py-16 text-center">
+        <div className="rounded-2xl bg-surface-container-lowest py-14 text-center shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/40 lg:shadow-none">
           <span
             className="material-symbols-outlined mb-3 text-5xl text-outline"
             style={{ fontVariationSettings: "'FILL' 0" }}
           >
             favorite
           </span>
-          <p className="text-body-lg text-on-surface-variant">
+          <p className="text-sm text-on-surface-variant lg:text-body-lg">
             {search.trim() ? 'No favorites match your search.' : 'Your favorites list is empty.'}
           </p>
           {!search.trim() ? (
-            <Link to="/buyer" className="text-body-md mt-4 inline-block font-bold text-primary hover:underline">
+            <Link to="/buyer" className="mt-4 inline-block text-sm font-bold text-primary hover:underline">
               Browse the marketplace
             </Link>
           ) : null}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             {pageProducts.map((product) => (
               <WishlistProductCard key={product.uuid} product={product} />
             ))}
           </div>
           {filteredProducts.length > 0 && paginationMeta.last_page > 1 ? (
-            <Pagination meta={paginationMeta} onPageChange={setPage} className="mt-8" />
+            <Pagination meta={paginationMeta} onPageChange={setPage} className="mt-6 lg:mt-8" />
           ) : null}
         </>
       )}
 
       {recentlyViewed.length > 0 ? (
-        <section className="mt-10 border-t border-outline-variant pt-8 lg:mt-12 lg:pt-10">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-headline-lg text-on-surface">Recently Viewed</h2>
-            <Link to="/buyer" className="text-body-md font-bold text-primary hover:underline">
+        <section className="mt-6 border-t border-outline-variant/50 pt-5 lg:mt-12 lg:pt-10">
+          <div className="mb-4 flex items-center justify-between lg:mb-6">
+            <h2 className="text-base font-bold text-on-surface lg:text-headline-lg">Recently Viewed</h2>
+            <Link to="/buyer" className="text-sm font-bold text-primary hover:underline">
               View All
             </Link>
           </div>
-          <div className="stitch-hide-scrollbar flex gap-4 overflow-x-auto pb-2">
+          <div className="stitch-hide-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
             {recentlyViewed.map((product) => (
               <Link
                 key={product.uuid}
                 to={`/buyer/products/${product.uuid}`}
-                className="w-48 flex-shrink-0 rounded-lg border border-transparent bg-white p-3 shadow-sm transition-all hover:border-outline-variant"
+                className="w-36 shrink-0 rounded-2xl bg-surface-container-lowest p-2.5 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:w-48 lg:rounded-lg lg:border lg:border-transparent lg:bg-white lg:p-3 lg:shadow-sm lg:hover:border-outline-variant"
               >
-                <div className="mb-2 h-24 overflow-hidden rounded-md">
+                <div className="mb-2 h-20 overflow-hidden rounded-xl lg:h-24 lg:rounded-md">
                   <ProductImage product={product} className="h-full w-full object-cover" />
                 </div>
-                <p className="text-label-md truncate font-semibold text-on-surface">{product.name}</p>
+                <p className="truncate text-xs font-semibold text-on-surface lg:text-label-md">{product.name}</p>
                 <p className="text-xs font-bold text-primary">
                   {formatCurrency(product.discount_price ?? product.price)}
                 </p>

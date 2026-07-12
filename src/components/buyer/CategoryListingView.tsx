@@ -215,7 +215,10 @@ export function CategoryListingView({
   ])
 
   const activeFilterCount =
-    (maxPrice < PRICE_MAX ? 1 : 0) + (organicOnly ? 1 : 0) + (locallySourcedOnly ? 1 : 0)
+    (maxPrice < PRICE_MAX ? 1 : 0) +
+    (organicOnly ? 1 : 0) +
+    (locallySourcedOnly ? 1 : 0) +
+    (sort !== 'featured' ? 1 : 0)
 
   useEffect(() => {
     const node = loadMoreRef.current
@@ -250,6 +253,41 @@ export function CategoryListingView({
 
   const filterControls = (
     <div className="space-y-6">
+      <div>
+        <h4 className="mb-3 text-[11px] font-semibold tracking-wider text-primary uppercase">
+          Sort by
+        </h4>
+        <div className="space-y-2">
+          {(
+            [
+              { value: 'featured', label: 'Featured' },
+              { value: 'price_asc', label: 'Price: Low to High' },
+              { value: 'price_desc', label: 'Price: High to Low' },
+              { value: 'newest', label: 'Newest Arrivals' },
+            ] as const
+          ).map((option) => (
+            <label
+              key={option.value}
+              className={cn(
+                'flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors',
+                sort === option.value
+                  ? 'border-primary bg-primary/5'
+                  : 'border-outline-variant bg-surface',
+              )}
+            >
+              <input
+                type="radio"
+                name="category-sort"
+                value={option.value}
+                checked={sort === option.value}
+                onChange={() => setSort(option.value)}
+                className="h-4 w-4 border-outline-variant text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-on-surface">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
       <div>
         <h4 className="mb-3 text-[11px] font-semibold tracking-wider text-primary uppercase">
           Price Range
@@ -298,14 +336,14 @@ export function CategoryListingView({
     <div className="app-page-pad-bottom lg:pb-8">
       <BuyerPageHeader
         title={pageTitle}
-        backTo={backTo ?? undefined}
-        showBack={backTo != null}
+        backTo={backTo}
+        showBack={backTo != null || isSearchMode}
         right={
           <button
             type="button"
             onClick={() => setFiltersOpen(true)}
             className="relative flex h-10 items-center gap-1 rounded-full px-2.5 text-primary hover:bg-surface-container-low md:hidden"
-            aria-label="Open filters"
+            aria-label="Open filters and sort"
           >
             <span className="material-symbols-outlined text-[22px]">tune</span>
             {activeFilterCount > 0 ? (
@@ -400,39 +438,9 @@ export function CategoryListingView({
 
           <p className="mb-3 text-xs text-on-surface-variant md:hidden">{resultsSubtitle}</p>
 
-          <div className="mb-3 flex items-center gap-2 md:hidden">
-            <label className="sr-only" htmlFor="category-sort-mobile">
-              Sort by
-            </label>
-            <select
-              id="category-sort-mobile"
-              value={sort}
-              onChange={(e) => setSort(e.target.value as ProductSort)}
-              className="min-w-0 flex-1 rounded-xl border border-outline-variant bg-surface px-3 py-2.5 text-sm focus:border-primary focus:ring-primary"
-            >
-              <option value="featured">Featured</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="newest">Newest Arrivals</option>
-            </select>
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(true)}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-outline-variant bg-surface px-3 py-2.5 text-sm font-semibold text-on-surface"
-            >
-              <span className="material-symbols-outlined text-[18px]">tune</span>
-              Filters
-              {activeFilterCount > 0 ? (
-                <span className="rounded-full bg-primary px-1.5 text-[10px] text-on-primary">
-                  {activeFilterCount}
-                </span>
-              ) : null}
-            </button>
-          </div>
-
           {!isSearchMode ? (
-            <div className="-mx-margin-mobile mb-4 md:hidden">
-              <div className="stitch-hide-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto px-margin-mobile pb-1 scroll-smooth">
+            <div className="mb-4 md:hidden">
+              <div className="stitch-hide-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 scroll-smooth">
                 <Link
                   to="/buyer/categories"
                   className={cn(
@@ -507,7 +515,6 @@ export function CategoryListingView({
                     product={product}
                     layout="grid"
                     showFavorite
-                    clickAddsToCart
                     className="md:hidden"
                   />
                 ))}
@@ -519,7 +526,6 @@ export function CategoryListingView({
                     product={product}
                     layout="uniform"
                     showFavorite
-                    clickAddsToCart
                     className="hidden md:block"
                   />
                 ))}
@@ -552,13 +558,14 @@ export function CategoryListingView({
           <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-surface px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-outline-variant" />
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-on-surface">Filters</h3>
+              <h3 className="text-lg font-bold text-on-surface">Filters & sort</h3>
               <button
                 type="button"
                 onClick={() => {
                   setMaxPrice(PRICE_MAX)
                   setOrganicOnly(false)
                   setLocallySourcedOnly(false)
+                  setSort('featured')
                 }}
                 className="text-sm font-semibold text-primary"
               >

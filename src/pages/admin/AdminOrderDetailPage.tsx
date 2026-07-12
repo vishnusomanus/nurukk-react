@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ADMIN_ORDER_STATUSES,
@@ -7,6 +7,7 @@ import {
   updateOrderStatus,
   type AdminOrder,
 } from '@/api/services/adminOrdersService'
+import { BreadcrumbBackLink } from '@/components/common/BreadcrumbBack'
 import { ProductImage } from '@/components/buyer/ProductImage'
 import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
 import { formatCurrency } from '@/utils/formatCurrency'
@@ -84,10 +85,7 @@ export function AdminOrderDetailPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-8">
-      <Link to="/admin/orders" className="text-label-md inline-flex items-center gap-1 font-bold text-primary hover:underline">
-        <span className="material-symbols-outlined text-sm">arrow_back</span>
-        Back to orders
-      </Link>
+      <BreadcrumbBackLink backTo="/admin/orders" label="Back to orders" />
 
       {isLoading ? (
         <div className="h-48 animate-pulse rounded-xl bg-surface-container" />

@@ -45,41 +45,47 @@ function OrderCard({
   const cancelled = isCancelledOrderStatus(order.status)
 
   return (
-    <div className="stitch-card-shadow stitch-order-card-hover rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
-      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="flex flex-wrap items-center gap-4">
-          <span className="text-headline-lg text-on-background">{orderLabel(order)}</span>
+    <div className="stitch-card-shadow stitch-order-card-hover rounded-2xl bg-surface-container-lowest p-4 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:p-6 lg:shadow-none">
+      <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-center lg:mb-6 lg:gap-4">
+        <div className="flex flex-wrap items-center gap-2 lg:gap-4">
+          <span className="text-base font-bold text-on-background lg:text-headline-lg">{orderLabel(order)}</span>
           {active ? (
-            <div className="flex items-center gap-1 rounded-full bg-primary-container/10 px-4 py-1 text-primary-container">
+            <div className="flex items-center gap-1 rounded-full bg-primary-container/10 px-3 py-1 text-primary-container lg:px-4">
               <span className="h-2 w-2 animate-pulse rounded-full bg-primary-container" />
-              <span className="text-label-md">
+              <span className="text-xs font-semibold lg:text-label-md">
                 {activeStatusLabel(order.status, { tracking: resolveOrderTracking(order), order })}
               </span>
             </div>
           ) : cancelled ? (
-            <div className="flex items-center gap-1 rounded-full bg-error-container px-4 py-1 text-error">
+            <div className="flex items-center gap-1 rounded-full bg-error-container px-3 py-1 text-error lg:px-4">
               <span className="material-symbols-outlined text-[16px]">cancel</span>
-              <span className="text-label-md">Cancelled</span>
+              <span className="text-xs font-semibold lg:text-label-md">Cancelled</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1 rounded-full bg-surface-container-high px-4 py-1 text-on-surface-variant">
+            <div className="flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-1 text-on-surface-variant lg:px-4">
               <span className="material-symbols-outlined text-[16px]">check_circle</span>
-              <span className="text-label-md capitalize">{order.status.replace(/_/g, ' ')}</span>
+              <span className="text-xs font-semibold capitalize lg:text-label-md">
+                {order.status.replace(/_/g, ' ')}
+              </span>
             </div>
           )}
           {dateLabel ? (
-            <span className="text-body-md text-on-surface-variant">• Ordered on {dateLabel}</span>
+            <span className="w-full text-xs text-on-surface-variant lg:w-auto lg:text-body-md">
+              Ordered on {dateLabel}
+            </span>
           ) : null}
         </div>
-        <div className="text-price-display text-on-background">{formatCurrency(order.total)}</div>
+        <div className="text-lg font-bold text-on-background lg:text-price-display">
+          {formatCurrency(order.total)}
+        </div>
       </div>
 
-      <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
-        <div className="flex items-center overflow-hidden -space-x-4">
+      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center lg:gap-6">
+        <div className="flex items-center overflow-hidden -space-x-3 lg:-space-x-4">
           {visibleItems.map((item, index) => (
             <div
               key={`${item.product?.uuid ?? item.product_name ?? index}`}
-              className="h-16 w-16 overflow-hidden rounded-xl border-2 border-surface bg-surface-container"
+              className="h-12 w-12 overflow-hidden rounded-xl border-2 border-surface bg-surface-container lg:h-16 lg:w-16"
             >
               <ProductImage
                 product={item.product}
@@ -88,40 +94,40 @@ function OrderCard({
             </div>
           ))}
           {extraCount > 0 ? (
-            <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-surface bg-surface-container-high text-label-md text-on-surface-variant">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-surface bg-surface-container-high text-xs font-semibold text-on-surface-variant lg:h-16 lg:w-16 lg:text-label-md">
               +{extraCount}
             </div>
           ) : null}
         </div>
 
-        <div className="flex w-full flex-wrap gap-3 lg:w-auto">
+        <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:gap-3">
           <Link
             to={`/buyer/orders/${order.uuid}/success`}
-            className="text-label-md flex flex-1 items-center justify-center rounded-xl border border-primary px-6 py-2.5 text-primary transition-all hover:bg-primary/5 lg:flex-none"
+            className="flex flex-1 items-center justify-center rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/5 lg:flex-none lg:px-6 lg:text-label-md"
           >
-            Order Details
+            Details
           </Link>
           {showTrackOrder ? (
             <Link
               to={`/buyer/orders/${order.uuid}/success`}
-              className="text-label-md flex flex-1 items-center justify-center gap-1 rounded-xl bg-primary px-6 py-2.5 text-on-primary transition-all hover:shadow-lg active:scale-95 lg:flex-none"
+              className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition-all hover:shadow-lg active:scale-95 lg:flex-none lg:px-6 lg:text-label-md"
             >
               <span className="material-symbols-outlined text-[18px]">local_shipping</span>
-              Track Order
+              Track
             </Link>
           ) : !active && !cancelled ? (
             <>
               <Link
                 to={`/buyer/orders/${order.uuid}/invoice`}
-                className="text-label-md flex flex-1 items-center justify-center rounded-xl border border-outline px-6 py-2.5 text-on-surface-variant transition-all hover:bg-surface-container-low lg:flex-none"
+                className="flex flex-1 items-center justify-center rounded-xl border border-outline px-4 py-2.5 text-sm font-semibold text-on-surface-variant transition-all hover:bg-surface-container-low lg:flex-none lg:px-6 lg:text-label-md"
               >
-                View Invoice
+                Invoice
               </Link>
               <button
                 type="button"
                 disabled={reordering}
                 onClick={() => onReorder(order.uuid)}
-                className="text-label-md flex flex-1 items-center justify-center gap-1 rounded-xl border border-primary px-6 py-2.5 text-primary transition-all hover:bg-primary/5 disabled:opacity-50 lg:flex-none"
+                className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/5 disabled:opacity-50 lg:flex-none lg:px-6 lg:text-label-md"
               >
                 <span className="material-symbols-outlined text-[18px]">reorder</span>
                 {reordering ? 'Adding…' : 'Reorder'}
@@ -208,43 +214,43 @@ export function BuyerOrdersPage() {
 
   return (
     <BuyerAccountShell title="Orders" backTo="/buyer" showBack={false}>
-      <header className="mb-8">
-        <h1 className="text-headline-xl mb-4 text-on-surface">Order History</h1>
-        <div className="flex flex-col gap-4 border-b border-outline-variant sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex gap-8">
+      <header className="mb-4 lg:mb-8">
+        <h1 className="text-headline-xl mb-4 hidden text-on-surface lg:block">Order History</h1>
+        <div className="flex flex-col gap-3 border-b border-outline-variant/50 sm:flex-row sm:items-center sm:justify-between lg:gap-4">
+          <div className="flex gap-1 rounded-xl bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] sm:gap-8 sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none">
             <button
               type="button"
               onClick={() => setTab('active')}
               className={cn(
-                'text-label-md relative pb-4 transition-colors',
-                tab === 'active' ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
+                'relative flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors sm:flex-none sm:rounded-none sm:px-0 sm:pb-4 sm:text-label-md',
+                tab === 'active' ? 'bg-primary text-on-primary sm:bg-transparent sm:text-primary' : 'text-on-surface-variant hover:text-primary',
               )}
             >
-              Active Orders
+              Active
               {tab === 'active' ? (
-                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary" />
+                <span className="absolute bottom-0 left-0 hidden h-0.5 w-full bg-primary sm:block" />
               ) : null}
             </button>
             <button
               type="button"
               onClick={() => setTab('completed')}
               className={cn(
-                'text-label-md relative pb-4 transition-colors',
-                tab === 'completed' ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
+                'relative flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors sm:flex-none sm:rounded-none sm:px-0 sm:pb-4 sm:text-label-md',
+                tab === 'completed' ? 'bg-primary text-on-primary sm:bg-transparent sm:text-primary' : 'text-on-surface-variant hover:text-primary',
               )}
             >
               Completed
               {tab === 'completed' ? (
-                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary" />
+                <span className="absolute bottom-0 left-0 hidden h-0.5 w-full bg-primary sm:block" />
               ) : null}
             </button>
           </div>
-          <div className="mb-2 flex items-center gap-4 sm:mb-0">
+          <div className="mb-0 flex items-center gap-4 sm:mb-0">
             <button
               type="button"
               onClick={() => setRecentOnly((value) => !value)}
               className={cn(
-                'text-label-md flex items-center gap-1 rounded-full border px-4 py-1.5 transition-colors',
+                'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors lg:text-label-md lg:px-4',
                 recentOnly
                   ? 'border-primary bg-primary/5 text-primary'
                   : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-low',
@@ -306,25 +312,25 @@ export function BuyerOrdersPage() {
       ) : null}
 
       {!isLoading && allOrders.length > 0 ? (
-        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="flex items-center gap-6 rounded-2xl border border-primary/20 bg-primary-container/10 p-6">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary">
-              <span className="material-symbols-outlined text-3xl">savings</span>
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 lg:mt-10 lg:gap-4">
+          <div className="flex items-center gap-4 rounded-2xl bg-primary-container/10 px-4 py-4 lg:gap-6 lg:border lg:border-primary/20 lg:p-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary lg:h-16 lg:w-16">
+              <span className="material-symbols-outlined text-2xl lg:text-3xl">savings</span>
             </div>
             <div>
-              <h4 className="text-headline-lg mb-1 text-primary">Harvest Savings</h4>
-              <p className="text-body-md text-on-surface-variant">
+              <h4 className="mb-0.5 text-base font-bold text-primary lg:mb-1 lg:text-headline-lg">Harvest Savings</h4>
+              <p className="text-sm text-on-surface-variant lg:text-body-md">
                 You&apos;ve saved {formatCurrency(savings)} across your orders.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-6 rounded-2xl border border-secondary/20 bg-secondary-container/10 p-6">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-secondary text-on-secondary">
-              <span className="material-symbols-outlined text-3xl">eco</span>
+          <div className="flex items-center gap-4 rounded-2xl bg-secondary-container/10 px-4 py-4 lg:gap-6 lg:border lg:border-secondary/20 lg:p-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-on-secondary lg:h-16 lg:w-16">
+              <span className="material-symbols-outlined text-2xl lg:text-3xl">eco</span>
             </div>
             <div>
-              <h4 className="text-headline-lg mb-1 text-secondary">Orders Placed</h4>
-              <p className="text-body-md text-on-surface-variant">
+              <h4 className="mb-0.5 text-base font-bold text-secondary lg:mb-1 lg:text-headline-lg">Orders Placed</h4>
+              <p className="text-sm text-on-surface-variant lg:text-body-md">
                 {allOrders.length} orders in your harvest history.
               </p>
             </div>

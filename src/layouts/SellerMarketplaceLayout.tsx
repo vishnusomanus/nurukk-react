@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { SellerFooter, SellerTopHeader } from '@/components/seller/SellerTopHeader'
 import { SellerSidebar } from '@/components/seller/SellerSidebar'
+import { resolveBreadcrumbBack } from '@/utils/breadcrumbBack'
 
 export type SellerOutletContext = {
   search: string
@@ -10,25 +11,25 @@ export type SellerOutletContext = {
 
 function resolveSellerChrome(pathname: string) {
   if (pathname.match(/^\/seller\/orders\/[^/]+$/)) {
-    return { title: 'Order Detail', backTo: '/seller/orders', showSearch: false }
+    return { title: 'Order Detail', showSearch: false }
   }
   if (pathname === '/seller/products/new') {
-    return { title: 'New Product', backTo: '/seller/products', showSearch: false }
+    return { title: 'New Product', showSearch: false }
   }
   if (pathname.match(/^\/seller\/products\/[^/]+\/edit$/)) {
-    return { title: 'Edit Product', backTo: '/seller/products', showSearch: false }
+    return { title: 'Edit Product', showSearch: false }
   }
   if (pathname === '/seller/profile/edit') {
-    return { title: 'Edit Profile', backTo: '/seller/profile', showSearch: false }
+    return { title: 'Edit Profile', showSearch: false }
   }
   if (pathname === '/seller/notifications') {
-    return { title: 'Notifications', backTo: '/seller', showSearch: false }
+    return { title: 'Notifications', showSearch: false }
   }
   if (pathname === '/seller/products') {
-    return { title: 'Products', backTo: undefined, showSearch: true, searchPlaceholder: 'Search inventory...' }
+    return { title: 'Products', showSearch: true, searchPlaceholder: 'Search inventory...' }
   }
   if (pathname === '/seller/orders') {
-    return { title: 'Orders', backTo: undefined, showSearch: true, searchPlaceholder: 'Search orders...' }
+    return { title: 'Orders', showSearch: true, searchPlaceholder: 'Search orders...' }
   }
   if (pathname === '/seller/inventory') return { title: 'Inventory', showSearch: false }
   if (pathname === '/seller/coupons') return { title: 'Coupons', showSearch: false }
@@ -45,6 +46,7 @@ export function SellerMarketplaceLayout() {
   const location = useLocation()
 
   const chrome = useMemo(() => resolveSellerChrome(location.pathname), [location.pathname])
+  const backTo = useMemo(() => resolveBreadcrumbBack(location.pathname), [location.pathname])
   const showAddProduct = location.pathname === '/seller/products'
 
   return (
@@ -54,7 +56,7 @@ export function SellerMarketplaceLayout() {
       <div className="flex min-h-dvh flex-col md:ml-64">
         <SellerTopHeader
           title={chrome.title}
-          backTo={chrome.backTo}
+          backTo={backTo}
           onMenuClick={() => setMobileOpen(true)}
           searchValue={search}
           onSearchChange={chrome.showSearch ? setSearch : undefined}

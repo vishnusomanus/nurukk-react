@@ -39,9 +39,9 @@ function AddressCard({
   const display = formatAddressDisplay(address)
 
   return (
-    <article className="stitch-bento-card stitch-card-shadow relative flex flex-col border border-surface-container-high p-6 lg:p-8">
+    <article className="stitch-bento-card stitch-card-shadow relative rounded-2xl border-0 bg-surface-container-lowest p-4 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:flex lg:flex-col lg:rounded-[inherit] lg:border lg:border-surface-container-high lg:p-8 lg:shadow-none">
       {address.is_default ? (
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-3 right-3 lg:top-4 lg:right-4">
           <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
             star
           </span>
@@ -51,53 +51,57 @@ function AddressCard({
           type="button"
           disabled={settingDefault}
           onClick={() => onSetDefault(address.uuid)}
-          className="absolute top-4 right-4 text-outline transition-colors hover:text-primary disabled:opacity-50"
+          className="absolute top-3 right-3 text-outline transition-colors hover:text-primary disabled:opacity-50 lg:top-4 lg:right-4"
           title="Set as default"
         >
           <span className="material-symbols-outlined">star</span>
         </button>
       )}
 
-      <div className="mb-4 flex items-center gap-4">
-        <div className={cn('flex h-12 w-12 items-center justify-center rounded-xl', wrap)}>
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+      <div className="mb-3 flex items-center gap-3 pr-8 lg:mb-4 lg:gap-4">
+        <div className={cn('flex h-10 w-10 items-center justify-center rounded-full lg:h-12 lg:w-12 lg:rounded-xl', wrap)}>
+          <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
             {icon}
           </span>
         </div>
-        <div>
-          <h5 className="text-headline-lg text-on-surface">{address.label ?? 'Address'}</h5>
+        <div className="min-w-0">
+          <h5 className="truncate text-[15px] font-bold text-on-surface lg:text-headline-lg">
+            {address.label ?? 'Address'}
+          </h5>
           {address.is_default ? (
-            <span className="text-label-md rounded bg-primary-fixed-dim/20 px-2 py-0.5 text-primary">
+            <span className="text-[10px] font-bold tracking-wide text-primary uppercase lg:text-label-md lg:rounded lg:bg-primary-fixed-dim/20 lg:px-2 lg:py-0.5 lg:normal-case">
               Default
             </span>
           ) : null}
         </div>
       </div>
 
-      <p className="text-body-md mb-6 flex-1 text-on-surface-variant">{display}</p>
+      <p className="mb-3 text-sm leading-snug text-on-surface-variant lg:mb-6 lg:flex-1 lg:text-body-md">
+        {display}
+      </p>
 
-      <div className="mb-6 space-y-2">
-        <div className="text-body-md flex items-center justify-between">
-          <span className="text-outline flex items-center gap-1">
-            <span className="material-symbols-outlined text-[18px]">schedule</span>
-            Delivery Est.
+      <div className="mb-3 space-y-1.5 rounded-xl bg-surface-container-low/80 px-3 py-2.5 lg:mb-6 lg:space-y-2 lg:bg-transparent lg:p-0">
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-1 text-outline">
+            <span className="material-symbols-outlined text-[16px]">schedule</span>
+            Est.
           </span>
           <span className="font-bold text-primary">{est}</span>
         </div>
-        <div className="text-body-md flex items-center justify-between">
-          <span className="text-outline flex items-center gap-1">
-            <span className="material-symbols-outlined text-[18px]">delivery_dining</span>
-            Delivery Fee
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-1 text-outline">
+            <span className="material-symbols-outlined text-[16px]">delivery_dining</span>
+            Fee
           </span>
           <span className="font-bold text-on-surface">{fee}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 border-t border-outline-variant pt-4">
+      <div className="flex items-center gap-2 border-t border-outline-variant/50 pt-3 lg:pt-4">
         <button
           type="button"
           onClick={() => onEdit(address)}
-          className="text-label-md flex-1 rounded-lg py-2 tracking-wider text-primary uppercase transition-colors hover:bg-primary-fixed-dim/10"
+          className="flex-1 rounded-lg py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary-fixed-dim/10 lg:text-label-md lg:uppercase lg:tracking-wider"
         >
           Edit
         </button>
@@ -105,7 +109,7 @@ function AddressCard({
           type="button"
           disabled={deleting}
           onClick={() => onDelete(address)}
-          className="text-label-md flex-1 rounded-lg py-2 tracking-wider text-error uppercase transition-colors hover:bg-error-container/50 disabled:opacity-50"
+          className="flex-1 rounded-lg py-2.5 text-sm font-semibold text-error transition-colors hover:bg-error-container/50 disabled:opacity-50 lg:text-label-md lg:uppercase lg:tracking-wider"
         >
           Delete
         </button>
@@ -177,8 +181,20 @@ export function BuyerAddressesPage() {
   }
 
   return (
-    <BuyerAccountShell title="Addresses">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:mb-8">
+    <BuyerAccountShell
+      title="Addresses"
+      right={
+        <button
+          type="button"
+          onClick={openCreate}
+          className="flex h-10 w-10 items-center justify-center rounded-full text-primary hover:bg-surface-container-low lg:hidden"
+          aria-label="Add new address"
+        >
+          <span className="material-symbols-outlined text-[24px]">add</span>
+        </button>
+      }
+    >
+      <div className="mb-2 hidden flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:mb-8 lg:flex">
         <div>
           <h1 className="text-headline-xl text-on-surface">Your Addresses</h1>
           <p className="text-body-lg text-on-surface-variant">
@@ -213,7 +229,7 @@ export function BuyerAddressesPage() {
         </p>
       ) : null}
 
-      <section className="stitch-bento-card mb-8 flex flex-col items-center gap-6 overflow-hidden border border-primary-fixed-dim bg-gradient-to-r from-primary-fixed to-surface-bright p-6 lg:mb-10 lg:flex-row lg:gap-8 lg:p-8">
+      <section className="stitch-bento-card mb-8 hidden flex-col items-center gap-6 overflow-hidden border border-primary-fixed-dim bg-gradient-to-r from-primary-fixed to-surface-bright p-6 lg:mb-10 lg:flex lg:flex-row lg:gap-8 lg:p-8">
         <div className="z-10 flex-1">
           <div className="text-label-md mb-4 inline-flex items-center gap-1 rounded-full bg-primary-container px-3 py-1 text-on-primary-container">
             <span className="material-symbols-outlined text-[18px]">bolt</span>
@@ -245,15 +261,25 @@ export function BuyerAddressesPage() {
       </section>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-6 md:grid-cols-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-72 animate-pulse rounded-3xl bg-surface-container" />
+            <div key={i} className="h-40 animate-pulse rounded-2xl bg-surface-container lg:h-72 lg:rounded-3xl" />
           ))}
         </div>
       ) : addresses.length === 0 ? (
-        <p className="py-16 text-center text-on-surface-variant">No addresses saved yet.</p>
+        <div className="rounded-2xl bg-surface-container-lowest py-14 text-center shadow-[0_2px_12px_rgba(15,40,20,0.06)]">
+          <span className="material-symbols-outlined mb-2 text-4xl text-outline">location_off</span>
+          <p className="text-sm text-on-surface-variant">No addresses saved yet.</p>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="mt-4 text-sm font-bold text-primary lg:hidden"
+          >
+            Add an address
+          </button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
           {addresses.map((addr) => (
             <AddressCard
               key={addr.uuid}

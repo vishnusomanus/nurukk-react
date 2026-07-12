@@ -3,6 +3,7 @@ dist
 dist-buyer
 dist-seller
 dist-delivery
+dist-apk
 .DS_Store
 *.log
 .env

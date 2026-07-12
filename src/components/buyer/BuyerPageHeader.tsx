@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { BreadcrumbBackButton } from '@/components/common/BreadcrumbBack'
 import { cn } from '@/utils/cn'
 
 export function BuyerPageHeader({
@@ -9,14 +9,12 @@ export function BuyerPageHeader({
   className,
 }: {
   title: string
-  backTo?: string
-  /** Set false on tab roots (Home / Orders / Profile). */
+  backTo?: string | null
+  /** Set false on tab roots (Home / Orders / Profile / Categories). */
   showBack?: boolean
   right?: React.ReactNode
   className?: string
 }) {
-  const navigate = useNavigate()
-
   return (
     <header
       className={cn(
@@ -27,24 +25,7 @@ export function BuyerPageHeader({
       <div className="mx-auto flex h-14 w-full max-w-lg items-center justify-between gap-2 px-3 sm:h-16 sm:px-margin-mobile">
         <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
           {showBack ? (
-            backTo ? (
-              <Link
-                to={backTo}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 hover:bg-surface-container-low"
-                aria-label="Go back"
-              >
-                <span className="material-symbols-outlined text-primary">arrow_back</span>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 hover:bg-surface-container-low"
-                aria-label="Go back"
-              >
-                <span className="material-symbols-outlined text-primary">arrow_back</span>
-              </button>
-            )
+            <BreadcrumbBackButton backTo={backTo} />
           ) : (
             <span className="h-10 w-1 shrink-0" aria-hidden />
           )}

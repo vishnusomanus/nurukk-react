@@ -1,6 +1,7 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as sellerService from '@/api/services/sellerService'
+import { BreadcrumbBackLink } from '@/components/common/BreadcrumbBack'
 import { ProductImage } from '@/components/buyer/ProductImage'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatOrderDateTime } from '@/utils/formatRelativeTime'
@@ -54,10 +55,7 @@ export function SellerOrderDetailPage() {
         <p className="rounded-xl border border-error/20 bg-error-container px-4 py-3 text-sm text-error">
           {getApiErrorMessage(error, 'Failed to load order')}
         </p>
-        <Link to="/seller/orders" className="mt-4 inline-flex items-center gap-2 text-primary hover:underline">
-          <span className="material-symbols-outlined">arrow_back</span>
-          Back to Orders
-        </Link>
+        <BreadcrumbBackLink backTo="/seller/orders" label="Back to Orders" className="mt-4" />
       </div>
     )
   }
@@ -74,11 +72,8 @@ export function SellerOrderDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-8">
-      <nav className="mb-6 flex items-center gap-2 text-on-surface-variant">
-        <Link to="/seller/orders" className="flex items-center gap-2 text-label-md hover:text-primary">
-          <span className="material-symbols-outlined">arrow_back</span>
-          Back to Orders
-        </Link>
+      <nav className="mb-6">
+        <BreadcrumbBackLink backTo="/seller/orders" label="Back to Orders" />
       </nav>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

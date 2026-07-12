@@ -23,6 +23,11 @@ function categoryIcon(name?: string) {
   return 'eco'
 }
 
+function isCutVegetableCategory(category: BuyerCategory) {
+  const key = `${category.slug ?? ''} ${category.name ?? ''}`.toLowerCase()
+  return key.includes('cut')
+}
+
 export function BuyerHomePage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -40,6 +45,26 @@ export function BuyerHomePage() {
   const banners = home?.banners ?? []
   const offers = home?.offers ?? []
   const recent = home?.recently_purchased ?? []
+  const cutVegCategory = categories.find(isCutVegetableCategory)
+
+  const { data: cutVegData, isLoading: cutVegLoading } = useQuery({
+    queryKey: [
+      'buyer',
+      'home',
+      'cut-vegetables',
+      cutVegCategory?.uuid,
+      deliveryScope.latitude,
+      deliveryScope.longitude,
+    ],
+    queryFn: () =>
+      buyerService.listCategoryProducts(cutVegCategory!.uuid, {
+        ...deliveryScope,
+        per_page: 12,
+      }),
+    enabled: !!cutVegCategory?.uuid,
+  })
+  const cutVegProducts = cutVegData?.data ?? []
+  const showCutVegSection = !!cutVegCategory && (cutVegLoading || cutVegProducts.length > 0)
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,22 +76,14 @@ export function BuyerHomePage() {
     <div className="app-page-pad-bottom lg:pb-8">
       {/* Mobile header */}
       <header className="app-header-safe fixed top-0 left-0 right-0 z-40 w-full bg-surface shadow-sm lg:hidden">
-        <div className="mx-auto grid h-14 w-full max-w-lg grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:h-16 sm:px-margin-mobile">
-          <div className="min-w-0 justify-self-start">
+        <div className="mx-auto flex h-14 w-full max-w-lg items-center gap-3 px-3 sm:h-16 sm:px-margin-mobile">
+          <div className="min-w-0 flex-1">
             <DeliveryLocationControl variant="mobile" />
           </div>
-          <h1 className="justify-self-center">
+          <h1 className="shrink-0">
             <span className="sr-only">{APP_NAME}</span>
             <BrandLogo size="sm" className="h-9 w-auto max-w-[72px]" alt={APP_NAME} />
           </h1>
-          <button
-            type="button"
-            onClick={() => navigate('/buyer/search')}
-            className="justify-self-end rounded-full p-2 hover:bg-surface-container-low"
-            aria-label="Search"
-          >
-            <span className="material-symbols-outlined text-on-surface-variant">search</span>
-          </button>
         </div>
       </header>
 
@@ -147,6 +164,57 @@ export function BuyerHomePage() {
             })}
           </div>
         </section>
+
+        {/* Cut vegetables showcase */}
+        {showCutVegSection ? (
+          <section>
+            <div className="mb-4 flex items-end justify-between lg:mb-6">
+              <div>
+                <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">
+                  {cutVegCategory?.name ?? 'Cut Vegetables'}
+                </h3>
+                <p className="text-body-md text-on-surface-variant">Ready-to-cook, freshly cut picks</p>
+              </div>
+              {cutVegCategory ? (
+                <Link
+                  to={`/buyer/categories/${cutVegCategory.uuid}`}
+                  className="text-label-md flex items-center gap-1 font-bold text-primary lg:text-body-lg"
+                >
+                  View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
+              ) : null}
+            </div>
+            <div className="stitch-hide-scrollbar -mx-margin-mobile flex snap-x snap-mandatory gap-3 overflow-x-auto px-margin-mobile pb-4 scroll-smooth lg:mx-0 lg:grid lg:snap-none lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 xl:grid-cols-5">
+              {cutVegLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-52 min-w-[min(42vw,160px)] shrink-0 animate-pulse snap-start rounded-xl bg-surface-container sm:min-w-[160px] lg:min-w-0"
+                    />
+                  ))
+                : cutVegProducts.map((product) => (
+                    <ProductCard
+                      key={product.uuid}
+                      product={product}
+                      layout="horizontal"
+                      showFavorite
+                      className="min-w-[min(42vw,160px)] shrink-0 snap-start sm:min-w-[160px] lg:min-w-0 lg:hidden"
+                    />
+                  ))}
+              {cutVegLoading
+                ? null
+                : cutVegProducts.map((product) => (
+                    <ProductCard
+                      key={`d-${product.uuid}`}
+                      product={product}
+                      layout="desktop"
+                      showFavorite
+                      className="hidden lg:block"
+                    />
+                  ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* Local farm stores */}
         {isLoading || featuredSellers.length > 0 ? (

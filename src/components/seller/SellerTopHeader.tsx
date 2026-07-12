@@ -1,16 +1,21 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { NotificationsMenu } from '@/components/common/NotificationsMenu'
 import { APP_NAME, appCopyright } from '@/constants/app'
+import { resolveBreadcrumbBack } from '@/utils/breadcrumbBack'
 import { cn } from '@/utils/cn'
 
 type SellerTopHeaderProps = {
   title?: string
-  backTo?: string
+  backTo?: string | null
   searchPlaceholder?: string
   searchValue?: string
   onSearchChange?: (value: string) => void
   showAddProduct?: boolean
   onMenuClick?: () => void
+}
+
+type LocationFromState = {
+  from?: string
 }
 
 export function SellerTopHeader({
@@ -22,22 +27,23 @@ export function SellerTopHeader({
   showAddProduct = false,
   onMenuClick,
 }: SellerTopHeaderProps) {
-  const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as LocationFromState | null)?.from
+  const target = backTo ?? resolveBreadcrumbBack(location.pathname, from)
   const showSearch = typeof onSearchChange === 'function'
 
   return (
     <header className="app-header-safe sticky top-0 z-30 w-full bg-surface shadow-sm">
       <div className="flex h-16 w-full items-center justify-between gap-3 px-4 md:h-20 md:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
-          {backTo ? (
-            <button
-              type="button"
+          {target ? (
+            <Link
+              to={target}
               className="rounded-lg p-2 text-on-surface-variant hover:text-primary md:hidden"
-              onClick={() => navigate(backTo)}
               aria-label="Go back"
             >
               <span className="material-symbols-outlined">arrow_back</span>
-            </button>
+            </Link>
           ) : (
             <button
               type="button"

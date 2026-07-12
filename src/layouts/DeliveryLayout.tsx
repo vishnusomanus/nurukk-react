@@ -5,6 +5,7 @@ import { deliveryService } from '@/api/services'
 import { NotificationsMenu } from '@/components/common/NotificationsMenu'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
+import { resolveBreadcrumbBack } from '@/utils/breadcrumbBack'
 import { cn } from '@/utils/cn'
 
 const NAV_ITEMS = [
@@ -25,8 +26,8 @@ export function DeliveryLayout() {
   const location = useLocation()
   const logout = useAuth((s) => s.logout)
   const userRole = useAuthStore((s) => s.user?.role)
-  const isNotifications = location.pathname.includes('/notifications')
   const title = headerTitle(location.pathname)
+  const backTo = resolveBreadcrumbBack(location.pathname)
 
   const { isLoading, isError } = useQuery({
     queryKey: ['delivery', 'profile'],
@@ -46,9 +47,9 @@ export function DeliveryLayout() {
       <header className="app-header-safe sticky top-0 z-30 border-b border-outline-variant bg-surface">
         <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4">
           <div className="flex min-w-0 items-center gap-2">
-            {isNotifications ? (
+            {backTo ? (
               <Link
-                to="/delivery"
+                to={backTo}
                 className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-container-low md:hidden"
                 aria-label="Go back"
               >

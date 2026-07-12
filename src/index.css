@@ -70,7 +70,7 @@ body {
   padding-top: calc(4rem + env(safe-area-inset-top, 0px));
 }
 .app-page-pad-bottom {
-  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
 }
 .app-page-pad-bottom-cta {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));

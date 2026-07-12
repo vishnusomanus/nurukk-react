@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { BuyerProduct } from '@/api/services/buyerService'
 import { ProductImage } from '@/components/buyer/ProductImage'
 import { ProductFavoriteButton } from '@/components/buyer/ProductFavoriteButton'
@@ -28,6 +28,7 @@ export function ProductCard({
   clickAddsToCart?: boolean
 }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const imageRef = useRef<HTMLDivElement>(null)
   const [addedPop, setAddedPop] = useState(false)
   const addToCart = useAddToCart()
@@ -35,6 +36,7 @@ export function ProductCard({
   const price = product.discount_price ?? product.price
   const original = product.discount_price ? product.price : null
   const productPath = getProductDetailPath(product.uuid)
+  const productLinkState = { from: `${location.pathname}${location.search}` }
 
   const handleAdd = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -91,7 +93,7 @@ export function ProductCard({
       return <div className={cn(block && 'block w-full text-left', linkClassName)}>{children}</div>
     }
     return (
-      <Link to={productPath} className={cn(block && 'block', linkClassName)}>
+      <Link to={productPath} state={productLinkState} className={cn(block && 'block', linkClassName)}>
         {children}
       </Link>
     )

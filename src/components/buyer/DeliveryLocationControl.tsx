@@ -100,13 +100,13 @@ export function DeliveryLocationControl({
   )
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative', variant === 'mobile' && 'w-full min-w-0', className)}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={cn(
           variant === 'mobile'
-            ? 'flex items-center gap-1 text-left'
+            ? 'flex w-full min-w-0 items-center gap-1.5 text-left'
             : 'rounded-full p-2 text-on-surface-variant transition-colors hover:text-primary',
         )}
         aria-label="Set delivery location"
@@ -118,21 +118,19 @@ export function DeliveryLocationControl({
             <span className={cn('material-symbols-outlined text-primary', locating && 'animate-pulse')}>
               location_on
             </span>
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-1 flex-col">
               <span className="text-[10px] leading-none font-semibold tracking-wide text-on-surface-variant">
                 DELIVER TO
               </span>
               <span
                 className={cn(
-                  'max-w-[5.5rem] truncate text-sm font-bold sm:max-w-[8rem]',
+                  'max-w-full truncate text-sm font-bold',
                   locating ? 'text-on-surface-variant' : stored?.serviceable === false ? 'text-error' : 'text-primary',
                 )}
               >
                 {label}
               </span>
-              <span className="max-w-[5.5rem] truncate text-[10px] text-on-surface-variant sm:max-w-[8rem]">
-                {statusHint}
-              </span>
+              <span className="max-w-full truncate text-[10px] text-on-surface-variant">{statusHint}</span>
             </div>
           </>
         ) : (
