@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useLocation, useOutletContext } from 'react-router-dom'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import * as sellerService from '@/api/services/sellerService'
 import type { SellerOrder, SellerOrderDetail } from '@/api/services/sellerService'
 import { SellerOrderCard } from '@/components/seller/SellerOrderCard'
+import { SellerPageShell } from '@/components/seller/SellerPageShell'
 import type { SellerOutletContext } from '@/layouts/SellerMarketplaceLayout'
 import { Pagination } from '@/components/ui/Pagination'
 import { extractRows } from '@/utils/extractRows'
@@ -14,11 +15,12 @@ import { cn } from '@/utils/cn'
 
 const TABS: Array<{ id: SellerOrderTab; label: string }> = [
   { id: 'active', label: 'Active' },
-  { id: 'completed', label: 'Completed' },
+  { id: 'completed', label: 'Done' },
   { id: 'cancelled', label: 'Cancelled' },
 ]
 
 export function SellerOrdersPage() {
+  const location = useLocation()
   const { search } = useOutletContext<SellerOutletContext>()
   const [page, setPage] = useState(1)
   const [tab, setTab] = useState<SellerOrderTab>('active')
@@ -73,54 +75,52 @@ export function SellerOrdersPage() {
   }, [rows])
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <h2 className="text-headline-xl text-on-surface">Order Management</h2>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            Track, accept, and fulfill customer orders in real time.
-          </p>
-        </div>
+    <SellerPageShell pathname={location.pathname} className="space-y-3 lg:space-y-5">
+      <div className="hidden lg:block">
+        <h2 className="text-headline-xl text-primary">Order Management</h2>
+        <p className="mt-1 text-body-md text-on-surface-variant">
+          Track, accept, and fulfill customer orders.
+        </p>
       </div>
 
       {error ? (
-        <p className="rounded-xl border border-error/20 bg-error-container px-4 py-3 text-sm text-error">
+        <p className="rounded-2xl border border-error/20 bg-error-container px-3 py-2 text-sm text-error">
           {getApiErrorMessage(error, 'Failed to load orders')}
         </p>
       ) : null}
 
-      <div className="mb-2 flex overflow-x-auto border-b border-outline-variant stitch-hide-scrollbar">
+      <div className="flex gap-1 rounded-full bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:max-w-md lg:rounded-xl">
         {TABS.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => setTab(item.id)}
             className={cn(
-              'px-6 py-4 text-body-md whitespace-nowrap transition-colors',
+              'flex-1 rounded-full px-2 py-2.5 text-xs font-bold transition-colors sm:text-sm lg:rounded-lg',
               tab === item.id
-                ? 'border-b-2 border-primary font-bold text-primary'
-                : 'text-on-surface-variant hover:text-primary',
+                ? 'bg-primary text-on-primary'
+                : 'text-on-surface-variant active:bg-surface-container-low',
             )}
           >
-            {item.label} ({tabCounts[item.id]})
+            {item.label}
+            <span className="ml-1 opacity-80">({tabCounts[item.id]})</span>
           </button>
         ))}
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-72 animate-pulse rounded-xl bg-surface-container" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="h-44 animate-pulse rounded-2xl bg-surface-container" />
           ))}
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container-lowest px-6 py-16 text-center stitch-card-shadow">
-          <span className="material-symbols-outlined mb-4 text-5xl text-outline">receipt_long</span>
-          <h3 className="text-headline-lg text-on-surface">No orders in this tab</h3>
-          <p className="mt-2 text-body-md text-on-surface-variant">New customer orders will appear here.</p>
+        <div className="rounded-2xl bg-surface-container-lowest py-14 text-center shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/40 lg:shadow-none">
+          <span className="material-symbols-outlined mb-3 text-5xl text-outline">receipt_long</span>
+          <p className="text-sm text-on-surface-variant">No orders in this tab.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
           {filteredOrders.map((order) => (
             <SellerOrderCard key={order.uuid} order={order} detail={detailsByUuid[order.uuid]} />
           ))}
@@ -128,6 +128,6 @@ export function SellerOrdersPage() {
       )}
 
       {meta ? <Pagination meta={meta} onPageChange={setPage} /> : null}
-    </div>
+    </SellerPageShell>
   )
 }

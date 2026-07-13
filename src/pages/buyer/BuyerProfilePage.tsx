@@ -16,6 +16,7 @@ import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { allowsRoleSwitch } from '@/config/appRole'
 import { canSwitchToSeller } from '@/utils/sellerAccess'
 import { cn } from '@/utils/cn'
+import { displayUserEmail } from '@/utils/userEmail'
 
 const PROFILE_AVATAR_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDP6pHoFxWdjIImPbkOMU-UgazhB4QukSXXA-eCEN5Hr-RBWkwLNfNfTfHAW-wE0VzEXlbbMah6Vp7_O06Cds3qcQqNQ3PvagD1n9zwfUR5fqSUUqAUQVKL3PwVVKVtT2Wy09neJP09IDiqtMZ4qYmPQxpa0-36jFtmq-z8k2yl6ZS5pOGLY7SkoMdByejP0K4i3oudUhCG49X-9xfyFeLEr4oAwEeZWZeSO2wLFH97gZgHwmCsZ_3XG52tjzNeyjNt_6pAQCX1sBFV'
@@ -354,7 +355,7 @@ export function BuyerProfilePage() {
 
   const displayName = user?.name?.trim() || 'Guest'
   const firstName = displayName.split(/\s+/)[0] ?? displayName
-  const contactLine = user?.phone?.trim() || user?.email?.trim() || null
+  const contactLine = user?.phone?.trim() || displayUserEmail(user?.email) || null
   const canSell = allowsRoleSwitch() && canSwitchToSeller(user)
   const sellerMode = isSellerRole(user?.role)
 

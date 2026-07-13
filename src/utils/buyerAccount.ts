@@ -64,25 +64,59 @@ export function canBuyerCancelOrder(
 }
 
 export function isCancelledOrderStatus(status: string) {
-  return status.toLowerCase() === 'cancelled'
+  const value = status.toLowerCase()
+  return value === 'cancelled' || value === 'canceled'
 }
 
-export function filterOrdersByTab(orders: BuyerOrder[], tab: 'active' | 'completed') {
+export type BuyerOrderTab = 'active' | 'completed' | 'cancelled'
+
+export function filterOrdersByTab(orders: BuyerOrder[], tab: BuyerOrderTab) {
   return orders.filter((order) => {
     const status = order.status.toLowerCase()
-    return tab === 'active' ? isActiveOrderStatus(status) : !isActiveOrderStatus(status)
+    if (tab === 'active') return isActiveOrderStatus(status)
+    if (tab === 'cancelled') return isCancelledOrderStatus(status)
+    return !isActiveOrderStatus(status) && !isCancelledOrderStatus(status)
   })
 }
 
 export function filterOrdersByRecentMonths(orders: BuyerOrder[], months = 3) {
   const cutoff = new Date()
   cutoff.setMonth(cutoff.getMonth() - months)
+  return filterOrdersFromCutoff(orders, cutoff)
+}
+
+export type OrderDateRange = 'this_month' | '3_months' | '6_months' | '1_year'
+
+export const ORDER_DATE_RANGE_OPTIONS: { id: OrderDateRange; label: string; shortLabel: string }[] = [
+  { id: 'this_month', label: 'This month', shortLabel: 'This mo' },
+  { id: '3_months', label: '3 months', shortLabel: '3 mo' },
+  { id: '6_months', label: '6 months', shortLabel: '6 mo' },
+  { id: '1_year', label: '1 year', shortLabel: '1 yr' },
+]
+
+function orderDateCutoff(range: OrderDateRange): Date {
+  const now = new Date()
+  if (range === 'this_month') {
+    return new Date(now.getFullYear(), now.getMonth(), 1)
+  }
+  const cutoff = new Date(now)
+  if (range === '3_months') cutoff.setMonth(cutoff.getMonth() - 3)
+  else if (range === '6_months') cutoff.setMonth(cutoff.getMonth() - 6)
+  else cutoff.setFullYear(cutoff.getFullYear() - 1)
+  return cutoff
+}
+
+function filterOrdersFromCutoff(orders: BuyerOrder[], cutoff: Date) {
   return orders.filter((order) => {
     const raw = order.created_at ?? order.placed_at
     if (typeof raw !== 'string') return true
     const date = new Date(raw)
     return Number.isNaN(date.getTime()) || date >= cutoff
   })
+}
+
+export function filterOrdersByDateRange(orders: BuyerOrder[], range: OrderDateRange) {
+  return filterOrdersFromCutoff(orders, orderDateCutoff(range))
 }
 
 export function orderDateLabel(order: BuyerOrder) {

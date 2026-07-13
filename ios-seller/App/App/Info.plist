@@ -51,5 +51,11 @@
 	<string>nurukk Seller uses your location to set your store pin and delivery radius.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>nurukk Seller uses your location to set your store pin and delivery radius.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>nurukk Seller needs camera access so you can take product photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>nurukk Seller needs photo library access so you can upload product images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>nurukk Seller may save cropped product photos to your library.</string>
 </dict>
 </plist>

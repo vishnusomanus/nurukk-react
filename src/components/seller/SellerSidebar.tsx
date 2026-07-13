@@ -149,21 +149,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
-export function SellerSidebar({ mobileOpen, onClose }: SellerSidebarProps) {
+export function SellerSidebar(_props: SellerSidebarProps = {}) {
   return (
-    <>
-      <aside className="app-header-safe fixed top-0 left-0 z-40 hidden h-dvh w-64 flex-col bg-surface-container-low py-6 md:flex">
-        <SidebarContent />
-      </aside>
-
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden />
-          <aside className="app-header-safe absolute top-0 left-0 flex h-dvh w-72 flex-col bg-surface-container-low py-6 shadow-lg">
-            <SidebarContent onNavigate={onClose} />
-          </aside>
-        </div>
-      ) : null}
-    </>
+    <aside className="app-header-safe fixed top-0 left-0 z-40 hidden h-dvh w-64 flex-col bg-surface-container-low py-6 lg:flex">
+      <SidebarContent />
+    </aside>
   )
 }

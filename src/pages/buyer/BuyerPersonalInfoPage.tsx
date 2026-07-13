@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { cn } from '@/utils/cn'
+import { displayUserEmail, emailUpdatePayload } from '@/utils/userEmail'
 
 function splitPhone(phone?: string | null) {
   const digits = String(phone ?? '').replace(/\D/g, '')
@@ -32,7 +33,7 @@ export function BuyerPersonalInfoPage() {
   const initialPhone = splitPhone(user?.phone)
 
   const [name, setName] = useState(user?.name ?? '')
-  const [email, setEmail] = useState(user?.email ?? '')
+  const [email, setEmail] = useState(displayUserEmail(user?.email))
   const [phonePrefix] = useState(initialPhone.prefix)
   const [phone, setPhone] = useState(initialPhone.number)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
@@ -43,7 +44,7 @@ export function BuyerPersonalInfoPage() {
 
   useEffect(() => {
     setName(user?.name ?? '')
-    setEmail(user?.email ?? '')
+    setEmail(displayUserEmail(user?.email))
     setPhone(splitPhone(user?.phone).number)
   }, [user])
 
@@ -51,8 +52,8 @@ export function BuyerPersonalInfoPage() {
     mutationFn: () =>
       updateAuthProfile({
         name: name.trim(),
-        email: email.trim() || undefined,
         phone: buildPhone(phonePrefix, phone),
+        ...emailUpdatePayload(email),
       }),
     onSuccess: () => {
       setSaveMessage('Profile updated successfully.')
@@ -62,7 +63,7 @@ export function BuyerPersonalInfoPage() {
 
   const handleDiscard = () => {
     setName(user?.name ?? '')
-    setEmail(user?.email ?? '')
+    setEmail(displayUserEmail(user?.email))
     setPhone(splitPhone(user?.phone).number)
     saveMutation.reset()
     setSaveMessage(null)

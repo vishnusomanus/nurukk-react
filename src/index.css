@@ -81,3 +81,15 @@ body {
   overscroll-behavior: contain;
   touch-action: pan-y;
 }
+
+/*
+ * iOS WebView zooms focused fields under 16px. Keep form controls at 16px on
+ * narrow viewports even when utilities like text-sm are applied.
+ */
+@media (max-width: 1024px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

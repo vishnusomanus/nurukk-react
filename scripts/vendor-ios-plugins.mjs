@@ -4,39 +4,71 @@ import { cpSync, mkdirSync, rmSync, existsSync, readdirSync, writeFileSync, read
 import { join } from 'node:path'
 
 const ROOT = process.cwd()
-const SPLASH_SRC = join(ROOT, 'node_modules', '@capacitor', 'splash-screen')
-const GEO_SRC = join(ROOT, 'node_modules', '@capacitor', 'geolocation')
+
+const PLUGINS = [
+  {
+    src: join(ROOT, 'node_modules', '@capacitor', 'splash-screen'),
+    folderName: 'CapacitorSplashScreen',
+    label: 'splash',
+    required: true,
+  },
+  {
+    src: join(ROOT, 'node_modules', '@capacitor', 'geolocation'),
+    folderName: 'CapacitorGeolocation',
+    label: 'geolocation',
+    required: true,
+  },
+  {
+    src: join(ROOT, 'node_modules', '@capacitor', 'browser'),
+    folderName: 'CapacitorBrowser',
+    label: 'browser',
+    required: true,
+  },
+  {
+    src: join(ROOT, 'node_modules', '@capacitor', 'camera'),
+    folderName: 'CapacitorCamera',
+    label: 'camera',
+    required: false,
+  },
+  {
+    src: join(ROOT, 'node_modules', '@capacitor', 'app'),
+    folderName: 'CapacitorApp',
+    label: 'app',
+    required: true,
+  },
+]
+
 const RAZORPAY_TEMPLATE = join(ROOT, 'scripts', 'capacitor-razorpay-spm')
 
-if (!existsSync(SPLASH_SRC)) {
-  console.error('[vendor-ios-plugins] @capacitor/splash-screen not installed')
-  process.exit(1)
-}
-
-if (!existsSync(GEO_SRC)) {
-  console.error('[vendor-ios-plugins] @capacitor/geolocation not installed')
-  process.exit(1)
+for (const plugin of PLUGINS) {
+  if (!existsSync(plugin.src)) {
+    if (plugin.required) {
+      console.error(`[vendor-ios-plugins] missing package for ${plugin.label}: ${plugin.src}`)
+      process.exit(1)
+    }
+    console.warn(`[vendor-ios-plugins] optional package missing for ${plugin.label}; skipping`)
+  }
 }
 
 function vendorCapacitorPlugin(role, src, folderName, label) {
+  if (!existsSync(src)) return
   const parent = join(ROOT, `ios-${role}`, 'App', 'local-plugins')
   const dest = join(parent, folderName)
   mkdirSync(parent, { recursive: true })
   rmSync(dest, { recursive: true, force: true })
-  cpSync(src, dest, { recursive: true })
+  cpSync(src, dest, {
+    recursive: true,
+    filter: (from) => {
+      const base = from.split('/').pop() ?? ''
+      // Avoid copying SPM/Xcode junk that can confuse multi-workspace opens.
+      return !['.swiftpm', '.build', 'node_modules', 'android', 'dist', 'Package.resolved'].includes(base)
+    },
+  })
   if (!existsSync(join(dest, 'Package.swift'))) {
     console.error(`[vendor-ios-plugins] ${label} failed for ${role}`)
     process.exit(1)
   }
   console.log(`[vendor-ios-plugins] ${role} ${label} (${readdirSync(dest).length} items)`)
-}
-
-function vendorSplash(role) {
-  vendorCapacitorPlugin(role, SPLASH_SRC, 'CapacitorSplashScreen', 'splash')
-}
-
-function vendorGeolocation(role) {
-  vendorCapacitorPlugin(role, GEO_SRC, 'CapacitorGeolocation', 'geolocation')
 }
 
 function vendorRazorpay(role) {
@@ -56,8 +88,9 @@ function vendorRazorpay(role) {
 }
 
 for (const role of ['buyer', 'seller', 'delivery']) {
-  vendorSplash(role)
-  vendorGeolocation(role)
+  for (const plugin of PLUGINS) {
+    vendorCapacitorPlugin(role, plugin.src, plugin.folderName, plugin.label)
+  }
 }
 
 // Payments are buyer-only, but keep seller/delivery packages in sync for CapApp-SPM reuse.

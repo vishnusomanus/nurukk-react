@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pagination } from '@/components/ui/Pagination'
 import { CouponFormModal } from '@/components/coupons/CouponFormModal'
+import { SellerPageShell } from '@/components/seller/SellerPageShell'
 import {
   createSellerCoupon,
   deleteSellerCoupon,
@@ -16,6 +18,7 @@ import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { cn } from '@/utils/cn'
 
 export function SellerCouponsPage() {
+  const location = useLocation()
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [createOpen, setCreateOpen] = useState(false)
@@ -48,18 +51,18 @@ export function SellerCouponsPage() {
   const meta = extractPaginationMeta(data)
 
   return (
-    <div className="stitch-marketplace space-y-6 px-4 py-6 md:px-8 md:py-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-headline-xl text-on-surface">Store coupons</h1>
+    <SellerPageShell pathname={location.pathname} className="space-y-4 lg:space-y-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="hidden lg:block">
+          <h1 className="text-headline-xl text-primary">Store coupons</h1>
           <p className="text-body-md text-on-surface-variant">
-            Set discount caps, validity dates, usage limits, and who can redeem your store promotions.
+            Set discount caps, validity dates, and usage limits.
           </p>
         </div>
         <button
           type="button"
           onClick={() => setCreateOpen(true)}
-          className="text-label-md inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-5 py-2.5 font-bold text-on-primary"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-on-primary"
         >
           <span className="material-symbols-outlined text-[20px]">add</span>
           Create coupon
@@ -151,6 +154,6 @@ export function SellerCouponsPage() {
         }}
         onSubmit={(payload) => create.mutate(payload)}
       />
-    </div>
+    </SellerPageShell>
   )
 }

@@ -13,10 +13,39 @@ import { join } from 'node:path'
 const ROOT = process.cwd()
 const ROLES = ['buyer', 'seller', 'delivery']
 
-const SHARED_SPLASH = '../../../node_modules/@capacitor/splash-screen'
-const LOCAL_SPLASH = '../local-plugins/CapacitorSplashScreen'
-const SHARED_GEO = '../../../node_modules/@capacitor/geolocation'
-const LOCAL_GEO = '../local-plugins/CapacitorGeolocation'
+const REWRITES = [
+  {
+    shared: '../../../node_modules/@capacitor/splash-screen',
+    local: '../local-plugins/CapacitorSplashScreen',
+    folder: 'CapacitorSplashScreen',
+    label: 'splash',
+  },
+  {
+    shared: '../../../node_modules/@capacitor/geolocation',
+    local: '../local-plugins/CapacitorGeolocation',
+    folder: 'CapacitorGeolocation',
+    label: 'geolocation',
+  },
+  {
+    shared: '../../../node_modules/@capacitor/browser',
+    local: '../local-plugins/CapacitorBrowser',
+    folder: 'CapacitorBrowser',
+    label: 'browser',
+  },
+  {
+    shared: '../../../node_modules/@capacitor/camera',
+    local: '../local-plugins/CapacitorCamera',
+    folder: 'CapacitorCamera',
+    label: 'camera',
+  },
+  {
+    shared: '../../../node_modules/@capacitor/app',
+    local: '../local-plugins/CapacitorApp',
+    folder: 'CapacitorApp',
+    label: 'app',
+  },
+]
+
 const LOCAL_RAZORPAY = '../local-plugins/CapacitorRazorpay'
 const SHARED_RAZORPAY = '../../../node_modules/capacitor-razorpay'
 
@@ -55,14 +84,22 @@ let patched = 0
 
 for (const role of ROLES) {
   const pkgPath = join(ROOT, `ios-${role}`, 'App', 'CapApp-SPM', 'Package.swift')
-  const localSplash = join(
-    ROOT,
-    `ios-${role}`,
-    'App',
-    'local-plugins',
-    'CapacitorSplashScreen',
-    'Package.swift',
-  )
+  if (!existsSync(pkgPath)) continue
+
+  for (const rewrite of REWRITES) {
+    const localPkg = join(
+      ROOT,
+      `ios-${role}`,
+      'App',
+      'local-plugins',
+      rewrite.folder,
+      'Package.swift',
+    )
+    if (!existsSync(localPkg)) {
+      console.warn(`[patch-ios-spm] missing vendored ${rewrite.label} plugin for ${role}`)
+    }
+  }
+
   const localRazorpay = join(
     ROOT,
     `ios-${role}`,
@@ -71,31 +108,15 @@ for (const role of ROLES) {
     'CapacitorRazorpay',
     'Package.swift',
   )
-
-  if (!existsSync(pkgPath)) continue
-  const localGeo = join(
-    ROOT,
-    `ios-${role}`,
-    'App',
-    'local-plugins',
-    'CapacitorGeolocation',
-    'Package.swift',
-  )
-
-  if (!existsSync(localSplash)) {
-    console.warn(`[patch-ios-spm] missing vendored splash plugin for ${role}`)
-    continue
-  }
-  if (!existsSync(localGeo)) {
-    console.warn(`[patch-ios-spm] missing vendored geolocation plugin for ${role}`)
-  }
   if (!existsSync(localRazorpay)) {
     console.warn(`[patch-ios-spm] missing vendored razorpay plugin for ${role}`)
   }
 
   const before = readFileSync(pkgPath, 'utf8')
-  let after = before.split(SHARED_SPLASH).join(LOCAL_SPLASH)
-  after = after.split(SHARED_GEO).join(LOCAL_GEO)
+  let after = before
+  for (const rewrite of REWRITES) {
+    after = after.split(rewrite.shared).join(rewrite.local)
+  }
   after = ensureRazorpayDependency(after)
 
   if (after !== before) {

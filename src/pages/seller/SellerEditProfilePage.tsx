@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as sellerService from '@/api/services/sellerService'
+import { SellerPageShell } from '@/components/seller/SellerPageShell'
 import { RemoteImage } from '@/components/buyer/ProductImage'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { cn } from '@/utils/cn'
+import { displayUserEmail, emailUpdatePayload } from '@/utils/userEmail'
 
 const PROFILE_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAZ9ckQZn0lT5D3bSUX7eM8UtAlvBN8BWRmE4txSfmfWbN5VWLGAdP1rLHT05BCuyrFoN6ITty1b7PxWBtWAyhoLQDY5oW3oaGwFCAPwFvxCPEu_479oV-od-Rykpnv1jdy7vMg8K68bFo_MQTZYu1KyYWCItZuvFgJGZecsQW5CjptmF7HjoT-kFIrSDJHTrI7Ck47VL5jSew4JjX45zM5VfZ43C5U_K6Cf3NS5R5SNziw4v7ZslCtnX7x_ylXuplppY7JHDr-yXPZ'
@@ -22,14 +24,13 @@ function splitPhone(phone?: string | null) {
   return { prefix: '+91', number: digits }
 }
 
-function buildPhone(prefix: string, number: string) {
-  const digits = number.replace(/\D/g, '')
-  if (!digits) return null
-  if (prefix === '+91') return `+91${digits}`
-  return `${prefix}${digits}`
+function buildPhone(_prefix: string, number: string) {
+  const digits = number.replace(/\D/g, '').slice(-10)
+  return digits || null
 }
 
 export function SellerEditProfilePage() {
+  const location = useLocation()
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
   const initUser = useAuth((s) => s.initUser)
@@ -44,7 +45,7 @@ export function SellerEditProfilePage() {
   const initialPhone = splitPhone(profile?.phone ?? user?.phone)
 
   const [name, setName] = useState(user?.name ?? '')
-  const [email, setEmail] = useState(user?.email ?? '')
+  const [email, setEmail] = useState(displayUserEmail(user?.email))
   const [phonePrefix] = useState(initialPhone.prefix)
   const [phone, setPhone] = useState(initialPhone.number)
   const [storeName, setStoreName] = useState('')
@@ -59,7 +60,7 @@ export function SellerEditProfilePage() {
 
   useEffect(() => {
     setName(user?.name ?? '')
-    setEmail(user?.email ?? '')
+    setEmail(displayUserEmail(user?.email))
     setPhone(splitPhone(profile?.phone ?? user?.phone).number)
   }, [user, profile?.phone])
 
@@ -75,8 +76,8 @@ export function SellerEditProfilePage() {
     mutationFn: async () => {
       await updateAuthProfile({
         name: name.trim(),
-        email: email.trim() || undefined,
         phone: buildPhone(phonePrefix, phone),
+        ...emailUpdatePayload(email),
       })
       return sellerService.updateProfile({
         store_name: storeName.trim(),
@@ -92,9 +93,22 @@ export function SellerEditProfilePage() {
     },
   })
 
+  const isDirty = useMemo(() => {
+    const baselinePhone = splitPhone(profile?.phone ?? user?.phone).number
+    return (
+      name !== (user?.name ?? '') ||
+      email !== displayUserEmail(user?.email) ||
+      phone !== baselinePhone ||
+      storeName !== (profile?.name ?? '') ||
+      description !== (profile?.description ?? '') ||
+      city !== (profile?.city ?? '') ||
+      pincode !== (profile?.pincode ?? '')
+    )
+  }, [city, description, email, name, phone, pincode, profile, storeName, user])
+
   const handleDiscard = () => {
     setName(user?.name ?? '')
-    setEmail(user?.email ?? '')
+    setEmail(displayUserEmail(user?.email))
     setPhone(splitPhone(profile?.phone ?? user?.phone).number)
     setStoreName(profile?.name ?? '')
     setDescription(profile?.description ?? '')
@@ -111,59 +125,35 @@ export function SellerEditProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-6xl p-4 md:p-8">
-        <p className="text-body-md text-on-surface-variant">Loading profile…</p>
-      </div>
+      <SellerPageShell pathname={location.pathname} ctaPad>
+        <p className="text-sm text-on-surface-variant">Loading profile…</p>
+      </SellerPageShell>
     )
   }
 
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-6xl p-4 md:p-8">
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+      <SellerPageShell pathname={location.pathname} ctaPad>
+        <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {getApiErrorMessage(error, 'Failed to load profile')}
         </p>
-      </div>
+      </SellerPageShell>
     )
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-8">
-      <nav className="text-label-md flex flex-wrap items-center gap-2 text-on-surface-variant">
-        <span>Settings</span>
-        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+    <SellerPageShell pathname={location.pathname} ctaPad className="space-y-4 lg:space-y-6">
+      <nav className="hidden text-sm text-on-surface-variant lg:flex lg:items-center lg:gap-2">
         <Link to="/seller/profile" className="hover:text-primary">
-          Personal Information
+          Profile
         </Link>
         <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-        <span className="font-bold text-primary">Edit Profile</span>
+        <span className="font-bold text-primary">Edit</span>
       </nav>
 
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-headline-xl text-on-surface">Edit Profile</h1>
-          <p className="text-body-md text-on-surface-variant">Update your account and farm details.</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={handleDiscard}
-            className="rounded-full border border-outline-variant px-5 py-2 font-bold text-on-surface-variant transition-colors hover:bg-surface-container-low"
-          >
-            Discard
-          </button>
-          <button
-            type="submit"
-            form="seller-profile-form"
-            disabled={saveMutation.isPending}
-            className={cn(
-              'rounded-full bg-primary px-5 py-2 font-bold text-on-primary transition-all',
-              'hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-60',
-            )}
-          >
-            {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
-          </button>
-        </div>
+      <div className="hidden lg:block">
+        <h1 className="text-headline-xl text-on-surface">Edit Profile</h1>
+        <p className="text-body-md text-on-surface-variant">Update your account and farm details.</p>
       </div>
 
       {saveMutation.isError ? (
@@ -320,6 +310,31 @@ export function SellerEditProfilePage() {
           </div>
         </div>
       </div>
-    </div>
+
+      <div className="app-cta-safe fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant/40 bg-surface/95 px-4 py-3 backdrop-blur-md lg:left-64">
+        <div className="mx-auto flex max-w-lg items-center gap-3 lg:max-w-none lg:justify-end">
+          {isDirty ? (
+            <button
+              type="button"
+              onClick={handleDiscard}
+              className="h-12 shrink-0 rounded-xl border border-outline-variant px-5 text-sm font-bold text-on-surface-variant transition-colors active:bg-surface-container-low"
+            >
+              Discard
+            </button>
+          ) : null}
+          <button
+            type="submit"
+            form="seller-profile-form"
+            disabled={saveMutation.isPending || !isDirty}
+            className={cn(
+              'h-12 flex-1 rounded-xl bg-primary text-sm font-bold text-on-primary shadow-lg transition-transform active:scale-[0.98] lg:max-w-xs lg:flex-none lg:px-8',
+              'disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none',
+            )}
+          >
+            {saveMutation.isPending ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </SellerPageShell>
   )
 }

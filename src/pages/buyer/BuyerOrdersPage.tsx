@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useInfiniteQuery, useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
@@ -12,18 +12,129 @@ import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import {
   activeStatusLabel,
   canTrackBuyerOrder,
-  filterOrdersByRecentMonths,
+  filterOrdersByDateRange,
   filterOrdersByTab,
   isCancelledOrderStatus,
   orderDateLabel,
   orderLabel,
+  ORDER_DATE_RANGE_OPTIONS,
   reorderOrderItems,
   useOrderSavingsSummary,
+  type BuyerOrderTab,
+  type OrderDateRange,
 } from '@/utils/buyerAccount'
 import { resolveOrderTracking } from '@/utils/orderTracking'
 import { cn } from '@/utils/cn'
 
-type OrderTab = 'active' | 'completed'
+type OrderTab = BuyerOrderTab
+
+const ORDER_TABS: { id: OrderTab; label: string }[] = [
+  { id: 'active', label: 'Active' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
+]
+
+function OrdersDateFilter({
+  dateRange,
+  onDateRangeChange,
+  align = 'right',
+}: {
+  dateRange: OrderDateRange
+  onDateRangeChange: (next: OrderDateRange) => void
+  align?: 'left' | 'right'
+}) {
+  const [filterOpen, setFilterOpen] = useState(false)
+  const filterRef = useRef<HTMLDivElement>(null)
+  const selectedRange =
+    ORDER_DATE_RANGE_OPTIONS.find((item) => item.id === dateRange) ?? ORDER_DATE_RANGE_OPTIONS[1]
+
+  useEffect(() => {
+    if (!filterOpen) return
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null
+      if (target && filterRef.current?.contains(target)) return
+      setFilterOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFilterOpen(false)
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('touchstart', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('touchstart', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [filterOpen])
+
+  return (
+    <div ref={filterRef} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setFilterOpen((open) => !open)}
+        aria-expanded={filterOpen}
+        aria-haspopup="listbox"
+        aria-label={`Date filter: ${selectedRange.label}`}
+        className={cn(
+          'inline-flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold transition-colors active:scale-[0.98]',
+          filterOpen
+            ? 'bg-primary/15 text-primary'
+            : 'bg-surface-container-low text-on-surface-variant',
+        )}
+      >
+        <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+        <span>{selectedRange.shortLabel}</span>
+        <span className="material-symbols-outlined text-[16px]">
+          {filterOpen ? 'expand_less' : 'expand_more'}
+        </span>
+      </button>
+
+      {filterOpen ? (
+        <div
+          role="listbox"
+          aria-label="Date range"
+          className={cn(
+            'absolute top-[calc(100%+0.4rem)] z-50 w-44 overflow-hidden rounded-2xl border border-outline-variant/40 bg-surface-container-lowest py-1.5 shadow-[0_12px_28px_rgba(15,40,20,0.14)]',
+            align === 'right' ? 'right-0' : 'left-0',
+          )}
+        >
+          <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">
+            Show orders from
+          </p>
+          {ORDER_DATE_RANGE_OPTIONS.map((item) => {
+            const selected = dateRange === item.id
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => {
+                  onDateRangeChange(item.id)
+                  setFilterOpen(false)
+                }}
+                className={cn(
+                  'flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-semibold transition-colors',
+                  selected
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-on-surface hover:bg-surface-container-low',
+                )}
+              >
+                {item.label}
+                {selected ? (
+                  <span className="material-symbols-outlined text-[18px]">check</span>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
+  )
+}
 
 function StatusPill({
   order,
@@ -190,7 +301,7 @@ export function BuyerOrdersPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<OrderTab>('active')
-  const [recentOnly, setRecentOnly] = useState(true)
+  const [dateRange, setDateRange] = useState<OrderDateRange>('3_months')
   const [actionError, setActionError] = useState<string | null>(null)
   const [reorderingUuid, setReorderingUuid] = useState<string | null>(null)
 
@@ -218,9 +329,9 @@ export function BuyerOrdersPage() {
   )
 
   const filteredOrders = useMemo(() => {
-    const scoped = recentOnly ? filterOrdersByRecentMonths(allOrders) : allOrders
+    const scoped = filterOrdersByDateRange(allOrders, dateRange)
     return filterOrdersByTab(scoped, tab)
-  }, [allOrders, recentOnly, tab])
+  }, [allOrders, dateRange, tab])
 
   const detailQueries = useQueries({
     queries: filteredOrders.map((order) => ({
@@ -259,58 +370,51 @@ export function BuyerOrdersPage() {
   })
 
   return (
-    <BuyerAccountShell title="Orders" backTo="/buyer" showBack={false}>
+    <BuyerAccountShell
+      title="Orders"
+      backTo="/buyer"
+      showBack={false}
+      right={
+        <OrdersDateFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+      }
+    >
       <header className="mb-4 space-y-3 lg:mb-8 lg:space-y-5">
-        <div className="hidden lg:block">
-          <h1 className="text-headline-xl mb-1 text-primary">Order History</h1>
-          <p className="text-body-lg text-on-surface-variant">
-            Track deliveries and reorder past harvests.
-          </p>
+        <div className="hidden items-start justify-between gap-4 lg:flex">
+          <div>
+            <h1 className="text-headline-xl mb-1 text-primary">Order History</h1>
+            <p className="text-body-lg text-on-surface-variant">
+              Track deliveries and reorder past harvests.
+            </p>
+          </div>
+          <OrdersDateFilter
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            align="right"
+          />
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex flex-1 gap-1 rounded-full bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:max-w-sm lg:rounded-xl">
+        <div
+          className="flex gap-1 rounded-full bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:max-w-md lg:rounded-xl"
+          role="tablist"
+          aria-label="Order status"
+        >
+          {ORDER_TABS.map((item) => (
             <button
+              key={item.id}
               type="button"
-              onClick={() => setTab('active')}
+              role="tab"
+              aria-selected={tab === item.id}
+              onClick={() => setTab(item.id)}
               className={cn(
-                'flex-1 rounded-full px-3 py-2.5 text-sm font-bold transition-colors lg:rounded-lg',
-                tab === 'active'
+                'flex-1 rounded-full px-2.5 py-2.5 text-xs font-bold transition-colors sm:text-sm lg:rounded-lg lg:px-3',
+                tab === item.id
                   ? 'bg-primary text-on-primary'
                   : 'text-on-surface-variant active:bg-surface-container-low',
               )}
             >
-              Active
+              {item.label}
             </button>
-            <button
-              type="button"
-              onClick={() => setTab('completed')}
-              className={cn(
-                'flex-1 rounded-full px-3 py-2.5 text-sm font-bold transition-colors lg:rounded-lg',
-                tab === 'completed'
-                  ? 'bg-primary text-on-primary'
-                  : 'text-on-surface-variant active:bg-surface-container-low',
-              )}
-            >
-              Completed
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setRecentOnly((value) => !value)}
-            className={cn(
-              'flex h-11 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-bold transition-colors',
-              recentOnly
-                ? 'bg-primary/10 text-primary'
-                : 'bg-surface-container-lowest text-on-surface-variant shadow-[0_2px_12px_rgba(15,40,20,0.06)]',
-            )}
-            aria-pressed={recentOnly}
-            title={recentOnly ? 'Showing last 3 months' : 'Showing all orders'}
-          >
-            <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-            <span className="hidden sm:inline">3 mo</span>
-          </button>
+          ))}
         </div>
       </header>
 
@@ -344,7 +448,11 @@ export function BuyerOrdersPage() {
             receipt_long
           </span>
           <p className="text-sm text-on-surface-variant lg:text-body-lg">
-            {tab === 'active' ? 'No active orders right now.' : 'No completed orders yet.'}
+            {tab === 'active'
+              ? 'No active orders right now.'
+              : tab === 'cancelled'
+                ? 'No cancelled orders.'
+                : 'No completed orders yet.'}
           </p>
           <Link to="/buyer" className="mt-4 inline-block text-sm font-bold text-primary hover:underline">
             Browse the marketplace

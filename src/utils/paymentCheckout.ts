@@ -9,6 +9,7 @@ import type {
   RazorpayClientPayload,
 } from '@/api/services/paymentService'
 import type { AuthUser } from '@/store/authStore'
+import { displayUserEmail } from '@/utils/userEmail'
 
 export type PaymentCheckoutResult = 'paid' | 'dismissed' | 'failed'
 
@@ -108,7 +109,7 @@ function buildRazorpayOptions(
     theme: { color: '#0d631b' },
     prefill: {
       name: user?.name ?? '',
-      email: user?.email ?? '',
+      email: displayUserEmail(user?.email),
       contact: user?.phone ?? '',
     },
   }

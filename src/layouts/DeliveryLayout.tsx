@@ -5,6 +5,7 @@ import { deliveryService } from '@/api/services'
 import { NotificationsMenu } from '@/components/common/NotificationsMenu'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
+import { isProfileNotFoundError } from '@/utils/apiErrorMessage'
 import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { resolveBreadcrumbBack } from '@/utils/breadcrumbBack'
 import { cn } from '@/utils/cn'
@@ -30,7 +31,7 @@ export function DeliveryLayout() {
   const title = headerTitle(location.pathname)
   const backTo = resolveBreadcrumbBack(location.pathname)
 
-  const { isLoading, isError } = useQuery({
+  const { isLoading, isError, error } = useQuery({
     queryKey: ['delivery', 'profile'],
     queryFn: () => deliveryService.getProfile(),
     retry: false,
@@ -38,10 +39,10 @@ export function DeliveryLayout() {
 
   useEffect(() => {
     if (isLoading) return
-    if (isError && userRole === 'delivery_agent') {
+    if (isError && userRole === 'delivery_agent' && isProfileNotFoundError(error)) {
       navigate('/delivery/onboarding', { replace: true })
     }
-  }, [isError, isLoading, navigate, userRole])
+  }, [error, isError, isLoading, navigate, userRole])
 
   return (
     <div className="min-h-dvh overflow-x-clip bg-surface-container-low pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">

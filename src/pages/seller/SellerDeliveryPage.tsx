@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { sellerService } from '@/api/services'
 import type { SellerDeliverySettings } from '@/api/services/sellerService'
+import { SellerPageShell } from '@/components/seller/SellerPageShell'
 import { StoreLocationRadiusPicker } from '@/components/seller/StoreLocationRadiusPicker'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 
 export function SellerDeliveryPage() {
+  const location = useLocation()
   const queryClient = useQueryClient()
   const [employeeName, setEmployeeName] = useState('')
   const [employeePhone, setEmployeePhone] = useState('')
@@ -76,11 +79,11 @@ export function SellerDeliveryPage() {
   }
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
-      <div>
-        <h1 className="text-headline-xl text-on-surface">Delivery</h1>
+    <SellerPageShell pathname={location.pathname} className="space-y-4 lg:space-y-6">
+      <div className="hidden lg:block">
+        <h1 className="text-headline-xl text-primary">Delivery</h1>
         <p className="text-body-md text-on-surface-variant">
-          Pin your store on the map and set how far you deliver — buyers see products only when they are inside range.
+          Pin your store on the map and set how far you deliver.
         </p>
       </div>
 
@@ -194,6 +197,6 @@ export function SellerDeliveryPage() {
           ))}
         </ul>
       </section>
-    </div>
+    </SellerPageShell>
   )
 }

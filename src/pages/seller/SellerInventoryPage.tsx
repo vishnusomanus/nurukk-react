@@ -1,17 +1,35 @@
 import { useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { sellerService } from '@/api/services'
+import type { InventoryItem } from '@/api/services/sellerService'
+import { SellerPageShell } from '@/components/seller/SellerPageShell'
 import { Pagination } from '@/components/ui/Pagination'
 import { buildClientPaginationMeta, paginateSlice } from '@/utils/clientPagination'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
+import { cn } from '@/utils/cn'
 
 const PAGE_SIZE = 15
 
+const softCard =
+  'rounded-2xl bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:shadow-none'
+
+type StockFilter = 'all' | 'low'
+
+function isLowStock(item: InventoryItem, lowUuids: Set<string>): boolean {
+  if (lowUuids.has(item.uuid)) return true
+  const threshold = item.low_stock_threshold
+  if (typeof threshold === 'number') return (item.stock ?? 0) <= threshold
+  return (item.stock ?? 0) <= 5
+}
+
 export function SellerInventoryPage() {
+  const location = useLocation()
   const queryClient = useQueryClient()
   const [editingUuid, setEditingUuid] = useState<string | null>(null)
   const [stockDraft, setStockDraft] = useState('')
   const [page, setPage] = useState(1)
+  const [filter, setFilter] = useState<StockFilter>('all')
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['seller', 'inventory'],
@@ -35,111 +53,203 @@ export function SellerInventoryPage() {
 
   const items = data?.data ?? []
   const lowStock = lowStockData?.data ?? []
+  const lowUuids = useMemo(() => new Set(lowStock.map((item) => item.uuid)), [lowStock])
+
+  const filteredItems = useMemo(() => {
+    if (filter === 'low') return items.filter((item) => isLowStock(item, lowUuids))
+    return items
+  }, [filter, items, lowUuids])
 
   const paginationMeta = useMemo(
-    () => buildClientPaginationMeta(items.length, page, PAGE_SIZE),
-    [items.length, page],
+    () => buildClientPaginationMeta(filteredItems.length, page, PAGE_SIZE),
+    [filteredItems.length, page],
   )
   const pageItems = useMemo(
-    () => paginateSlice(items, paginationMeta.current_page, PAGE_SIZE),
-    [items, paginationMeta.current_page],
+    () => paginateSlice(filteredItems, paginationMeta.current_page, PAGE_SIZE),
+    [filteredItems, paginationMeta.current_page],
   )
 
+  const startEdit = (item: InventoryItem) => {
+    setEditingUuid(item.uuid)
+    setStockDraft(String(item.stock ?? 0))
+  }
+
+  const cancelEdit = () => {
+    setEditingUuid(null)
+    setStockDraft('')
+  }
+
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      <div>
-        <h1 className="text-headline-xl text-on-surface">Inventory</h1>
+    <SellerPageShell pathname={location.pathname} className="space-y-3 lg:space-y-5">
+      <div className="hidden lg:block">
+        <h1 className="text-headline-xl text-primary">Inventory</h1>
         <p className="text-body-md text-on-surface-variant">Track stock levels across your catalog</p>
       </div>
 
-      {lowStock.length > 0 ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <h2 className="text-body-lg mb-2 font-bold text-amber-900">Low stock alert</h2>
-          <ul className="space-y-1 text-sm text-amber-900">
-            {lowStock.map((item) => (
-              <li key={item.uuid}>
-                {item.name ?? item.uuid}: {item.stock ?? 0} left
-              </li>
-            ))}
-          </ul>
+      <div className="grid grid-cols-2 gap-2">
+        <div className={cn(softCard, 'px-3 py-3')}>
+          <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">SKUs</p>
+          <p className="mt-0.5 text-xl font-bold text-on-surface">{items.length}</p>
         </div>
-      ) : null}
-
-      {error ? (
-        <p className="text-sm text-error">{getApiErrorMessage(error, 'Failed to load inventory')}</p>
-      ) : null}
-
-      <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-surface-container-low">
-            <tr>
-              <th className="px-4 py-3 text-on-surface">Product</th>
-              <th className="px-4 py-3 text-on-surface">Stock</th>
-              <th className="px-4 py-3 text-on-surface">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i}>
-                    <td colSpan={3} className="px-4 py-4">
-                      <div className="h-4 animate-pulse rounded bg-surface-container" />
-                    </td>
-                  </tr>
-                ))
-              : pageItems.map((item) => (
-                  <tr key={item.uuid} className="border-t border-outline-variant/40">
-                    <td className="px-4 py-3 font-medium text-on-surface">{item.name ?? item.uuid}</td>
-                    <td className="px-4 py-3 text-on-surface">
-                      {editingUuid === item.uuid ? (
-                        <input
-                          type="number"
-                          min={0}
-                          value={stockDraft}
-                          onChange={(e) => setStockDraft(e.target.value)}
-                          className="w-24 rounded border border-outline-variant px-2 py-1"
-                        />
-                      ) : (
-                        item.stock ?? 0
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingUuid === item.uuid ? (
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            className="text-primary"
-                            disabled={updateStock.isPending}
-                            onClick={() =>
-                              updateStock.mutate({ uuid: item.uuid, stock: Number(stockDraft) || 0 })
-                            }
-                          >
-                            Save
-                          </button>
-                          <button type="button" onClick={() => setEditingUuid(null)}>
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="text-primary"
-                          onClick={() => {
-                            setEditingUuid(item.uuid)
-                            setStockDraft(String(item.stock ?? 0))
-                          }}
-                        >
-                          Edit
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-          </tbody>
-        </table>
+        <div className={cn(softCard, 'px-3 py-3')}>
+          <p className="text-[10px] font-bold tracking-wide text-on-surface-variant uppercase">Low stock</p>
+          <p className={cn('mt-0.5 text-xl font-bold', lowStock.length > 0 ? 'text-secondary' : 'text-on-surface')}>
+            {lowStock.length}
+          </p>
+        </div>
       </div>
 
-      {items.length > 0 ? <Pagination meta={paginationMeta} onPageChange={setPage} /> : null}
-    </div>
+      <div className="flex gap-1 rounded-full bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:max-w-sm lg:rounded-xl">
+        {(
+          [
+            { id: 'all' as const, label: 'All' },
+            { id: 'low' as const, label: `Low stock${lowStock.length ? ` (${lowStock.length})` : ''}` },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => {
+              setFilter(tab.id)
+              setPage(1)
+              cancelEdit()
+            }}
+            className={cn(
+              'flex-1 rounded-full px-3 py-2.5 text-xs font-bold transition-colors sm:text-sm lg:rounded-lg',
+              filter === tab.id
+                ? 'bg-primary text-on-primary'
+                : 'text-on-surface-variant active:bg-surface-container-low',
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {error ? (
+        <p className="rounded-2xl border border-error/20 bg-error-container px-3 py-2 text-sm text-error">
+          {getApiErrorMessage(error, 'Failed to load inventory')}
+        </p>
+      ) : null}
+
+      {updateStock.isError ? (
+        <p className="rounded-2xl border border-error/20 bg-error-container px-3 py-2 text-sm text-error">
+          {getApiErrorMessage(updateStock.error, 'Failed to update stock')}
+        </p>
+      ) : null}
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-[4.5rem] animate-pulse rounded-2xl bg-surface-container" />
+          ))}
+        </div>
+      ) : pageItems.length === 0 ? (
+        <div className={cn(softCard, 'py-14 text-center')}>
+          <span className="material-symbols-outlined mb-3 text-5xl text-outline">warehouse</span>
+          <p className="text-sm text-on-surface-variant">
+            {filter === 'low' ? 'No low-stock items right now.' : 'No inventory items yet.'}
+          </p>
+          {filter === 'all' ? (
+            <Link to="/seller/products/new" className="mt-4 inline-block text-sm font-bold text-primary">
+              Add a product
+            </Link>
+          ) : null}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {pageItems.map((item) => {
+            const low = isLowStock(item, lowUuids)
+            const editing = editingUuid === item.uuid
+
+            return (
+              <article key={item.uuid} className={cn(softCard, 'overflow-hidden')}>
+                <div className="flex items-center gap-3 px-3.5 py-3">
+                  <div
+                    className={cn(
+                      'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                      low ? 'bg-secondary/15 text-secondary' : 'bg-primary/10 text-primary',
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-[22px]">
+                      {low ? 'warning' : 'inventory_2'}
+                    </span>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate text-[15px] font-semibold text-on-surface">
+                        {item.name ?? item.uuid}
+                      </h3>
+                      {low ? (
+                        <span className="rounded-full bg-secondary/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-secondary uppercase">
+                          Low
+                        </span>
+                      ) : null}
+                    </div>
+                    {!editing ? (
+                      <p className="mt-0.5 text-xs text-on-surface-variant">
+                        <span className="font-bold text-on-surface">{item.stock ?? 0}</span> in stock
+                        {typeof item.low_stock_threshold === 'number'
+                          ? ` · alert at ${item.low_stock_threshold}`
+                          : ''}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {!editing ? (
+                    <button
+                      type="button"
+                      onClick={() => startEdit(item)}
+                      className="flex h-10 shrink-0 items-center gap-1 rounded-xl bg-surface-container-low px-3 text-sm font-bold text-primary active:scale-[0.98]"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                      Edit
+                    </button>
+                  ) : null}
+                </div>
+
+                {editing ? (
+                  <div className="flex items-center gap-2 border-t border-outline-variant/30 bg-surface-container-low/40 px-3.5 py-3">
+                    <label className="min-w-0 flex-1">
+                      <span className="sr-only">Stock quantity</span>
+                      <input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        value={stockDraft}
+                        onChange={(e) => setStockDraft(e.target.value)}
+                        autoFocus
+                        className="w-full rounded-xl border-none bg-surface-container-lowest px-3 py-2.5 text-sm font-semibold text-on-surface outline-none ring-1 ring-outline-variant/40 focus:ring-2 focus:ring-primary/30"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      disabled={updateStock.isPending}
+                      onClick={() =>
+                        updateStock.mutate({ uuid: item.uuid, stock: Number(stockDraft) || 0 })
+                      }
+                      className="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-on-primary disabled:opacity-50 active:scale-[0.98]"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updateStock.isPending}
+                      onClick={cancelEdit}
+                      className="rounded-xl px-3 py-2.5 text-sm font-bold text-on-surface-variant active:bg-surface-container"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : null}
+              </article>
+            )
+          })}
+        </div>
+      )}
+
+      {filteredItems.length > 0 ? <Pagination meta={paginationMeta} onPageChange={setPage} /> : null}
+    </SellerPageShell>
   )
 }

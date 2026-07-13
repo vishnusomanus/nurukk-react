@@ -45,6 +45,7 @@ export type CreateProductPayload = {
 
 export type UpdateProductPayload = Partial<{
   name: string
+  category_uuid: string
   description: string | null
   price: number
   discount_price: number | null

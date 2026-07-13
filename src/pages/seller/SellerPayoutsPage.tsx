@@ -1,5 +1,7 @@
+import { useLocation } from 'react-router-dom'
 import * as sellerService from '@/api/services/sellerService'
 import { PayoutPanel } from '@/components/payout/PayoutPanel'
+import { SellerPageShell } from '@/components/seller/SellerPageShell'
 
 const sellerPayoutApi = {
   getSummary: sellerService.getPayoutSummary,
@@ -13,17 +15,16 @@ const sellerPayoutApi = {
 }
 
 export function SellerPayoutsPage() {
+  const location = useLocation()
   return (
-    <div className="stitch-marketplace px-4 py-6 md:px-8 md:py-8">
-      <div className="mx-auto max-w-3xl space-y-2">
-        <h2 className="text-headline-xl text-on-surface">Payouts</h2>
+    <SellerPageShell pathname={location.pathname} className="space-y-3 lg:max-w-3xl lg:space-y-4">
+      <div className="hidden lg:block">
+        <h2 className="text-headline-xl text-primary">Payouts</h2>
         <p className="text-body-md text-on-surface-variant">
-          Your share of item sales (after discounts) is transferred automatically each week.
+          Your share of item sales is transferred automatically each week.
         </p>
-        <div className="pt-4">
-          <PayoutPanel api={sellerPayoutApi} />
-        </div>
       </div>
-    </div>
+      <PayoutPanel api={sellerPayoutApi} />
+    </SellerPageShell>
   )
 }

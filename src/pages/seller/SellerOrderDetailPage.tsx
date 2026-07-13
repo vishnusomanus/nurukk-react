@@ -1,8 +1,8 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as sellerService from '@/api/services/sellerService'
-import { BreadcrumbBackLink } from '@/components/common/BreadcrumbBack'
 import { ProductImage } from '@/components/buyer/ProductImage'
+import { SellerPageShell } from '@/components/seller/SellerPageShell'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatOrderDateTime } from '@/utils/formatRelativeTime'
 import { sellerOrderLabel, sellerOrderStatusConfig } from '@/utils/sellerOrderStatus'
@@ -11,6 +11,7 @@ import { cn } from '@/utils/cn'
 
 export function SellerOrderDetailPage() {
   const { uuid } = useParams<{ uuid: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -43,20 +44,21 @@ export function SellerOrderDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center p-8">
-        <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
-      </div>
+      <SellerPageShell pathname={location.pathname} ctaPad>
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+        </div>
+      </SellerPageShell>
     )
   }
 
   if (error || !order) {
     return (
-      <div className="p-8">
-        <p className="rounded-xl border border-error/20 bg-error-container px-4 py-3 text-sm text-error">
+      <SellerPageShell pathname={location.pathname} ctaPad>
+        <p className="rounded-2xl border border-error/20 bg-error-container px-3 py-2 text-sm text-error">
           {getApiErrorMessage(error, 'Failed to load order')}
         </p>
-        <BreadcrumbBackLink backTo="/seller/orders" label="Back to Orders" className="mt-4" />
-      </div>
+      </SellerPageShell>
     )
   }
 
@@ -65,27 +67,18 @@ export function SellerOrderDetailPage() {
     .filter(Boolean)
     .join(', ')
 
-  const nextReadyStatus =
-    order.status === 'accepted' || order.status === 'preparing' || order.status === 'packed'
-      ? 'ready_for_delivery'
-      : null
-
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-8">
-      <nav className="mb-6">
-        <BreadcrumbBackLink backTo="/seller/orders" label="Back to Orders" />
-      </nav>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2">
-          <section className="flex flex-col justify-between gap-4 rounded-xl bg-surface-container-lowest p-6 stitch-card-shadow md:flex-row md:items-center">
+    <SellerPageShell pathname={location.pathname} ctaPad className="space-y-4 lg:space-y-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
+        <div className="space-y-4 lg:col-span-2 lg:space-y-6">
+          <section className="flex flex-col justify-between gap-3 rounded-2xl bg-surface-container-lowest p-4 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:flex-row lg:items-center lg:rounded-xl lg:border lg:border-outline-variant/30 lg:p-6 lg:shadow-none">
             <div>
-              <p className="mb-1 text-label-md font-bold text-primary-container">
-                ORDER ID: {sellerOrderLabel(order.order_number, order.uuid)}
+              <p className="mb-1 text-[11px] font-bold tracking-wide text-primary uppercase">
+                {sellerOrderLabel(order.order_number, order.uuid)}
               </p>
-              <h2 className="mb-2 text-headline-xl text-on-surface">{order.buyer?.name ?? 'Customer'}</h2>
-              <div className="flex items-center text-body-md text-on-surface-variant">
-                <span className="material-symbols-outlined mr-2 text-body-md">calendar_today</span>
+              <h2 className="mb-1 text-xl font-bold text-on-surface">{order.buyer?.name ?? 'Customer'}</h2>
+              <div className="flex items-center text-sm text-on-surface-variant">
+                <span className="material-symbols-outlined mr-1 text-[16px]">calendar_today</span>
                 {formatOrderDateTime(order.created_at)}
               </div>
             </div>
@@ -102,7 +95,7 @@ export function SellerOrderDetailPage() {
                       type="button"
                       disabled={updateStatus.isPending}
                       onClick={() => updateStatus.mutate('accepted')}
-                      className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-label-md text-on-primary hover:opacity-90"
+                      className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary transition-transform active:scale-[0.98] disabled:opacity-50"
                     >
                       <span className="material-symbols-outlined text-[18px]">check_circle</span>
                       Accept Order
@@ -111,18 +104,47 @@ export function SellerOrderDetailPage() {
                       type="button"
                       disabled={rejectOrder.isPending}
                       onClick={() => rejectOrder.mutate()}
-                      className="flex items-center gap-2 rounded-xl border border-error px-4 py-2 text-label-md text-error hover:bg-error/5"
+                      className="flex items-center gap-2 rounded-xl border border-error px-4 py-2 text-sm font-bold text-error disabled:opacity-50"
                     >
                       Decline
                     </button>
                   </>
                 ) : null}
-                {nextReadyStatus ? (
+
+                {order.status === 'accepted' || order.status === 'preparing' ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={updateStatus.isPending || order.status === 'preparing'}
+                      onClick={() => updateStatus.mutate('preparing')}
+                      className={cn(
+                        'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-transform active:scale-[0.98] disabled:opacity-60',
+                        order.status === 'preparing'
+                          ? 'bg-secondary text-on-secondary'
+                          : 'border border-outline text-on-surface',
+                      )}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">skillet</span>
+                      Preparing
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updateStatus.isPending}
+                      onClick={() => updateStatus.mutate('ready_for_delivery')}
+                      className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary transition-transform active:scale-[0.98] disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                      Mark as Ready
+                    </button>
+                  </>
+                ) : null}
+
+                {order.status === 'packed' ? (
                   <button
                     type="button"
                     disabled={updateStatus.isPending}
-                    onClick={() => updateStatus.mutate(nextReadyStatus)}
-                    className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-label-md text-on-primary hover:opacity-90"
+                    onClick={() => updateStatus.mutate('ready_for_delivery')}
+                    className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary transition-transform active:scale-[0.98] disabled:opacity-50"
                   >
                     <span className="material-symbols-outlined text-[18px]">check_circle</span>
                     Mark as Ready
@@ -248,10 +270,10 @@ export function SellerOrderDetailPage() {
       </div>
 
       {updateStatus.error || rejectOrder.error ? (
-        <p className="mt-6 text-sm text-error">
+        <p className="text-sm text-error">
           {getApiErrorMessage(updateStatus.error ?? rejectOrder.error, 'Action failed')}
         </p>
       ) : null}
-    </div>
+    </SellerPageShell>
   )
 }

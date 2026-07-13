@@ -22,7 +22,7 @@ function isAppInternalPath(path: string) {
 }
 
 /** Tab roots / section homes — no back control. */
-const NO_BACK = new Set([
+export const NO_BACK = new Set([
   '/buyer',
   '/buyer/categories',
   '/buyer/orders',
@@ -31,9 +31,6 @@ const NO_BACK = new Set([
   '/seller/products',
   '/seller/orders',
   '/seller/inventory',
-  '/seller/coupons',
-  '/seller/payouts',
-  '/seller/delivery',
   '/seller/profile',
   '/delivery',
   '/delivery/history',
@@ -48,6 +45,25 @@ const NO_BACK = new Set([
   '/register/seller',
   '/register/delivery',
 ])
+
+/** Bottom-nav Home routes — hardware back should minimize the app. */
+export const BOTTOM_NAV_HOME = new Set(['/buyer', '/seller', '/delivery'])
+
+/**
+ * Other bottom-nav destinations → navigate to that role's Home on hardware back.
+ * Keys are exact tab roots; values are the Home path.
+ */
+export const BOTTOM_NAV_TO_HOME: Record<string, string> = {
+  '/buyer/categories': '/buyer',
+  '/buyer/orders': '/buyer',
+  '/buyer/profile': '/buyer',
+  '/seller/products': '/seller',
+  '/seller/orders': '/seller',
+  '/seller/inventory': '/seller',
+  '/seller/profile': '/seller',
+  '/delivery/history': '/delivery',
+  '/delivery/earnings': '/delivery',
+}
 
 type ExplicitRule = {
   pattern: RegExp
@@ -72,12 +88,16 @@ const EXPLICIT: ExplicitRule[] = [
   { pattern: /^\/buyer\/wishlist$/, parent: '/buyer/profile' },
   { pattern: /^\/buyer\/notifications$/, parent: '/buyer/profile' },
 
-  // Seller
+  // Seller — primary detail flows
   { pattern: /^\/seller\/orders\/([^/]+)$/, parent: '/seller/orders' },
   { pattern: /^\/seller\/products\/new$/, parent: '/seller/products' },
   { pattern: /^\/seller\/products\/([^/]+)\/edit$/, parent: '/seller/products' },
   { pattern: /^\/seller\/profile\/edit$/, parent: '/seller/profile' },
-  { pattern: /^\/seller\/notifications$/, parent: '/seller' },
+  // Seller — secondary screens from Profile
+  { pattern: /^\/seller\/coupons$/, parent: '/seller/profile' },
+  { pattern: /^\/seller\/payouts$/, parent: '/seller/profile' },
+  { pattern: /^\/seller\/delivery$/, parent: '/seller/profile' },
+  { pattern: /^\/seller\/notifications$/, parent: '/seller/profile' },
   { pattern: /^\/seller\/onboarding$/, parent: '/login/seller' },
 
   // Delivery

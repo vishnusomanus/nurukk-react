@@ -7,12 +7,27 @@ type ProductTagEntry = { value: string; label: string }
 export function getProductTags(product: Record<string, unknown>): ProductTagEntry[] {
   const raw = product.tags
   if (!Array.isArray(raw)) return []
-  return raw.filter(
-    (tag): tag is ProductTagEntry =>
-      typeof tag === 'object' &&
-      tag !== null &&
-      typeof (tag as ProductTagEntry).value === 'string',
-  )
+
+  const out: ProductTagEntry[] = []
+  for (const tag of raw) {
+    if (typeof tag === 'string') {
+      const value = tag.trim()
+      if (value) out.push({ value, label: value })
+      continue
+    }
+    if (typeof tag === 'object' && tag !== null) {
+      const entry = tag as Partial<ProductTagEntry>
+      const value = typeof entry.value === 'string' ? entry.value.trim() : ''
+      if (!value) continue
+      const label = typeof entry.label === 'string' && entry.label.trim() ? entry.label.trim() : value
+      out.push({ value, label })
+    }
+  }
+  return out
+}
+
+export function getProductTagValues(product: Record<string, unknown>): string[] {
+  return getProductTags(product).map((tag) => tag.value)
 }
 
 export function productHasTag(product: BuyerProduct, tagValue: string) {

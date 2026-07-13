@@ -12,7 +12,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.4.1"),
-        .package(name: "CapacitorBrowser", path: "../../../node_modules/@capacitor/browser"),
+        .package(name: "CapacitorApp", path: "../local-plugins/CapacitorApp"),
+        .package(name: "CapacitorBrowser", path: "../local-plugins/CapacitorBrowser"),
+        .package(name: "CapacitorCamera", path: "../local-plugins/CapacitorCamera"),
         .package(name: "CapacitorGeolocation", path: "../local-plugins/CapacitorGeolocation"),
         .package(name: "CapacitorSplashScreen", path: "../local-plugins/CapacitorSplashScreen"),
         .package(name: "CapacitorRazorpay", path: "../local-plugins/CapacitorRazorpay")
@@ -23,7 +25,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
+                .product(name: "CapacitorApp", package: "CapacitorApp"),
                 .product(name: "CapacitorBrowser", package: "CapacitorBrowser"),
+                .product(name: "CapacitorCamera", package: "CapacitorCamera"),
                 .product(name: "CapacitorGeolocation", package: "CapacitorGeolocation"),
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
                 .product(name: "CapacitorRazorpay", package: "CapacitorRazorpay")
