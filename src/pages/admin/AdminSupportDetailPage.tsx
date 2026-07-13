@@ -60,7 +60,7 @@ export function AdminSupportDetailPage() {
   if (error || !ticket) {
     return (
       <div className="space-y-4 p-4 md:p-8">
-        <BreadcrumbBackLink to="/admin/support" label="Support" />
+        <BreadcrumbBackLink backTo="/admin/support" label="Support" />
         <p className="text-sm text-error">{getApiErrorMessage(error, 'Ticket not found')}</p>
       </div>
     )
@@ -68,7 +68,7 @@ export function AdminSupportDetailPage() {
 
   return (
     <div className="space-y-4 p-4 md:p-8">
-      <BreadcrumbBackLink to="/admin/support" label="Support" />
+      <BreadcrumbBackLink backTo="/admin/support" label="Support" />
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-headline-xl text-on-surface">{ticket.name}</h1>
