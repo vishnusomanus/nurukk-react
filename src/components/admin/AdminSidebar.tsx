@@ -25,6 +25,7 @@ const navItems: NavItem[] = [
   { to: '/admin/audit-logs', label: 'Audit Logs', icon: 'history' },
   { to: '/admin/refunds', label: 'Refunds', icon: 'payments' },
   { to: '/admin/support', label: 'Support', icon: 'support_agent' },
+  { to: '/admin/push', label: 'Push Alerts', icon: 'notifications_active' },
   { to: '/admin/payouts', label: 'Payouts', icon: 'account_balance' },
   { to: '/admin/settings', label: 'Admin Settings', icon: 'settings' },
 ]

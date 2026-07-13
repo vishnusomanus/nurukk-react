@@ -9,6 +9,10 @@ export function getNotificationHref(
   notification: AppNotification,
   role?: string | null,
 ): string | null {
+  if (typeof notification.deep_link === 'string' && notification.deep_link.trim()) {
+    return notification.deep_link.trim()
+  }
+
   const orderUuid =
     typeof notification.data?.order_uuid === 'string' ? notification.data.order_uuid : null
 

@@ -353,6 +353,7 @@ export function AddressFormModal({
                 searchQuery={mapSearch}
                 onSearchQueryChange={setMapSearch}
                 onSearchSubmit={handleSearchSubmit}
+                onPickLocation={(result) => applyGeocodedAddress(result, true)}
                 onLocate={handleLocate}
                 locating={locating}
                 loading={geocoding}

@@ -6,8 +6,11 @@ export type AppNotification = {
   title?: string
   body?: string
   type?: string
+  category?: string
   is_read?: boolean
   created_at?: string
+  image_url?: string | null
+  deep_link?: string | null
   data?: Record<string, unknown>
 }
 
@@ -32,5 +35,53 @@ export async function markAllRead() {
 
 export async function markAsRead(uuid: string) {
   const { data } = await apiClient.patch<GenericSuccess<AppNotification>>(`/v1/notifications/${uuid}/read`)
+  return data
+}
+
+export async function registerDeviceToken(payload: {
+  token: string
+  platform: 'android' | 'ios' | 'web'
+  app: 'buyer' | 'seller' | 'delivery'
+  device_id?: string
+  locale?: string
+}) {
+  const { data } = await apiClient.post<GenericSuccess>('/v1/notifications/device-token', payload)
+  return data
+}
+
+export async function unregisterDeviceToken(token: string) {
+  const { data } = await apiClient.delete<GenericSuccess>('/v1/notifications/device-token', {
+    data: { token },
+  })
+  return data
+}
+
+export async function getPreferences() {
+  const { data } = await apiClient.get<GenericSuccess<{ preferences: Record<string, boolean> }>>(
+    '/v1/notifications/preferences',
+  )
+  return data
+}
+
+export async function updatePreferences(preferences: Record<string, boolean>) {
+  const { data } = await apiClient.put<GenericSuccess<{ preferences: Record<string, boolean> }>>(
+    '/v1/notifications/preferences',
+    { preferences },
+  )
+  return data
+}
+
+export async function trackOpen(uuid: string) {
+  const { data } = await apiClient.post<GenericSuccess>(`/v1/notifications/${uuid}/open`)
+  return data
+}
+
+export async function trackClick(uuid: string) {
+  const { data } = await apiClient.post<GenericSuccess>(`/v1/notifications/${uuid}/click`)
+  return data
+}
+
+export async function heartbeat() {
+  const { data } = await apiClient.post<GenericSuccess>('/v1/notifications/heartbeat')
   return data
 }

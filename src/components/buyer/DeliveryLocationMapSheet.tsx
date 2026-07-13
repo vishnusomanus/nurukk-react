@@ -224,6 +224,13 @@ export function DeliveryLocationMapSheet({
           searchQuery={mapSearch}
           onSearchQueryChange={setMapSearch}
           onSearchSubmit={() => void handleSearchSubmit()}
+          onPickLocation={(hit) => {
+            const coords = { lat: hit.lat, lng: hit.lng }
+            lastGeocodedRef.current = null
+            setPosition(coords)
+            if (hit.displayName) setMapSearch(hit.displayName)
+            setMapError(null)
+          }}
           onLocate={() => void handleLocate()}
           locating={locating}
           loading={geocoding}

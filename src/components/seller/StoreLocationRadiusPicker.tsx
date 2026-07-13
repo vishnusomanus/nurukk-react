@@ -143,6 +143,13 @@ export function StoreLocationRadiusPicker({
         searchQuery={mapSearch}
         onSearchQueryChange={setMapSearch}
         onSearchSubmit={() => void handleSearchSubmit()}
+        onPickLocation={(hit) => {
+          const coords = { lat: hit.lat, lng: hit.lng }
+          setPosition(coords)
+          if (hit.displayName) setMapSearch(hit.displayName)
+          setMapError(null)
+          void emitLocation(coords, hit.displayName ?? hit.addressLine)
+        }}
         onLocate={() => void handleLocate()}
         locating={locating}
         loading={geocoding}

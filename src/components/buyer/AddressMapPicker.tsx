@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { cn } from '@/utils/cn'
 import { hasGoogleMapsApiKey, loadGoogleMaps } from '@/utils/googleMapsLoader'
+import { type GeocodedAddress, searchLocations } from '@/utils/nominatim'
 
 export type MapPosition = {
   lat: number
@@ -15,6 +16,8 @@ type AddressMapPickerProps = {
   searchQuery: string
   onSearchQueryChange: (value: string) => void
   onSearchSubmit: () => void
+  /** Called when the user picks a suggestion from the dropdown. */
+  onPickLocation?: (result: GeocodedAddress) => void
   onLocate: () => void
   locating?: boolean
   loading?: boolean
@@ -57,6 +60,7 @@ export function AddressMapPicker({
   searchQuery,
   onSearchQueryChange,
   onSearchSubmit,
+  onPickLocation,
   onLocate,
   locating = false,
   loading = false,
@@ -68,6 +72,7 @@ export function AddressMapPicker({
   variant = 'default',
 }: AddressMapPickerProps) {
   const isSheet = variant === 'sheet'
+  const listboxId = useId()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const leafletMapRef = useRef<L.Map | null>(null)
   const leafletCircleRef = useRef<L.Circle | null>(null)
@@ -77,11 +82,95 @@ export function AddressMapPicker({
   const ignoreMovesUntilRef = useRef(0)
   const lastEmittedRef = useRef<MapPosition | null>(null)
   const onPositionChangeRef = useRef(onPositionChange)
+  const onPickLocationRef = useRef(onPickLocation)
+  const onSearchSubmitRef = useRef(onSearchSubmit)
   const radiusKmRef = useRef(radiusKm)
+  const searchRequestRef = useRef(0)
+  const suppressSuggestionsRef = useRef(false)
   const useGoogle = hasGoogleMapsApiKey()
 
+  const [suggestions, setSuggestions] = useState<GeocodedAddress[]>([])
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false)
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState(-1)
+  const [searchFocused, setSearchFocused] = useState(false)
+
   onPositionChangeRef.current = onPositionChange
+  onPickLocationRef.current = onPickLocation
+  onSearchSubmitRef.current = onSearchSubmit
   radiusKmRef.current = radiusKm
+
+  useEffect(() => {
+    if (!searchFocused || suppressSuggestionsRef.current) {
+      setSuggestions([])
+      setSuggestionsOpen(false)
+      setHighlightIndex(-1)
+      return
+    }
+
+    const query = searchQuery.trim()
+    if (query.length < 3) {
+      setSuggestions([])
+      setSuggestionsOpen(false)
+      setHighlightIndex(-1)
+      setSuggestionsLoading(false)
+      return
+    }
+
+    const requestId = ++searchRequestRef.current
+    setSuggestionsLoading(true)
+    const timer = window.setTimeout(() => {
+      void searchLocations(query, 5)
+        .then((results) => {
+          if (requestId !== searchRequestRef.current) return
+          setSuggestions(results)
+          setSuggestionsOpen(results.length > 0)
+          setHighlightIndex(results.length > 0 ? 0 : -1)
+        })
+        .catch(() => {
+          if (requestId !== searchRequestRef.current) return
+          setSuggestions([])
+          setSuggestionsOpen(false)
+          setHighlightIndex(-1)
+        })
+        .finally(() => {
+          if (requestId === searchRequestRef.current) setSuggestionsLoading(false)
+        })
+    }, 320)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [searchQuery, searchFocused])
+
+  const pickSuggestion = (result: GeocodedAddress) => {
+    suppressSuggestionsRef.current = true
+    searchRequestRef.current += 1
+    setSuggestions([])
+    setSuggestionsOpen(false)
+    setHighlightIndex(-1)
+    setSuggestionsLoading(false)
+    if (onPickLocationRef.current) {
+      onPickLocationRef.current(result)
+    } else {
+      onSearchSubmitRef.current()
+    }
+    window.setTimeout(() => {
+      suppressSuggestionsRef.current = false
+    }, 400)
+  }
+
+  const runSearch = () => {
+    suppressSuggestionsRef.current = true
+    searchRequestRef.current += 1
+    setSuggestions([])
+    setSuggestionsOpen(false)
+    setHighlightIndex(-1)
+    onSearchSubmitRef.current()
+    window.setTimeout(() => {
+      suppressSuggestionsRef.current = false
+    }, 400)
+  }
 
   const suppressNextMoves = (ms = 200) => {
     ignoreMovesUntilRef.current = Date.now() + ms
@@ -379,33 +468,111 @@ export function AddressMapPicker({
           isSheet ? 'min-h-0 p-3' : 'min-h-[280px] p-4 md:p-6',
         )}
       >
-        <form
-          className={cn(
-            'pointer-events-auto flex items-center gap-2 border border-black/10 bg-white shadow-[0_8px_24px_-8px_rgba(15,23,42,0.28)] [color-scheme:light]',
-            isSheet ? 'rounded-full px-4 py-2.5' : 'rounded-xl p-3 backdrop-blur-xl',
-          )}
-          onSubmit={(e) => {
-            e.preventDefault()
-            onSearchSubmit()
-          }}
-        >
-          <span className="material-symbols-outlined shrink-0 text-[#0d631b]">search</span>
-          <input
-            value={searchQuery}
-            onChange={(e) => onSearchQueryChange(e.target.value)}
-            placeholder="Search area, landmark, pincode…"
-            enterKeyHint="search"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            className="w-full border-none bg-transparent text-[16px] leading-5 text-[#1b1c1c] outline-none placeholder:text-[#6b7568] placeholder:opacity-100 focus:ring-0"
-          />
-          {loading ? (
-            <span className="material-symbols-outlined animate-spin text-[20px] text-[#0d631b]">
-              progress_activity
-            </span>
+        <div className="pointer-events-auto relative">
+          <div
+            className={cn(
+              'flex items-center gap-2 border border-black/10 bg-white shadow-[0_8px_24px_-8px_rgba(15,23,42,0.28)] [color-scheme:light]',
+              isSheet ? 'rounded-full px-4 py-2.5' : 'rounded-xl p-3 backdrop-blur-xl',
+            )}
+          >
+            <span className="material-symbols-outlined shrink-0 text-[#0d631b]">search</span>
+            <input
+              value={searchQuery}
+              onChange={(e) => {
+                suppressSuggestionsRef.current = false
+                onSearchQueryChange(e.target.value)
+              }}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => {
+                window.setTimeout(() => setSearchFocused(false), 150)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (suggestionsOpen && suggestions.length > 0) {
+                    const index = highlightIndex >= 0 ? highlightIndex : 0
+                    pickSuggestion(suggestions[index]!)
+                    return
+                  }
+                  runSearch()
+                  return
+                }
+                if (e.key === 'ArrowDown' && suggestionsOpen && suggestions.length > 0) {
+                  e.preventDefault()
+                  setHighlightIndex((i) => (i + 1) % suggestions.length)
+                  return
+                }
+                if (e.key === 'ArrowUp' && suggestionsOpen && suggestions.length > 0) {
+                  e.preventDefault()
+                  setHighlightIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1))
+                  return
+                }
+                if (e.key === 'Escape' && suggestionsOpen) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setSuggestionsOpen(false)
+                  setHighlightIndex(-1)
+                }
+              }}
+              placeholder="Search area, landmark, pincode…"
+              enterKeyHint="search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              role="combobox"
+              aria-expanded={suggestionsOpen}
+              aria-controls={listboxId}
+              aria-autocomplete="list"
+              aria-activedescendant={
+                suggestionsOpen && highlightIndex >= 0
+                  ? `${listboxId}-option-${highlightIndex}`
+                  : undefined
+              }
+              className="w-full border-none bg-transparent text-[16px] leading-5 text-[#1b1c1c] outline-none placeholder:text-[#6b7568] placeholder:opacity-100 focus:ring-0"
+            />
+            {loading || suggestionsLoading ? (
+              <span className="material-symbols-outlined animate-spin text-[20px] text-[#0d631b]">
+                progress_activity
+              </span>
+            ) : null}
+          </div>
+
+          {suggestionsOpen && suggestions.length > 0 ? (
+            <ul
+              id={listboxId}
+              role="listbox"
+              className="absolute top-[calc(100%+0.4rem)] left-0 right-0 z-30 max-h-56 overflow-y-auto rounded-2xl border border-black/10 bg-white py-1 shadow-[0_12px_32px_-12px_rgba(15,23,42,0.35)] [color-scheme:light]"
+            >
+              {suggestions.map((result, index) => {
+                const label = result.displayName ?? result.addressLine ?? 'Location'
+                const active = index === highlightIndex
+                return (
+                  <li key={`${result.lat}-${result.lng}-${label}`} role="presentation">
+                    <button
+                      id={`${listboxId}-option-${index}`}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseEnter={() => setHighlightIndex(index)}
+                      onClick={() => pickSuggestion(result)}
+                      className={cn(
+                        'flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition-colors',
+                        active ? 'bg-primary/10 text-on-surface' : 'text-on-surface hover:bg-black/[0.04]',
+                      )}
+                    >
+                      <span className="material-symbols-outlined mt-0.5 shrink-0 text-[18px] text-primary">
+                        location_on
+                      </span>
+                      <span className="line-clamp-2 leading-snug">{label}</span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
           ) : null}
-        </form>
+        </div>
 
         <div className={cn('pointer-events-none flex flex-col', isSheet ? 'items-end gap-2' : 'gap-3')}>
           <button

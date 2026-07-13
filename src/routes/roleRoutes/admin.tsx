@@ -54,6 +54,11 @@ const AdminSupportPage = lazy(() =>
 const AdminSupportDetailPage = lazy(() =>
   import('@/pages/admin/AdminSupportDetailPage').then((m) => ({ default: m.AdminSupportDetailPage })),
 )
+const AdminNotificationManagementPage = lazy(() =>
+  import('@/pages/admin/AdminNotificationManagementPage').then((m) => ({
+    default: m.AdminNotificationManagementPage,
+  })),
+)
 const AdminPayoutsPage = lazy(() =>
   import('@/pages/admin/AdminPayoutsPage').then((m) => ({ default: m.AdminPayoutsPage })),
 )
@@ -91,6 +96,7 @@ export const adminProtectedRoutes: RouteObject[] = [
           { path: 'refunds', element: wrap(<AdminRefundsPage />) },
           { path: 'support', element: wrap(<AdminSupportPage />) },
           { path: 'support/:uuid', element: wrap(<AdminSupportDetailPage />) },
+          { path: 'push', element: wrap(<AdminNotificationManagementPage />) },
           { path: 'payouts', element: wrap(<AdminPayoutsPage />) },
           { path: 'settings', element: wrap(<SettingsPage />) },
           { path: 'notifications', element: wrap(<NotificationsPage />) },
