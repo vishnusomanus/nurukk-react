@@ -17,7 +17,8 @@ export function isBuyerBottomNavHidden(pathname: string) {
     pathname.includes('/checkout') ||
     pathname.includes('/success') ||
     pathname.includes('/invoice') ||
-    pathname.includes('/products/')
+    pathname.includes('/products/') ||
+    (pathname.includes('/recipes/') && pathname !== '/buyer/recipes')
   )
 }
 

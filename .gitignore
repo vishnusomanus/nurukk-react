@@ -29,3 +29,4 @@ tsconfig.tsbuildinfo
 local.properties
 *.keystore
 *.jks
+tmp/

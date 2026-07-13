@@ -14,12 +14,14 @@ const NAV_ITEMS = [
   { to: '/delivery', label: 'Deliveries', icon: 'local_shipping', end: true },
   { to: '/delivery/history', label: 'History', icon: 'history', end: false },
   { to: '/delivery/earnings', label: 'Earnings', icon: 'payments', end: false },
+  { to: '/delivery/support', label: 'Support', icon: 'help_center', end: false },
 ]
 
 function headerTitle(pathname: string) {
   if (pathname.startsWith('/delivery/history')) return 'History'
   if (pathname.startsWith('/delivery/earnings')) return 'Earnings'
   if (pathname.startsWith('/delivery/notifications')) return 'Notifications'
+  if (pathname.startsWith('/delivery/support')) return 'Help & Support'
   return 'Deliveries'
 }
 
@@ -104,7 +106,7 @@ export function DeliveryLayout() {
       </div>
 
       <nav className="app-bottom-nav-safe fixed right-0 bottom-0 left-0 z-20 border-t border-outline-variant bg-surface px-2 pt-2 md:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-3 gap-1">
+        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}

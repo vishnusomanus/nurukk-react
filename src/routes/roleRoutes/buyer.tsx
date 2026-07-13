@@ -55,6 +55,15 @@ const BuyerWishlistPage = lazy(() =>
 const BuyerSellerStorePage = lazy(() =>
   import('@/pages/buyer/BuyerSellerStorePage').then((m) => ({ default: m.BuyerSellerStorePage })),
 )
+const BuyerRecipesPage = lazy(() =>
+  import('@/pages/buyer/BuyerRecipesPage').then((m) => ({ default: m.BuyerRecipesPage })),
+)
+const BuyerRecipeDetailPage = lazy(() =>
+  import('@/pages/buyer/BuyerRecipeDetailPage').then((m) => ({ default: m.BuyerRecipeDetailPage })),
+)
+const BuyerSupportPage = lazy(() =>
+  import('@/pages/buyer/BuyerSupportPage').then((m) => ({ default: m.BuyerSupportPage })),
+)
 const NotificationsPage = lazy(() =>
   import('@/pages/common/NotificationsPage').then((m) => ({ default: m.NotificationsPage })),
 )
@@ -77,6 +86,8 @@ export const buyerProtectedRoutes: RouteObject[] = [
           { path: 'categories/:categoryUuid', element: wrap(<CategoryListingPage />) },
           { path: 'products/:productUuid', element: wrap(<ProductDetailPage />) },
           { path: 'search', element: wrap(<BuyerSearchPage />) },
+          { path: 'recipes', element: wrap(<BuyerRecipesPage />) },
+          { path: 'recipes/:recipeUuid', element: wrap(<BuyerRecipeDetailPage />) },
           { path: 'stores/:sellerUuid', element: wrap(<BuyerSellerStorePage />) },
           { path: 'checkout', element: wrap(<CheckoutSummaryPage />) },
           { path: 'checkout/payment', element: wrap(<PaymentSelectionPage />) },
@@ -87,6 +98,7 @@ export const buyerProtectedRoutes: RouteObject[] = [
           { path: 'wishlist', element: wrap(<BuyerWishlistPage />) },
           { path: 'profile/personal', element: wrap(<BuyerPersonalInfoPage />) },
           { path: 'profile', element: wrap(<BuyerProfilePage />) },
+          { path: 'support', element: wrap(<BuyerSupportPage />) },
           { path: 'notifications', element: wrap(<NotificationsPage />) },
         ],
       },

@@ -113,13 +113,13 @@ export function BuyerSellerStorePage() {
             />
 
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div key={index} className="h-72 animate-pulse rounded-xl bg-surface-container" />
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
                   <SellerStoreProductCard key={product.uuid} product={product} />
                 ))}

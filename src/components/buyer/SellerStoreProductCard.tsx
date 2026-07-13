@@ -47,7 +47,7 @@ export function SellerStoreProductCard({ product }: { product: BuyerProduct }) {
       )}
     >
       <Link to={`/buyer/products/${product.uuid}`} className="block">
-        <div ref={imageRef} className="relative h-48 overflow-hidden">
+        <div ref={imageRef} className="relative aspect-square overflow-hidden sm:h-48 sm:aspect-auto">
           <ProductImage
             product={product}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -55,7 +55,7 @@ export function SellerStoreProductCard({ product }: { product: BuyerProduct }) {
           {badge && !outOfStock ? (
             <div
               className={cn(
-                'pointer-events-none absolute top-3 left-3 rounded-full px-3 py-1 text-[10px] font-bold tracking-wider uppercase',
+                'pointer-events-none absolute top-2 left-2 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase sm:top-3 sm:left-3 sm:px-3 sm:py-1 sm:text-[10px]',
                 getProductListingBadgeClassName(badge),
               )}
             >
@@ -64,7 +64,7 @@ export function SellerStoreProductCard({ product }: { product: BuyerProduct }) {
           ) : null}
           {outOfStock ? (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-              <span className="rounded-lg bg-surface px-4 py-2 text-label-md font-bold tracking-widest text-on-surface uppercase shadow-xl">
+              <span className="rounded-lg bg-surface px-2 py-1 text-[10px] font-bold tracking-widest text-on-surface uppercase shadow-xl sm:px-4 sm:py-2 sm:text-label-md">
                 Out of Stock
               </span>
             </div>
@@ -72,23 +72,25 @@ export function SellerStoreProductCard({ product }: { product: BuyerProduct }) {
         </div>
       </Link>
 
-      <div className="p-4">
+      <div className="p-2.5 sm:p-4">
         <Link to={`/buyer/products/${product.uuid}`}>
-          <h3 className="mb-1 font-bold text-on-surface">{product.name}</h3>
-          <p className="text-label-md mb-4 text-on-surface-variant">{product.unit ?? 'Fresh pack'}</p>
+          <h3 className="mb-0.5 line-clamp-2 text-sm font-bold text-on-surface sm:mb-1 sm:text-base">
+            {product.name}
+          </h3>
+          <p className="text-label-md mb-2 text-on-surface-variant sm:mb-4">{product.unit ?? 'Fresh pack'}</p>
         </Link>
-        <div className="flex items-center justify-between">
-          <span className={cn('text-price-display text-primary', outOfStock && 'text-outline')}>
+        <div className="flex items-center justify-between gap-1">
+          <span className={cn('text-base font-bold text-primary sm:text-price-display', outOfStock && 'text-outline')}>
             {formatCurrency(price)}
           </span>
           {outOfStock ? (
             <button
               type="button"
               disabled
-              className="flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-full bg-outline-variant text-white"
+              className="flex h-8 w-8 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-outline-variant text-white sm:h-10 sm:w-10"
               aria-label="Notify when available"
             >
-              <span className="material-symbols-outlined">notifications</span>
+              <span className="material-symbols-outlined text-[18px] sm:text-[24px]">notifications</span>
             </button>
           ) : (
             <button
@@ -96,12 +98,14 @@ export function SellerStoreProductCard({ product }: { product: BuyerProduct }) {
               disabled={addToCart.isPending}
               onClick={handleAdd}
               className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-md transition-all hover:bg-primary-container active:scale-90 disabled:opacity-70',
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-md transition-all hover:bg-primary-container active:scale-90 disabled:opacity-70 sm:h-10 sm:w-10',
                 addedPop && 'add-to-cart-pop',
               )}
               aria-label={`Add ${product.name} to cart`}
             >
-              <span className="material-symbols-outlined">{addedPop ? 'check' : 'add'}</span>
+              <span className="material-symbols-outlined text-[18px] sm:text-[24px]">
+                {addedPop ? 'check' : 'add'}
+              </span>
             </button>
           )}
         </div>

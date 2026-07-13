@@ -24,6 +24,12 @@ function resolveSellerChrome(pathname: string) {
   if (pathname.match(/^\/seller\/products\/[^/]+\/edit$/)) {
     return { title: 'Edit Product', showSearch: false, showBack: true, backTo: '/seller/products' }
   }
+  if (pathname === '/seller/recipes/new') {
+    return { title: 'New Recipe', showSearch: false, showBack: true, backTo: '/seller/recipes' }
+  }
+  if (pathname.match(/^\/seller\/recipes\/[^/]+\/edit$/)) {
+    return { title: 'Edit Recipe', showSearch: false, showBack: true, backTo: '/seller/recipes' }
+  }
   if (pathname === '/seller/profile/edit') {
     return { title: 'Edit Profile', showSearch: false, showBack: true, backTo: '/seller/profile' }
   }
@@ -32,6 +38,14 @@ function resolveSellerChrome(pathname: string) {
   }
   if (pathname === '/seller/products') {
     return { title: 'Products', showSearch: true, searchPlaceholder: 'Search products…', showBack: false }
+  }
+  if (pathname === '/seller/recipes') {
+    return {
+      title: 'Recipes',
+      showSearch: true,
+      searchPlaceholder: 'Search recipes, bundles…',
+      showBack: false,
+    }
   }
   if (pathname === '/seller/orders') {
     return { title: 'Orders', showSearch: true, searchPlaceholder: 'Search orders…', showBack: false }
@@ -89,6 +103,7 @@ export function SellerMarketplaceLayout() {
     [chrome.backTo, location.pathname],
   )
   const showAddProduct = location.pathname === '/seller/products'
+  const showAddRecipe = location.pathname === '/seller/recipes'
   const backTo = chrome.showBack ? resolvedBack : null
 
   return (
@@ -103,6 +118,7 @@ export function SellerMarketplaceLayout() {
           onSearchChange={chrome.showSearch ? setSearch : undefined}
           searchPlaceholder={chrome.searchPlaceholder}
           showAddProduct={showAddProduct}
+          showAddRecipe={showAddRecipe}
         />
         <main className="scroll-touch flex-1 overflow-x-clip">
           <div className="mx-auto w-full max-w-lg lg:max-w-none">

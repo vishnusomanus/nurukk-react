@@ -47,13 +47,6 @@ const MANAGEMENT_CARDS = [
     to: '/buyer/wishlist',
   },
   {
-    icon: 'payments',
-    iconWrap: 'bg-secondary-fixed',
-    iconColor: 'text-on-secondary-fixed',
-    title: 'Payment Methods',
-    description: 'Securely edit or add your credit cards and digital wallets.',
-  },
-  {
     icon: 'receipt_long',
     iconWrap: 'bg-primary-fixed',
     iconColor: 'text-on-primary-fixed',
@@ -75,6 +68,7 @@ const MANAGEMENT_CARDS = [
     iconColor: 'text-on-tertiary-fixed',
     title: 'Help & Support',
     description: 'Get assistance from our team or browse the FAQ.',
+    to: '/buyer/support',
   },
 ] as const
 

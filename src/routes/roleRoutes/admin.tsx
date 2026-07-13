@@ -48,6 +48,12 @@ const AdminAuditLogsPage = lazy(() =>
 const AdminRefundsPage = lazy(() =>
   import('@/pages/admin/AdminRefundsPage').then((m) => ({ default: m.AdminRefundsPage })),
 )
+const AdminSupportPage = lazy(() =>
+  import('@/pages/admin/AdminSupportPage').then((m) => ({ default: m.AdminSupportPage })),
+)
+const AdminSupportDetailPage = lazy(() =>
+  import('@/pages/admin/AdminSupportDetailPage').then((m) => ({ default: m.AdminSupportDetailPage })),
+)
 const AdminPayoutsPage = lazy(() =>
   import('@/pages/admin/AdminPayoutsPage').then((m) => ({ default: m.AdminPayoutsPage })),
 )
@@ -83,6 +89,8 @@ export const adminProtectedRoutes: RouteObject[] = [
           { path: 'orders/:uuid', element: wrap(<AdminOrderDetailPage />) },
           { path: 'audit-logs', element: wrap(<AdminAuditLogsPage />) },
           { path: 'refunds', element: wrap(<AdminRefundsPage />) },
+          { path: 'support', element: wrap(<AdminSupportPage />) },
+          { path: 'support/:uuid', element: wrap(<AdminSupportDetailPage />) },
           { path: 'payouts', element: wrap(<AdminPayoutsPage />) },
           { path: 'settings', element: wrap(<SettingsPage />) },
           { path: 'notifications', element: wrap(<NotificationsPage />) },

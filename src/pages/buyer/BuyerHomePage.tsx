@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { buyerService } from '@/api/services'
+import { buyerService, buyerRecipesService } from '@/api/services'
 import { ProductCard } from '@/components/buyer/ProductCard'
 import { ProductImage, RemoteImage } from '@/components/buyer/ProductImage'
+import { RecipeCard } from '@/components/buyer/RecipeCard'
 import { SellerCard } from '@/components/buyer/SellerCard'
 import { DeliveryLocationControl } from '@/components/buyer/DeliveryLocationControl'
 import { DeliveryRangeBanner } from '@/components/buyer/DeliveryRangeBanner'
@@ -19,7 +20,9 @@ import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { getCategoryImageUrl } from '@/utils/categoryImage'
 import { cn } from '@/utils/cn'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { extractRows } from '@/utils/extractRows'
 import type { BuyerCategory } from '@/api/services/buyerService'
+import type { BuyerRecipe } from '@/api/services/buyerRecipesService'
 
 function isCutVegetableCategory(category: BuyerCategory) {
   const key = `${category.slug ?? ''} ${category.name ?? ''}`.toLowerCase()
@@ -99,6 +102,12 @@ export function BuyerHomePage() {
   })
   const cutVegProducts = cutVegData?.data ?? []
   const showCutVegSection = !!cutVegCategory && (cutVegLoading || cutVegProducts.length > 0)
+
+  const { data: recipesData, isLoading: recipesLoading } = useQuery({
+    queryKey: ['buyer', 'recipes', 'home'],
+    queryFn: () => buyerRecipesService.listRecipes({ page: 1, per_page: 8 }),
+  })
+  const homeRecipes = extractRows(recipesData?.data) as BuyerRecipe[]
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -298,6 +307,45 @@ export function BuyerHomePage() {
                 ))}
           </div>
         </section>
+
+        {/* Farm recipes */}
+        {recipesLoading || homeRecipes.length > 0 ? (
+          <section>
+            <div className="mb-4 flex items-end justify-between lg:mb-6">
+              <div>
+                <h3 className="text-headline-lg-mobile text-on-surface lg:text-headline-lg">
+                  Farm Recipes
+                </h3>
+                <p className="text-body-md text-on-surface-variant">
+                  Cook with fresh bundles from local farms
+                </p>
+              </div>
+              <Link
+                to="/buyer/recipes"
+                className="text-label-md flex items-center gap-1 font-bold text-primary lg:text-body-lg"
+              >
+                View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </Link>
+            </div>
+            <div className="stitch-hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 scroll-smooth lg:grid lg:snap-none lg:grid-cols-3 lg:gap-6 lg:overflow-visible xl:grid-cols-4">
+              {recipesLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-56 w-[calc((100%-0.75rem)/1.35)] shrink-0 animate-pulse snap-start rounded-2xl bg-surface-container lg:h-64 lg:w-auto lg:min-w-0"
+                    />
+                  ))
+                : homeRecipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.uuid}
+                      recipe={recipe}
+                      layout="rail"
+                      className="w-[calc((100%-0.75rem)/1.35)] shrink-0 snap-start lg:w-auto lg:min-w-0"
+                    />
+                  ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* Recently purchased */}
         {recent.length > 0 ? (

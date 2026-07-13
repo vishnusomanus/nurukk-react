@@ -46,6 +46,15 @@ const SellerOnboardingPage = lazy(() =>
 const SellerDeliveryPage = lazy(() =>
   import('@/pages/seller/SellerDeliveryPage').then((m) => ({ default: m.SellerDeliveryPage })),
 )
+const SellerRecipesPage = lazy(() =>
+  import('@/pages/seller/SellerRecipesPage').then((m) => ({ default: m.SellerRecipesPage })),
+)
+const SellerRecipeFormPage = lazy(() =>
+  import('@/pages/seller/SellerRecipeFormPage').then((m) => ({ default: m.SellerRecipeFormPage })),
+)
+const SellerSupportPage = lazy(() =>
+  import('@/pages/seller/SellerSupportPage').then((m) => ({ default: m.SellerSupportPage })),
+)
 const NotificationsPage = lazy(() =>
   import('@/pages/common/NotificationsPage').then((m) => ({ default: m.NotificationsPage })),
 )
@@ -71,6 +80,9 @@ export const sellerProtectedRoutes: RouteObject[] = [
           { path: 'products', element: wrap(<SellerProductsPage />) },
           { path: 'products/new', element: wrap(<SellerProductFormPage />) },
           { path: 'products/:uuid/edit', element: wrap(<SellerProductFormPage />) },
+          { path: 'recipes', element: wrap(<SellerRecipesPage />) },
+          { path: 'recipes/new', element: wrap(<SellerRecipeFormPage />) },
+          { path: 'recipes/:uuid/edit', element: wrap(<SellerRecipeFormPage />) },
           { path: 'orders', element: wrap(<SellerOrdersPage />) },
           { path: 'orders/:uuid', element: wrap(<SellerOrderDetailPage />) },
           { path: 'coupons', element: wrap(<SellerCouponsPage />) },
@@ -79,6 +91,7 @@ export const sellerProtectedRoutes: RouteObject[] = [
           { path: 'delivery', element: wrap(<SellerDeliveryPage />) },
           { path: 'profile', element: wrap(<SellerProfilePage />) },
           { path: 'profile/edit', element: wrap(<SellerEditProfilePage />) },
+          { path: 'support', element: wrap(<SellerSupportPage />) },
           { path: 'notifications', element: wrap(<NotificationsPage />) },
         ],
       },

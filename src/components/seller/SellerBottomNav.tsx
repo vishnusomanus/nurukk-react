@@ -21,6 +21,8 @@ export function isSellerBottomNavHidden(pathname: string) {
   return (
     pathname.includes('/products/new') ||
     (pathname.includes('/products/') && pathname.includes('/edit')) ||
+    pathname.includes('/recipes/new') ||
+    (pathname.includes('/recipes/') && pathname.includes('/edit')) ||
     pathname.match(/\/seller\/orders\/[^/]+$/) != null ||
     pathname.includes('/profile/edit') ||
     pathname.includes('/onboarding')

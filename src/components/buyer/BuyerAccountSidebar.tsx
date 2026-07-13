@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/buyer/addresses', label: 'Saved Addresses', icon: 'location_on', end: false },
   { to: '/buyer/wishlist', label: 'Favorites', icon: 'favorite', end: false },
   { to: '/buyer/profile/personal', label: 'Settings', icon: 'settings', end: false },
+  { to: '/buyer/support', label: 'Help & Support', icon: 'help_center', end: false },
 ] as const
 
 export function BuyerAccountSidebar({ className }: { className?: string }) {

@@ -57,6 +57,19 @@ export function BuyerDesktopHeader() {
             >
               Shop All
             </NavLink>
+            <NavLink
+              to="/buyer/recipes"
+              className={({ isActive }) =>
+                cn(
+                  'shrink-0 text-body-lg transition-colors duration-200',
+                  isActive
+                    ? 'border-b-2 border-primary pb-1 font-bold text-primary'
+                    : 'text-on-surface-variant hover:text-primary',
+                )
+              }
+            >
+              Recipes
+            </NavLink>
 
             {menuCategories.map((category) => (
               <NavLink

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buyerService, paymentService } from '@/api/services'
@@ -6,6 +5,7 @@ import type { OnlinePaymentMethod } from '@/constants/paymentMethods'
 import { BuyerPageHeader } from '@/components/buyer/BuyerPageHeader'
 import { ProductImage } from '@/components/buyer/ProductImage'
 import { OrderRateForm } from '@/components/buyer/OrderRateForm'
+import { DeliveryRateForm } from '@/components/buyer/DeliveryRateForm'
 import { OrderStatusHeroIcon } from '@/components/buyer/OrderStatusHeroIcon'
 import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
 import { useAuthStore } from '@/store/authStore'
@@ -41,7 +41,6 @@ export function OrderSuccessPage() {
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
   const paymentOutcome = (location.state as { paymentOutcome?: string } | null)?.paymentOutcome
-  const [hasRated, setHasRated] = useState(false)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['buyer', 'order', orderUuid],
@@ -389,8 +388,31 @@ export function OrderSuccessPage() {
                 </section>
               ) : null}
 
-              {!active && delivered && !hasRated ? (
-                <OrderRateForm orderUuid={orderUuid} onRated={() => setHasRated(true)} />
+              {!active && delivered ? (
+                <div className="space-y-3">
+                  <OrderRateForm
+                    orderUuid={orderUuid}
+                    products={items
+                      .filter((item) => item.can_rate && item.product?.uuid)
+                      .map((item) => ({
+                        productUuid: item.product!.uuid,
+                        productName: item.product?.name ?? item.product_name,
+                        initialRating: item.buyer_rating?.rating,
+                      }))}
+                  />
+                  {order.can_rate_delivery ? (
+                    <DeliveryRateForm
+                      orderUuid={orderUuid}
+                      riderName={
+                        order.delivery_agent?.name ??
+                        tracking.delivery_agent_name ??
+                        null
+                      }
+                      initialRating={order.delivery_rating?.rating}
+                      initialComment={order.delivery_rating?.comment}
+                    />
+                  ) : null}
+                </div>
               ) : null}
 
               {/* Desktop actions */}

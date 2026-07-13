@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buyerService, paymentService } from '@/api/services'
@@ -12,6 +12,7 @@ import {
 import { CheckoutFreshnessCard } from '@/components/buyer/CheckoutFreshnessCard'
 import { ConfirmActionModal } from '@/components/buyer/ConfirmActionModal'
 import { DeliveryLocationControl } from '@/components/buyer/DeliveryLocationControl'
+import { LocationConfirmSheet } from '@/components/buyer/LocationConfirmSheet'
 import { NoStoresNearbyCard } from '@/components/buyer/NoStoresNearbyCard'
 import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
 import { useCheckoutAddress } from '@/hooks/useCheckoutAddress'
@@ -37,11 +38,12 @@ const softCard =
 export function CheckoutSummaryPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { addressUuid, addresses, hasAddress, setAddressUuid } = useCheckoutAddress()
+  const { addressUuid, addresses, hasAddress, selectedAddress, setAddressUuid } = useCheckoutAddress()
   const { stored } = useDeliveryLocation()
   const noStoresInRange = Boolean(stored && !stored.serviceable)
   const [removeTarget, setRemoveTarget] = useState<CartItem | null>(null)
   const [confirmClearOpen, setConfirmClearOpen] = useState(false)
+  const [locationConfirmOpen, setLocationConfirmOpen] = useState(false)
   const addressRef = useRef<CheckoutDeliveryAddressHandle>(null)
 
   const { data: cartData, isLoading, error } = useQuery({
@@ -120,12 +122,17 @@ export function CheckoutSummaryPage() {
     })
   }
 
+  const goToPayment = useCallback(() => {
+    setLocationConfirmOpen(false)
+    navigate('/buyer/checkout/payment')
+  }, [navigate])
+
   const handleProceed = () => {
     if (!hasAddress) {
       focusAddressSection()
       return
     }
-    navigate('/buyer/checkout/payment')
+    setLocationConfirmOpen(true)
   }
 
   return (
@@ -369,6 +376,14 @@ export function CheckoutSummaryPage() {
           </div>
         </div>
       ) : null}
+
+      <LocationConfirmSheet
+        open={locationConfirmOpen}
+        address={selectedAddress}
+        onClose={() => setLocationConfirmOpen(false)}
+        onConfirm={goToPayment}
+        onChangeAddress={focusAddressSection}
+      />
 
       <ConfirmActionModal
         open={!!removeTarget}

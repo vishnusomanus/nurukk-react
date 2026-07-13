@@ -29,6 +29,10 @@ export type BuyerProduct = {
   images?: string[]
   image_url?: string
   nutrition?: ProductNutrition | null
+  avg_rating?: number | null
+  rating_count?: number
+  can_rate?: boolean
+  my_rating?: BuyerProductRating | null
   category?: BuyerCategory
   seller?: {
     uuid?: string
@@ -40,6 +44,32 @@ export type BuyerProduct = {
   }
   deliverable?: boolean
   [key: string]: unknown
+}
+
+export type BuyerProductRating = {
+  uuid?: string
+  rating: number
+  user?: {
+    uuid?: string
+    name?: string
+  } | null
+  created_at?: string | null
+  product?: BuyerProduct | null
+}
+
+export type BuyerDeliveryRating = {
+  uuid?: string
+  rating: number
+  comment?: string | null
+  delivery_agent?: {
+    uuid?: string
+    name?: string
+  } | null
+  user?: {
+    uuid?: string
+    name?: string
+  } | null
+  created_at?: string | null
 }
 
 export type BuyerSellerSummary = {
@@ -107,6 +137,8 @@ export type BuyerOrderItem = {
   quantity: number
   subtotal?: number
   product?: BuyerProduct
+  buyer_rating?: BuyerProductRating | null
+  can_rate?: boolean
   [key: string]: unknown
 }
 
@@ -128,6 +160,12 @@ export type BuyerOrder = {
   placed_at?: string
   distance_km?: number
   tracking?: OrderTrackData
+  can_rate_delivery?: boolean
+  delivery_agent?: {
+    uuid?: string
+    name?: string | null
+  } | null
+  delivery_rating?: BuyerDeliveryRating | null
   [key: string]: unknown
 }
 
@@ -550,9 +588,39 @@ export async function getInvoice(uuid: string) {
 
 export async function rateOrder(
   uuid: string,
-  payload: { rating: number; comment?: string; product_uuid?: string },
+  payload: { rating: number; product_uuid: string },
 ) {
-  const { data } = await apiClient.post<GenericSuccess>(`/v1/buyer/orders/${uuid}/rate`, payload)
+  const { data } = await apiClient.post<GenericSuccess<BuyerProductRating>>(
+    `/v1/buyer/orders/${uuid}/rate`,
+    payload,
+  )
+  return data
+}
+
+export async function rateDelivery(
+  uuid: string,
+  payload: { rating: number; comment: string },
+) {
+  const { data } = await apiClient.post<GenericSuccess<BuyerDeliveryRating>>(
+    `/v1/buyer/orders/${uuid}/rate-delivery`,
+    payload,
+  )
+  return data
+}
+
+export async function listProductRatings(uuid: string, params?: { page?: number; per_page?: number }) {
+  const { data } = await apiClient.get<GenericSuccess<Paginated<BuyerProductRating> | BuyerProductRating[]>>(
+    `/v1/buyer/products/${uuid}/ratings`,
+    { params },
+  )
+  return data
+}
+
+export async function rateProduct(uuid: string, payload: { rating: number }) {
+  const { data } = await apiClient.post<GenericSuccess<BuyerProductRating>>(
+    `/v1/buyer/products/${uuid}/rate`,
+    payload,
+  )
   return data
 }
 

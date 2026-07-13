@@ -107,6 +107,7 @@ export function CartAddProvider({ children }: { children: React.ReactNode }) {
         confirmLabel={mutation.isPending ? 'Replacing…' : 'Replace cart'}
         confirming={mutation.isPending}
         icon="shopping_cart"
+        tone="primary"
         onClose={cancelReplace}
         onConfirm={() => {
           void confirmReplace()

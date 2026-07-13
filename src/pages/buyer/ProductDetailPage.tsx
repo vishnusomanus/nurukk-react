@@ -1,19 +1,45 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { buyerService } from '@/api/services'
+import type { BuyerProductRating } from '@/api/services/buyerService'
 import { BuyerPageHeader } from '@/components/buyer/BuyerPageHeader'
 import { ProductNutritionPanel } from '@/components/buyer/ProductNutritionPanel'
 import { ProductCard } from '@/components/buyer/ProductCard'
+import { ProductRateForm } from '@/components/buyer/ProductRateForm'
 import { RemoteImage } from '@/components/buyer/ProductImage'
 import { triggerCartFly } from '@/store/cartFlyStore'
 import { useAddToCart } from '@/hooks/useAddToCart'
+import { useAuthStore } from '@/store/authStore'
 import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
+import { extractRows } from '@/utils/extractRows'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { getProductImage } from '@/utils/productImage'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { navigateAfterFirstCartItem } from '@/utils/cartNavigation'
 import { cn } from '@/utils/cn'
+
+function RatingStars({ value, size = 18 }: { value: number; size?: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${value} out of 5`}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          className={cn(
+            'material-symbols-outlined text-secondary',
+            star > value && 'text-outline-variant',
+          )}
+          style={{
+            fontSize: size,
+            fontVariationSettings: star <= value ? "'FILL' 1" : undefined,
+          }}
+        >
+          star
+        </span>
+      ))}
+    </span>
+  )
+}
 
 export function ProductDetailPage() {
   const { productUuid = '' } = useParams()
@@ -37,10 +63,24 @@ export function ProductDetailPage() {
     enabled: !!productUuid,
   })
 
+  const { data: ratingsData, isLoading: ratingsLoading } = useQuery({
+    queryKey: ['buyer', 'product', productUuid, 'ratings'],
+    queryFn: () => buyerService.listProductRatings(productUuid, { page: 1, per_page: 20 }),
+    enabled: !!productUuid,
+  })
+
   const addToCart = useAddToCart()
+  const user = useAuthStore((s) => s.user)
 
   const product = data?.data
   const related = relatedData?.data ?? []
+  const ratings = extractRows(ratingsData?.data) as BuyerProductRating[]
+  const myRating = useMemo(() => {
+    if (product?.my_rating) return product.my_rating
+    const userUuid = user?.uuid
+    if (!userUuid) return null
+    return ratings.find((row) => row.user?.uuid === userUuid) ?? null
+  }, [product?.my_rating, ratings, user?.uuid])
   const price = product?.discount_price ?? product?.price
   const images = product?.images?.length ? product.images : [getProductImage(product)]
   const outOfDeliveryRange = product?.deliverable === false
@@ -240,6 +280,56 @@ export function ProductDetailPage() {
         </div>
       </main>
 
+      <section className="buyer-page-container mt-8 space-y-4 lg:mt-10">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-1 rounded-full bg-primary" />
+            <h2 className="text-lg font-bold text-on-surface">Ratings</h2>
+          </div>
+          {product.avg_rating != null ? (
+            <div className="flex items-center gap-2 text-sm font-semibold text-on-surface">
+              <RatingStars value={Math.round(product.avg_rating)} size={16} />
+              <span>{product.avg_rating.toFixed(1)}</span>
+              {product.rating_count ? (
+                <span className="font-normal text-on-surface-variant">· {product.rating_count}</span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        <ProductRateForm
+          productUuid={product.uuid}
+          canRate={Boolean(product.can_rate)}
+          initialRating={myRating?.rating}
+        />
+
+        {ratingsLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-surface-container" />
+            ))}
+          </div>
+        ) : ratings.length === 0 ? (
+          <p className="rounded-xl bg-surface-container-low px-4 py-5 text-center text-sm text-on-surface-variant">
+            No ratings yet. Buy this product to be the first to rate it.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {ratings.map((row, index) => (
+              <article
+                key={row.uuid ?? `${row.user?.uuid ?? 'anon'}-${index}`}
+                className="flex items-center justify-between gap-2 rounded-xl border border-outline-variant/20 bg-surface-container-lowest px-4 py-3"
+              >
+                <p className="text-sm font-semibold text-on-surface">
+                  {row.user?.name ?? 'Buyer'}
+                </p>
+                <RatingStars value={row.rating} size={16} />
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       {related.length > 0 ? (
         <section className="buyer-page-container mt-8 mb-4 lg:mt-10 lg:mb-0">
           <h2 className="mb-4 text-lg font-bold text-on-surface lg:text-headline-lg">You may also like</h2>
@@ -302,6 +392,13 @@ function ProductInfo({
             </span>
           ) : null}
           <h1 className="text-headline-xl tracking-tight text-on-surface">{product.name}</h1>
+          {product.avg_rating != null ? (
+            <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+              <RatingStars value={Math.round(product.avg_rating)} size={16} />
+              <span className="font-semibold text-on-surface">{product.avg_rating.toFixed(1)}</span>
+              {product.rating_count ? <span>({product.rating_count})</span> : null}
+            </div>
+          ) : null}
           <div className="flex items-center gap-2">
             <span className={cn('text-price-display text-primary', !mobile && 'text-[32px]')}>
               {formatCurrency(price)}

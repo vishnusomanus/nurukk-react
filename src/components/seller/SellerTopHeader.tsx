@@ -11,6 +11,7 @@ type SellerTopHeaderProps = {
   searchValue?: string
   onSearchChange?: (value: string) => void
   showAddProduct?: boolean
+  showAddRecipe?: boolean
 }
 
 type LocationFromState = {
@@ -24,6 +25,7 @@ export function SellerTopHeader({
   searchValue = '',
   onSearchChange,
   showAddProduct = false,
+  showAddRecipe = false,
 }: SellerTopHeaderProps) {
   const location = useLocation()
   const from = (location.state as LocationFromState | null)?.from
@@ -81,6 +83,17 @@ export function SellerTopHeader({
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
               Add product
+            </Link>
+          ) : null}
+          {showAddRecipe ? (
+            <Link
+              to="/seller/recipes/new"
+              className={cn(
+                'hidden items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary transition-all hover:shadow-lg active:scale-95 lg:flex',
+              )}
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+              Create recipe
             </Link>
           ) : null}
         </div>

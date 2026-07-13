@@ -15,10 +15,12 @@ const PROFILE_AVATAR =
 
 const MENU_LINKS = [
   { to: '/seller/inventory', label: 'Inventory', icon: 'warehouse', description: 'Stock levels' },
+  { to: '/seller/recipes', label: 'Recipes', icon: 'menu_book', description: 'Farm-to-table dishes' },
   { to: '/seller/coupons', label: 'Coupons', icon: 'local_offer', description: 'Store offers' },
   { to: '/seller/payouts', label: 'Payouts', icon: 'payments', description: 'Earnings & transfers' },
   { to: '/seller/delivery', label: 'Delivery', icon: 'local_shipping', description: 'Radius & fees' },
   { to: '/seller/profile/edit', label: 'Edit profile', icon: 'edit', description: 'Farm details' },
+  { to: '/seller/support', label: 'Help & Support', icon: 'help_center', description: 'Contact the team' },
 ] as const
 
 function formatPhoneDisplay(phone?: string | null): string {
@@ -160,7 +162,7 @@ export function SellerProfilePage() {
       </section>
 
       {!profileMissing ? (
-        <section className={cn(softCard, 'overflow-hidden')}>
+        <section className={cn(softCard, 'overflow-hidden lg:hidden')}>
           {MENU_LINKS.map((item, index) => (
             <div key={item.to}>
               {index > 0 ? <div className="h-px bg-outline-variant/40" /> : null}

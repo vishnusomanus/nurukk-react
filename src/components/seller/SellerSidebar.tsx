@@ -20,11 +20,13 @@ type NavItem = {
 const navItems: NavItem[] = [
   { to: '/seller', label: 'Dashboard', icon: 'dashboard', end: true },
   { to: '/seller/products', label: 'Products', icon: 'inventory_2' },
+  { to: '/seller/recipes', label: 'My Recipes', icon: 'menu_book' },
   { to: '/seller/inventory', label: 'Inventory', icon: 'warehouse' },
   { to: '/seller/orders', label: 'Order History', icon: 'receipt_long' },
   { to: '/seller/coupons', label: 'Coupons', icon: 'local_offer' },
   { to: '/seller/payouts', label: 'Payouts', icon: 'payments' },
   { to: '/seller/delivery', label: 'Delivery', icon: 'local_shipping' },
+  { to: '/seller/support', label: 'Help & Support', icon: 'help_center' },
   { to: '/seller/profile', label: 'Settings', icon: 'settings' },
 ]
 
