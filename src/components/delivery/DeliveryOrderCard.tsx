@@ -7,7 +7,7 @@ import { cn } from '@/utils/cn'
 
 export type { DeliveryOrder } from '@/api/services/deliveryService'
 
-type ContactStage = 'available' | 'pickup' | 'post_pickup' | 'delivery' | 'complete'
+type ContactStage = 'available' | 'pickup' | 'delivery' | 'complete'
 
 function formatAddressLine(parts: Array<string | undefined | null>) {
   const value = parts.filter(Boolean).join(', ')
@@ -45,7 +45,7 @@ function resolveContactStage(status?: string, variant?: 'available' | 'assigned'
   if (variant === 'available') return 'available'
   const value = String(status ?? '').toLowerCase()
   if (value === 'delivered') return 'complete'
-  if (value === 'at_pickup') return 'post_pickup'
+  // Unlock customer only after package is collected.
   if (value === 'picked_up' || value === 'out_for_delivery') return 'delivery'
   return 'pickup'
 }
@@ -158,8 +158,7 @@ export function DeliveryOrderCard({
   const storeTelUrl = buildTelUrl(order.seller?.phone)
 
   const showSellerActions = stage === 'available' || stage === 'pickup'
-  const showCustomerBlock = stage === 'post_pickup' || stage === 'delivery'
-  const showCustomerActions = showCustomerBlock
+  const showCustomerBlock = stage === 'delivery'
   const hideCustomerPrivacy = stage === 'available' || stage === 'pickup'
 
   return (
@@ -230,9 +229,9 @@ export function DeliveryOrderCard({
                 <span className="material-symbols-outlined text-[20px]">lock</span>
                 <span className="text-[11px] font-bold tracking-wide uppercase">Drop-off</span>
               </div>
-              <p className="text-sm font-semibold text-on-surface">Customer details unlock after pickup</p>
+              <p className="text-sm font-semibold text-on-surface">Customer details unlock after package collected</p>
               <p className="mt-1 text-sm leading-relaxed text-on-surface-variant">
-                Navigate to the shop first. Customer name, phone, and address appear once you reach the store.
+                Mark the package as collected at the shop to see the customer name, phone, and delivery address.
               </p>
             </div>
           ) : showCustomerBlock ? (
@@ -247,20 +246,18 @@ export function DeliveryOrderCard({
               telUrl={customerTelUrl}
               navigateLabel="Navigate"
               callLabel="Call"
-              showActions={showCustomerActions}
+              showActions
             />
           ) : null}
         </div>
 
-        {stage === 'delivery' || stage === 'post_pickup' ? (
-          storeTelUrl ? (
-            <p className="text-xs text-on-surface-variant">
-              Need the store?{' '}
-              <a href={storeTelUrl} className="font-semibold text-primary">
-                Call {sellerName}
-              </a>
-            </p>
-          ) : null
+        {stage === 'delivery' && storeTelUrl ? (
+          <p className="text-xs text-on-surface-variant">
+            Need the store?{' '}
+            <a href={storeTelUrl} className="font-semibold text-primary">
+              Call {sellerName}
+            </a>
+          </p>
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3 text-sm text-on-surface-variant">
