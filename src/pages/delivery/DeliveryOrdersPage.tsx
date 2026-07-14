@@ -6,12 +6,22 @@ import {
   DeliveryOrderCard,
   type DeliveryOrder,
 } from '@/components/delivery/DeliveryOrderCard'
+import { DeliveryPageShell } from '@/components/delivery/DeliveryPageShell'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/store/authStore'
 import { extractRows } from '@/utils/extractRows'
 import { extractPaginationMeta } from '@/utils/extractPaginationMeta'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { cn } from '@/utils/cn'
+
+function primaryCtaClassName(tone: 'primary' | 'secondary' = 'primary') {
+  return cn(
+    'flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-60',
+    tone === 'primary'
+      ? 'bg-primary text-on-primary shadow-[0_10px_22px_-8px_rgba(13,99,27,0.45)]'
+      : 'bg-secondary text-on-secondary shadow-[0_10px_22px_-8px_rgba(150,73,0,0.35)]',
+  )
+}
 
 type DeliveryTab = 'available' | 'assigned'
 
@@ -127,23 +137,19 @@ export function DeliveryOrdersPage() {
   const showPagination = tab === 'assigned' || !isPlatformAgent
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-6 md:py-8">
-      <div className="space-y-2">
-        <h2 className="text-headline-xl text-on-surface">Deliveries</h2>
-        <p className="text-body-md text-on-surface-variant">
-          {hasActiveDelivery
-            ? 'Finish your current delivery before accepting a new order.'
-            : isPlatformAgent
-              ? 'Platform queue shows one shared order at a time. Accept it before another agent does.'
-              : 'View ready orders for your store and manage your active runs.'}
-        </p>
-      </div>
+    <DeliveryPageShell pathname="/delivery">
+      <p className="text-sm leading-relaxed text-on-surface-variant">
+        {hasActiveDelivery
+          ? 'Finish your current delivery before accepting a new order.'
+          : isPlatformAgent
+            ? 'One shared queue order at a time — first to accept gets the run.'
+            : 'Ready store orders and your active runs.'}
+      </p>
 
-      <div className="rounded-2xl border border-outline-variant/40 bg-surface p-1.5 stitch-card-shadow">
-        <div className="grid grid-cols-2 gap-1.5">
-          {TABS.map((item) => {
-            const locked = item.id === 'available' && hasActiveDelivery
-            return (
+      <div className="flex gap-2 rounded-full bg-surface-container-high/80 p-1 shadow-[inset_0_1px_2px_rgba(15,40,20,0.06)]">
+        {TABS.map((item) => {
+          const locked = item.id === 'available' && hasActiveDelivery
+          return (
             <button
               key={item.id}
               type="button"
@@ -152,46 +158,43 @@ export function DeliveryOrdersPage() {
                 if (!locked) setTab(item.id)
               }}
               className={cn(
-                'flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-label-md font-bold transition-all',
+                'flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-sm font-bold transition-all',
                 tab === item.id
-                  ? 'bg-primary text-on-primary shadow-sm'
-                  : 'text-on-surface-variant hover:bg-surface-container-high',
-                locked && 'cursor-not-allowed opacity-50',
+                  ? 'bg-primary text-on-primary shadow-[0_6px_16px_-6px_rgba(13,99,27,0.5)]'
+                  : 'text-on-surface-variant',
+                locked && 'cursor-not-allowed opacity-45',
               )}
             >
-              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
               {item.label}
             </button>
-            )
-          })}
-        </div>
+          )
+        })}
       </div>
 
       {error ? (
-        <p className="rounded-xl border border-error/20 bg-error-container/20 px-4 py-3 text-sm text-error">
+        <p className="rounded-2xl bg-error-container/25 px-4 py-3 text-sm text-error">
           {getApiErrorMessage(error, 'Failed to load orders')}
         </p>
       ) : null}
 
       {actionError ? (
-        <p className="rounded-xl border border-error/20 bg-error-container/20 px-4 py-3 text-sm text-error">
-          {actionError}
-        </p>
+        <p className="rounded-2xl bg-error-container/25 px-4 py-3 text-sm text-error">{actionError}</p>
       ) : null}
 
       {hasActiveDelivery ? (
-        <div className="flex items-center gap-2 rounded-xl border border-secondary/20 bg-secondary/10 px-4 py-3 text-body-md text-on-surface">
+        <div className="flex items-start gap-3 rounded-2xl bg-secondary-container/20 px-4 py-3 text-sm text-on-surface">
           <span className="material-symbols-outlined text-secondary">info</span>
           <span>Complete your active delivery to unlock the available queue.</span>
         </div>
       ) : null}
 
       {tab === 'available' && isPlatformAgent && !isLoading && !hasActiveDelivery ? (
-        <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary-container/10 px-4 py-3 text-body-md text-on-surface">
+        <div className="flex items-start gap-3 rounded-2xl bg-primary-container/15 px-4 py-3 text-sm text-on-surface">
           <span className="material-symbols-outlined text-primary">groups</span>
-          <span>Same order for every platform agent — first to accept gets the delivery.</span>
+          <span className="flex-1">Same order for every platform agent — first to accept wins.</span>
           {isFetching ? (
-            <span className="material-symbols-outlined ml-auto animate-spin text-primary">progress_activity</span>
+            <span className="material-symbols-outlined animate-spin text-primary">progress_activity</span>
           ) : null}
         </div>
       ) : null}
@@ -199,7 +202,7 @@ export function DeliveryOrdersPage() {
       {isLoading ? (
         <div className="space-y-4">
           {Array.from({ length: tab === 'available' && isPlatformAgent ? 1 : 2 }).map((_, index) => (
-            <div key={index} className="h-72 animate-pulse rounded-2xl bg-surface-container" />
+            <div key={index} className="h-72 animate-pulse rounded-[1.75rem] bg-surface-container" />
           ))}
         </div>
       ) : orders.length === 0 ? (
@@ -225,14 +228,20 @@ export function DeliveryOrdersPage() {
               variant={tab}
               feeOnly={isPlatformAgent}
               highlighted={tab === 'available' && isPlatformAgent}
-              disabled={accept.isPending || deliver.isPending || reached.isPending || reachedPickup.isPending || collectPackage.isPending}
+              disabled={
+                accept.isPending ||
+                deliver.isPending ||
+                reached.isPending ||
+                reachedPickup.isPending ||
+                collectPackage.isPending
+              }
               action={
                 tab === 'available' ? (
                   <button
                     type="button"
                     disabled={accept.isPending}
                     onClick={() => accept.mutate(order.uuid)}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-label-md font-bold text-on-primary transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+                    className={primaryCtaClassName()}
                   >
                     <span className="material-symbols-outlined">check_circle</span>
                     {accept.isPending ? 'Accepting…' : 'Accept delivery'}
@@ -242,17 +251,17 @@ export function DeliveryOrdersPage() {
                     type="button"
                     disabled={reachedPickup.isPending}
                     onClick={() => reachedPickup.mutate(order.uuid)}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-label-md font-bold text-on-primary transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+                    className={primaryCtaClassName()}
                   >
                     <span className="material-symbols-outlined">storefront</span>
-                    {reachedPickup.isPending ? 'Updating…' : 'Reached pickup location'}
+                    {reachedPickup.isPending ? 'Updating…' : 'Reached pickup'}
                   </button>
                 ) : order.status === 'at_pickup' ? (
                   <button
                     type="button"
                     disabled={collectPackage.isPending}
                     onClick={() => collectPackage.mutate(order.uuid)}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-label-md font-bold text-on-primary transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+                    className={primaryCtaClassName()}
                   >
                     <span className="material-symbols-outlined">inventory_2</span>
                     {collectPackage.isPending ? 'Updating…' : 'Package collected'}
@@ -262,20 +271,20 @@ export function DeliveryOrdersPage() {
                     type="button"
                     disabled={reached.isPending}
                     onClick={() => reached.mutate(order.uuid)}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-label-md font-bold text-on-primary transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+                    className={primaryCtaClassName()}
                   >
                     <span className="material-symbols-outlined">location_on</span>
-                    {reached.isPending ? 'Updating…' : 'Reached customer location'}
+                    {reached.isPending ? 'Updating…' : 'Reached customer'}
                   </button>
                 ) : order.status === 'out_for_delivery' ? (
                   <button
                     type="button"
                     disabled={deliver.isPending}
                     onClick={() => deliver.mutate(order.uuid)}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-secondary text-label-md font-bold text-on-secondary transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+                    className={primaryCtaClassName('secondary')}
                   >
                     <span className="material-symbols-outlined">done_all</span>
-                    {deliver.isPending ? 'Updating…' : 'Mark as delivered'}
+                    {deliver.isPending ? 'Updating…' : 'Mark delivered'}
                   </button>
                 ) : null
               }
@@ -287,6 +296,6 @@ export function DeliveryOrdersPage() {
       {showPagination && meta && meta.last_page > 1 ? (
         <Pagination meta={meta} onPageChange={setPage} />
       ) : null}
-    </div>
+    </DeliveryPageShell>
   )
 }

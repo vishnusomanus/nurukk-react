@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { deliveryService } from '@/api/services'
 import { PayoutPanel } from '@/components/payout/PayoutPanel'
+import { DeliveryPageShell } from '@/components/delivery/DeliveryPageShell'
 import type { DeliveryDailyEarning } from '@/api/services/deliveryService'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
@@ -10,9 +11,9 @@ import { cn } from '@/utils/cn'
 type EarningsPeriod = 'week' | 'month' | 'all'
 
 const PERIOD_OPTIONS: Array<{ id: EarningsPeriod; label: string }> = [
-  { id: 'week', label: 'This week' },
-  { id: 'month', label: 'This month' },
-  { id: 'all', label: 'All time' },
+  { id: 'week', label: 'Week' },
+  { id: 'month', label: 'Month' },
+  { id: 'all', label: 'All' },
 ]
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -51,11 +52,11 @@ function WeeklyEarningsChart({
 
   if (loading) {
     return (
-      <div className="flex h-64 items-end justify-between gap-2 px-4">
+      <div className="flex h-56 items-end justify-between gap-2 px-2">
         {WEEKDAY_LABELS.map((label) => (
           <div key={label} className="flex flex-1 flex-col items-center">
-            <div className="h-48 w-full max-w-[40px] animate-pulse rounded-t-lg bg-surface-container-high" />
-            <span className="mt-4 text-label-md text-on-surface-variant">{label}</span>
+            <div className="h-40 w-full max-w-[36px] animate-pulse rounded-t-xl bg-surface-container-high" />
+            <span className="mt-3 text-xs text-on-surface-variant">{label}</span>
           </div>
         ))}
       </div>
@@ -63,7 +64,7 @@ function WeeklyEarningsChart({
   }
 
   return (
-    <div className="flex h-64 items-end justify-between gap-2 px-4">
+    <div className="flex h-56 items-end justify-between gap-2 px-2">
       {bars.map((bar) => {
         const heightPercent =
           maxEarnings === 0 || bar.earnings === 0
@@ -73,21 +74,21 @@ function WeeklyEarningsChart({
 
         return (
           <div key={bar.date} className="group flex flex-1 flex-col items-center">
-            <div className="relative w-full max-w-[40px] rounded-t-lg bg-secondary/10 transition-colors group-hover:bg-secondary/20">
+            <div className="relative w-full max-w-[36px] rounded-t-xl bg-primary/10">
               <div
                 className={cn(
-                  'absolute right-0 bottom-0 left-0 rounded-t-lg transition-all',
-                  isToday ? 'bg-secondary' : 'bg-secondary/70 group-hover:bg-secondary',
+                  'absolute right-0 bottom-0 left-0 rounded-t-xl transition-all',
+                  isToday ? 'bg-primary' : 'bg-primary/70 group-hover:bg-primary',
                 )}
                 style={{ height: `${heightPercent}%` }}
-                title={`${bar.label}: ${formatCurrency(bar.earnings)}${bar.deliveries ? ` (${bar.deliveries} deliveries)` : ''}`}
+                title={`${bar.label}: ${formatCurrency(bar.earnings)}`}
               />
-              <div className="h-48" />
+              <div className="h-40" />
             </div>
             <span
               className={cn(
-                'mt-4 text-label-md text-on-surface-variant',
-                isToday && 'font-bold text-secondary',
+                'mt-3 text-xs text-on-surface-variant',
+                isToday && 'font-bold text-primary',
               )}
             >
               {bar.label}
@@ -104,20 +105,33 @@ function StatCard({
   value,
   hint,
   icon,
+  accent = false,
 }: {
   label: string
   value: string
   hint?: string
   icon: string
+  accent?: boolean
 }) {
   return (
-    <div className="rounded-2xl border border-outline-variant/40 bg-surface p-5 stitch-card-shadow">
-      <div className="mb-3 flex items-center gap-2 text-on-surface-variant">
-        <span className="material-symbols-outlined text-[20px] text-secondary">{icon}</span>
-        <span className="text-label-md uppercase">{label}</span>
+    <div
+      className={cn(
+        'rounded-[1.5rem] p-4 shadow-[0_4px_20px_-10px_rgba(15,40,20,0.14)]',
+        accent
+          ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary'
+          : 'bg-surface',
+      )}
+    >
+      <div className={cn('mb-2 flex items-center gap-2', accent ? 'text-on-primary/80' : 'text-on-surface-variant')}>
+        <span className="material-symbols-outlined text-[20px]">{icon}</span>
+        <span className="text-[11px] font-bold tracking-wide uppercase">{label}</span>
       </div>
-      <p className="text-headline-xl text-on-surface">{value}</p>
-      {hint ? <p className="text-body-md mt-1 text-on-surface-variant">{hint}</p> : null}
+      <p className={cn('text-2xl font-bold tracking-tight', accent ? 'text-on-primary' : 'text-on-surface')}>
+        {value}
+      </p>
+      {hint ? (
+        <p className={cn('mt-1 text-sm', accent ? 'text-on-primary/80' : 'text-on-surface-variant')}>{hint}</p>
+      ) : null}
     </div>
   )
 }
@@ -146,42 +160,38 @@ export function DeliveryEarningsPage() {
     period === 'week' ? 'This week' : period === 'month' ? 'This month' : 'All time'
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-6 md:py-8">
-      <div className="space-y-2">
-        <h2 className="text-headline-xl text-on-surface">Earnings</h2>
-        <p className="text-body-md text-on-surface-variant">
-          Delivery fees earned from completed orders.
-        </p>
-      </div>
+    <DeliveryPageShell pathname="/delivery/earnings">
+      <p className="text-sm leading-relaxed text-on-surface-variant">
+        Delivery fees from completed orders.
+      </p>
 
-      <div className="rounded-2xl border border-outline-variant/40 bg-surface p-1.5 stitch-card-shadow">
-        <div className="grid grid-cols-3 gap-1.5">
-          {PERIOD_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => setPeriod(option.id)}
-              className={cn(
-                'rounded-xl px-3 py-2.5 text-label-md font-bold transition-all',
-                period === option.id
-                  ? 'bg-secondary text-on-secondary shadow-sm'
-                  : 'text-on-surface-variant hover:bg-surface-container-high',
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-2 rounded-full bg-surface-container-high/80 p-1">
+        {PERIOD_OPTIONS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => setPeriod(option.id)}
+            className={cn(
+              'flex-1 rounded-full px-3 py-2.5 text-sm font-bold transition-all',
+              period === option.id
+                ? 'bg-primary text-on-primary shadow-[0_6px_16px_-6px_rgba(13,99,27,0.5)]'
+                : 'text-on-surface-variant',
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
       {error ? (
-        <p className="rounded-xl border border-error/20 bg-error-container/20 px-4 py-3 text-sm text-error">
+        <p className="rounded-2xl bg-error-container/25 px-4 py-3 text-sm text-error">
           {getApiErrorMessage(error, 'Failed to load earnings')}
         </p>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <StatCard
+          accent
           label={periodLabel}
           value={isLoading ? '…' : formatCurrency(earnings?.period_earnings ?? 0)}
           hint={`${earnings?.period_deliveries ?? 0} deliveries`}
@@ -195,7 +205,7 @@ export function DeliveryEarningsPage() {
         <StatCard
           label="Total earned"
           value={isLoading ? '…' : formatCurrency(earnings?.total_earnings ?? 0)}
-          hint={`${earnings?.total_deliveries ?? 0} lifetime deliveries`}
+          hint={`${earnings?.total_deliveries ?? 0} lifetime`}
           icon="account_balance_wallet"
         />
         <StatCard
@@ -206,14 +216,14 @@ export function DeliveryEarningsPage() {
       </div>
 
       {period === 'week' ? (
-        <div className="rounded-2xl border border-outline-variant/40 bg-surface p-4 stitch-card-shadow lg:p-6">
-          <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="rounded-[1.75rem] bg-surface p-4 shadow-[0_4px_20px_-10px_rgba(15,40,20,0.14)] sm:p-5">
+          <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-headline-lg text-on-surface">Weekly breakdown</h3>
-              <p className="text-body-md text-on-surface-variant">Daily delivery fees for the last 7 days</p>
+              <h3 className="text-base font-bold text-on-surface">Weekly rhythm</h3>
+              <p className="text-sm text-on-surface-variant">Last 7 days</p>
             </div>
             {!isLoading && earnings ? (
-              <p className="text-headline-lg font-bold text-secondary">
+              <p className="text-lg font-bold text-primary">
                 {formatCurrency(earnings.week_earnings ?? 0)}
               </p>
             ) : null}
@@ -223,6 +233,6 @@ export function DeliveryEarningsPage() {
       ) : null}
 
       <PayoutPanel api={deliveryPayoutApi} />
-    </div>
+    </DeliveryPageShell>
   )
 }

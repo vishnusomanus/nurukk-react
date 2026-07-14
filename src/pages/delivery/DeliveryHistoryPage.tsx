@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { deliveryService } from '@/api/services'
 import type { DeliveryHistoryOrder } from '@/api/services/deliveryService'
 import { DeliveryEmptyState, DeliveryHistoryCard } from '@/components/delivery/DeliveryOrderCard'
+import { DeliveryPageShell } from '@/components/delivery/DeliveryPageShell'
 import { Pagination } from '@/components/ui/Pagination'
 import { extractRows } from '@/utils/extractRows'
 import { extractPaginationMeta } from '@/utils/extractPaginationMeta'
@@ -20,24 +21,21 @@ export function DeliveryHistoryPage() {
   const meta = extractPaginationMeta(data)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 md:px-6 md:py-8">
-      <div className="space-y-2">
-        <h2 className="text-headline-xl text-on-surface">Order History</h2>
-        <p className="text-body-md text-on-surface-variant">
-          Completed deliveries and fees earned per order.
-        </p>
-      </div>
+    <DeliveryPageShell pathname="/delivery/history">
+      <p className="text-sm leading-relaxed text-on-surface-variant">
+        Completed runs and the fee you earned on each.
+      </p>
 
       {error ? (
-        <p className="rounded-xl border border-error/20 bg-error-container/20 px-4 py-3 text-sm text-error">
+        <p className="rounded-2xl bg-error-container/25 px-4 py-3 text-sm text-error">
           {getApiErrorMessage(error, 'Failed to load delivery history')}
         </p>
       ) : null}
 
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className="h-28 animate-pulse rounded-2xl bg-surface-container" />
+            <div key={index} className="h-28 animate-pulse rounded-[1.5rem] bg-surface-container" />
           ))}
         </div>
       ) : orders.length === 0 ? (
@@ -47,7 +45,7 @@ export function DeliveryHistoryPage() {
           description="Deliveries you finish will appear here with the fee you earned."
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {orders.map((order) => (
             <DeliveryHistoryCard key={order.uuid} order={order} />
           ))}
@@ -55,6 +53,6 @@ export function DeliveryHistoryPage() {
       )}
 
       {meta && meta.last_page > 1 ? <Pagination meta={meta} onPageChange={setPage} /> : null}
-    </div>
+    </DeliveryPageShell>
   )
 }

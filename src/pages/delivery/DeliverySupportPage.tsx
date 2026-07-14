@@ -1,16 +1,16 @@
 import { HelpSupportForm } from '@/components/common/HelpSupportForm'
+import { DeliveryPageShell } from '@/components/delivery/DeliveryPageShell'
 
 export function DeliverySupportPage() {
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-4 md:px-6 md:py-6">
-      {/* Layout header already shows the title on all breakpoints — avoid a second H1. */}
-      <p className="text-sm text-on-surface-variant md:text-base">
+    <DeliveryPageShell pathname="/delivery/support">
+      <p className="text-sm leading-relaxed text-on-surface-variant">
         Report delivery issues or ask for account help. Screenshots welcome.
       </p>
 
-      <div className="rounded-2xl bg-surface p-4 shadow-sm md:rounded-xl md:border md:border-outline-variant/30 md:p-6 md:shadow-none">
+      <div className="rounded-[1.75rem] bg-surface p-4 shadow-[0_4px_20px_-10px_rgba(15,40,20,0.14)] sm:p-5">
         <HelpSupportForm app="delivery" />
       </div>
-    </div>
+    </DeliveryPageShell>
   )
 }

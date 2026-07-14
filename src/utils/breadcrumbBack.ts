@@ -35,6 +35,8 @@ export const NO_BACK = new Set([
   '/delivery',
   '/delivery/history',
   '/delivery/earnings',
+  '/delivery/support',
+  '/delivery/account',
   '/admin',
   '/admin/dashboard',
   '/login/buyer',
@@ -63,6 +65,8 @@ export const BOTTOM_NAV_TO_HOME: Record<string, string> = {
   '/seller/profile': '/seller',
   '/delivery/history': '/delivery',
   '/delivery/earnings': '/delivery',
+  '/delivery/support': '/delivery',
+  '/delivery/account': '/delivery',
 }
 
 type ExplicitRule = {

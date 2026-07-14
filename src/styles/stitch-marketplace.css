@@ -83,6 +83,16 @@
   padding-top: 1rem;
 }
 
+.delivery-page-container {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 32rem;
+  padding-left: var(--spacing-margin-mobile);
+  padding-right: var(--spacing-margin-mobile);
+  padding-top: 1rem;
+}
+
 @media (min-width: 1024px) {
   .buyer-page-container {
     max-width: 80rem;
@@ -92,6 +102,14 @@
   }
 
   .seller-page-container {
+    max-width: 80rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .delivery-page-container {
     max-width: 80rem;
     padding-left: 1.5rem;
     padding-right: 1.5rem;

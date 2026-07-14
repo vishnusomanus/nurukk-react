@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { deliveryService } from '@/api/services'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
@@ -45,18 +46,16 @@ export function DeliveryOnboardingPage() {
   })
 
   return (
-    <div className="stitch-auth-page flex min-h-dvh items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg rounded-2xl border border-outline-variant/40 bg-surface p-8 stitch-card-shadow">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/20 text-primary">
-            <span className="material-symbols-outlined">local_shipping</span>
-          </div>
-          <div>
-            <h1 className="text-headline-xl text-on-surface">Complete your agent profile</h1>
-            <p className="text-body-md text-on-surface-variant">
-              A few details before you can accept marketplace deliveries.
-            </p>
-          </div>
+    <div className="stitch-auth-page stitch-body stitch-login-bg relative flex min-h-dvh flex-col items-center justify-center px-4 py-10">
+      <div className="stitch-login-overlay pointer-events-none fixed inset-0" aria-hidden />
+
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-[2rem] bg-surface/95 p-6 shadow-[0_20px_50px_-20px_rgba(15,40,20,0.35)] backdrop-blur-xl sm:p-8">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <BrandLogo size="md" className="mb-4 h-16" />
+          <h1 className="text-2xl font-bold tracking-tight text-primary">Ready to ride</h1>
+          <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
+            A few details before you can accept marketplace deliveries.
+          </p>
         </div>
 
         <form
@@ -67,22 +66,26 @@ export function DeliveryOnboardingPage() {
           }}
         >
           <label className="block">
-            <span className="text-label-md mb-1 block text-on-surface">Full name</span>
+            <span className="mb-1.5 block text-xs font-bold tracking-wide text-on-surface-variant uppercase">
+              Full name
+            </span>
             <input
               required
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name as shown to customers"
-              className="text-body-md w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-12 w-full rounded-2xl border-none bg-surface-container-low px-4 text-[16px] text-on-surface outline-none ring-0 placeholder:text-outline focus:ring-2 focus:ring-primary/25"
             />
           </label>
 
           <label className="block">
-            <span className="text-label-md mb-1 block text-on-surface">Vehicle type</span>
+            <span className="mb-1.5 block text-xs font-bold tracking-wide text-on-surface-variant uppercase">
+              Vehicle
+            </span>
             <select
               value={vehicleType}
               onChange={(e) => setVehicleType(e.target.value)}
-              className="text-body-md w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-12 w-full rounded-2xl border-none bg-surface-container-low px-4 text-[16px] text-on-surface outline-none focus:ring-2 focus:ring-primary/25"
             >
               {VEHICLE_OPTIONS.map((option) => (
                 <option key={option.value || 'none'} value={option.value}>
@@ -93,7 +96,9 @@ export function DeliveryOnboardingPage() {
           </label>
 
           <label className="block">
-            <span className="text-label-md mb-1 block text-on-surface">Service radius (km)</span>
+            <span className="mb-1.5 block text-xs font-bold tracking-wide text-on-surface-variant uppercase">
+              Service radius (km)
+            </span>
             <input
               type="number"
               min={1}
@@ -101,12 +106,12 @@ export function DeliveryOnboardingPage() {
               step={0.5}
               value={serviceRadius}
               onChange={(e) => setServiceRadius(e.target.value)}
-              className="text-body-md w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-12 w-full rounded-2xl border-none bg-surface-container-low px-4 text-[16px] text-on-surface outline-none focus:ring-2 focus:ring-primary/25"
             />
           </label>
 
           {register.isError ? (
-            <p className="rounded-xl border border-error/20 bg-error-container/20 px-4 py-3 text-sm text-error">
+            <p className="rounded-2xl bg-error-container/25 px-4 py-3 text-sm text-error">
               {getApiErrorMessage(register.error, 'Registration failed')}
             </p>
           ) : null}
@@ -114,7 +119,7 @@ export function DeliveryOnboardingPage() {
           <button
             type="submit"
             disabled={register.isPending || !displayName.trim()}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-label-md font-bold text-on-primary transition-all hover:brightness-110 disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-bold text-on-primary shadow-[0_12px_24px_-8px_rgba(13,99,27,0.5)] transition-all active:scale-[0.98] disabled:opacity-60"
           >
             {register.isPending ? 'Creating profile…' : 'Start delivering'}
           </button>

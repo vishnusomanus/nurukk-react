@@ -29,6 +29,9 @@ const DeliveryOnboardingPage = lazy(() =>
 const DeliverySupportPage = lazy(() =>
   import('@/pages/delivery/DeliverySupportPage').then((m) => ({ default: m.DeliverySupportPage })),
 )
+const DeliveryAccountPage = lazy(() =>
+  import('@/pages/delivery/DeliveryAccountPage').then((m) => ({ default: m.DeliveryAccountPage })),
+)
 const NotificationsPage = lazy(() =>
   import('@/pages/common/NotificationsPage').then((m) => ({ default: m.NotificationsPage })),
 )
@@ -54,6 +57,7 @@ export const deliveryProtectedRoutes: RouteObject[] = [
           { path: 'history', element: wrap(<DeliveryHistoryPage />) },
           { path: 'earnings', element: wrap(<DeliveryEarningsPage />) },
           { path: 'support', element: wrap(<DeliverySupportPage />) },
+          { path: 'account', element: wrap(<DeliveryAccountPage />) },
           { path: 'notifications', element: wrap(<NotificationsPage />) },
         ],
       },

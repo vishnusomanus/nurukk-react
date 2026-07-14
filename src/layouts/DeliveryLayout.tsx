@@ -1,37 +1,50 @@
-import { useEffect } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { deliveryService } from '@/api/services'
-import { NotificationsMenu } from '@/components/common/NotificationsMenu'
-import { useAuth } from '@/hooks/useAuth'
+import { DeliveryBottomNav } from '@/components/delivery/DeliveryBottomNav'
+import { DeliveryFooter, DeliveryTopHeader } from '@/components/delivery/DeliveryTopHeader'
 import { useAuthStore } from '@/store/authStore'
 import { isProfileNotFoundError } from '@/utils/apiErrorMessage'
-import { getLogoutRedirectPath } from '@/utils/authPaths'
 import { resolveBreadcrumbBack } from '@/utils/breadcrumbBack'
 import { cn } from '@/utils/cn'
 
-const NAV_ITEMS = [
+const DESKTOP_NAV = [
   { to: '/delivery', label: 'Deliveries', icon: 'local_shipping', end: true },
   { to: '/delivery/history', label: 'History', icon: 'history', end: false },
   { to: '/delivery/earnings', label: 'Earnings', icon: 'payments', end: false },
-  { to: '/delivery/support', label: 'Support', icon: 'help_center', end: false },
-]
+  { to: '/delivery/support', label: 'Support', icon: 'help', end: false },
+  { to: '/delivery/account', label: 'Account', icon: 'person', end: false },
+] as const
 
-function headerTitle(pathname: string) {
-  if (pathname.startsWith('/delivery/history')) return 'History'
-  if (pathname.startsWith('/delivery/earnings')) return 'Earnings'
-  if (pathname.startsWith('/delivery/notifications')) return 'Notifications'
-  if (pathname.startsWith('/delivery/support')) return 'Help & Support'
-  return 'Deliveries'
+function resolveDeliveryChrome(pathname: string): {
+  title: string
+  showBack: boolean
+  showBrand: boolean
+  backTo?: string
+} {
+  if (pathname.startsWith('/delivery/history')) {
+    return { title: 'History', showBack: false, showBrand: false }
+  }
+  if (pathname.startsWith('/delivery/earnings')) {
+    return { title: 'Earnings', showBack: false, showBrand: false }
+  }
+  if (pathname.startsWith('/delivery/support')) {
+    return { title: 'Help & Support', showBack: false, showBrand: false }
+  }
+  if (pathname.startsWith('/delivery/account')) {
+    return { title: 'Account', showBack: false, showBrand: false }
+  }
+  if (pathname.startsWith('/delivery/notifications')) {
+    return { title: 'Notifications', showBack: true, backTo: '/delivery', showBrand: false }
+  }
+  return { title: 'Deliveries', showBack: false, showBrand: true }
 }
 
 export function DeliveryLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const logout = useAuth((s) => s.logout)
   const userRole = useAuthStore((s) => s.user?.role)
-  const title = headerTitle(location.pathname)
-  const backTo = resolveBreadcrumbBack(location.pathname)
 
   const { isLoading, isError, error } = useQuery({
     queryKey: ['delivery', 'profile'],
@@ -46,76 +59,32 @@ export function DeliveryLayout() {
     }
   }, [error, isError, isLoading, navigate, userRole])
 
+  const chrome = useMemo(() => resolveDeliveryChrome(location.pathname), [location.pathname])
+  const resolvedBack = useMemo(
+    () => chrome.backTo ?? resolveBreadcrumbBack(location.pathname),
+    [chrome.backTo, location.pathname],
+  )
+  const backTo = chrome.showBack ? resolvedBack : null
+
   return (
-    <div className="min-h-dvh overflow-x-clip bg-surface-container-low pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
-      <header className="app-header-safe sticky top-0 z-30 border-b border-outline-variant bg-surface">
-        <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4">
-          <div className="flex min-w-0 items-center gap-2">
-            {backTo ? (
-              <Link
-                to={backTo}
-                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-container-low md:hidden"
-                aria-label="Go back"
-              >
-                <span className="material-symbols-outlined text-primary">arrow_back</span>
-              </Link>
-            ) : null}
-            <h1 className="truncate text-headline-lg font-bold text-primary">{title}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationsMenu />
-            <button
-              type="button"
-              onClick={async () => {
-                await logout()
-                navigate(getLogoutRedirectPath('/delivery', userRole), { replace: true })
-              }}
-              className="text-label-md font-semibold text-error"
-            >
-              Logout
-            </button>
-          </div>
+    <div className="stitch-marketplace flex min-h-dvh w-full flex-col overflow-x-clip bg-background text-on-surface">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-outline-variant/40 bg-surface lg:flex">
+        <div className="border-b border-outline-variant/30 px-5 py-5">
+          <p className="text-headline-lg font-bold text-primary">nurukk Delivery</p>
+          <p className="text-body-md mt-1 text-on-surface-variant">Courier console</p>
         </div>
-
-        <nav className="hidden border-t border-outline-variant/40 md:block">
-          <div className="mx-auto flex max-w-3xl gap-1 px-4 py-2">
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-2 rounded-xl px-4 py-2.5 text-label-md font-bold transition-all',
-                    isActive
-                      ? 'bg-primary text-on-primary'
-                      : 'text-on-surface-variant hover:bg-surface-container-high',
-                  )
-                }
-              >
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-        </nav>
-      </header>
-
-      <div className="scroll-touch">
-        <Outlet />
-      </div>
-
-      <nav className="app-bottom-nav-safe fixed right-0 bottom-0 left-0 z-20 border-t border-outline-variant bg-surface px-2 pt-2 md:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
-          {NAV_ITEMS.map((item) => (
+        <nav className="flex flex-1 flex-col gap-1 p-3">
+          {DESKTOP_NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  'flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-label-md font-bold transition-all',
-                  isActive ? 'bg-primary-container/20 text-primary' : 'text-on-surface-variant',
+                  'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors',
+                  isActive
+                    ? 'bg-primary text-on-primary shadow-[0_8px_20px_-8px_rgba(13,99,27,0.45)]'
+                    : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface',
                 )
               }
             >
@@ -123,8 +92,20 @@ export function DeliveryLayout() {
               {item.label}
             </NavLink>
           ))}
-        </div>
-      </nav>
+        </nav>
+      </aside>
+
+      <div className="flex min-h-dvh flex-col lg:ml-64">
+        <DeliveryTopHeader title={chrome.title} backTo={backTo} showBrand={chrome.showBrand} />
+        <main className="scroll-touch flex-1 overflow-x-clip">
+          <div className="mx-auto w-full max-w-lg lg:max-w-none">
+            <Outlet />
+          </div>
+        </main>
+        <DeliveryFooter />
+      </div>
+
+      <DeliveryBottomNav />
     </div>
   )
 }
