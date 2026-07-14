@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "220647774409",
+    "project_id": "nurukku-firebase",
+    "storage_bucket": "nurukku-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:220647774409:android:a1fdd7b3ad1afbdedc5518",
+        "android_client_info": {
+          "package_name": "com.candlestack.nurukk.buyer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1z0hWDUCTAGZ6ZqSK-zeUIDPuY5ij7gE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

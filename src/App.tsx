@@ -7,15 +7,43 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/authStore'
 import { PushAlertHost } from '@/components/common/PushAlertHost'
 import { useHighPriorityNotificationPoll } from '@/hooks/useHighPriorityNotificationPoll'
-import { syncPushRegistration } from '@/native/pushNotifications'
 
 function PushBootstrap() {
   const token = useAuthStore((s) => s.token)
   useHighPriorityNotificationPoll()
 
+  // Native: request FCM permission + token ASAP (before login) so background
+  // pushes work after the first open. Channels are also created in MainActivity.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void import('@/native/pushNotifications')
+        .then((m) => m.initPushNotifications())
+        .catch((err) => console.warn('[push] early init failed', err))
+    }, 400)
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  // Local tray helpers (permission UX smoke test).
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void import('@/native/systemTrayNotifications')
+        .then(async (m) => {
+          await m.initSystemTrayNotifications()
+        })
+        .catch((err) => console.warn('[tray] deferred init failed', err))
+    }, 800)
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  // Sync FCM token to API once the user is authenticated.
   useEffect(() => {
     if (!token) return
-    void syncPushRegistration()
+    const timer = window.setTimeout(() => {
+      void import('@/native/pushNotifications')
+        .then((m) => m.syncPushRegistration())
+        .catch((err) => console.warn('[push] deferred sync failed', err))
+    }, 600)
+    return () => window.clearTimeout(timer)
   }, [token])
 
   return <PushAlertHost />

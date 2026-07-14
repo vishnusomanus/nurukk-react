@@ -16,6 +16,8 @@ let package = Package(
         .package(name: "CapacitorBrowser", path: "../local-plugins/CapacitorBrowser"),
         .package(name: "CapacitorCamera", path: "../local-plugins/CapacitorCamera"),
         .package(name: "CapacitorGeolocation", path: "../local-plugins/CapacitorGeolocation"),
+        .package(name: "CapacitorLocalNotifications", path: "../local-plugins/CapacitorLocalNotifications"),
+        .package(name: "CapacitorPushNotifications", path: "../local-plugins/CapacitorPushNotifications"),
         .package(name: "CapacitorSplashScreen", path: "../local-plugins/CapacitorSplashScreen"),
         .package(name: "CapacitorRazorpay", path: "../local-plugins/CapacitorRazorpay")
     ],
@@ -29,6 +31,8 @@ let package = Package(
                 .product(name: "CapacitorBrowser", package: "CapacitorBrowser"),
                 .product(name: "CapacitorCamera", package: "CapacitorCamera"),
                 .product(name: "CapacitorGeolocation", package: "CapacitorGeolocation"),
+                .product(name: "CapacitorLocalNotifications", package: "CapacitorLocalNotifications"),
+                .product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications"),
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
                 .product(name: "CapacitorRazorpay", package: "CapacitorRazorpay")
             ]

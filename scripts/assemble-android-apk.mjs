@@ -20,10 +20,14 @@ const destApk = join(outDir, `nurukk-${role}-debug.apk`)
 const javaHome =
   process.env.JAVA_HOME ||
   '/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home'
-const androidHome =
-  process.env.ANDROID_HOME ||
-  process.env.ANDROID_SDK_ROOT ||
-  '/opt/homebrew/share/android-commandlinetools'
+const homeDir = process.env.HOME || ''
+const androidHomeCandidates = [
+  process.env.ANDROID_HOME,
+  process.env.ANDROID_SDK_ROOT,
+  homeDir ? join(homeDir, 'Library/Android/sdk') : '',
+  '/opt/homebrew/share/android-commandlinetools',
+].filter(Boolean)
+const androidHome = androidHomeCandidates.find((p) => existsSync(p)) || androidHomeCandidates[0]
 
 if (!existsSync(join(javaHome, 'bin/java'))) {
   console.error(`JAVA_HOME not found at ${javaHome}. Install OpenJDK 21 first.`)

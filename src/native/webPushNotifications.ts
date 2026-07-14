@@ -104,6 +104,7 @@ export async function initWebPushNotifications() {
 
   onMessage(messaging, (payload) => {
     const parsed = parseData(payload.data as Record<string, unknown> | undefined)
+    // Foreground web: Firebase may not auto-show; we show one tray via emit.
     emitForegroundPushAlert({
       title: payload.notification?.title || parsed.title || 'Notification',
       body: payload.notification?.body || parsed.body || '',

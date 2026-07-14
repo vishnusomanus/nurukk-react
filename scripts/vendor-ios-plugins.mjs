@@ -36,6 +36,18 @@ const PLUGINS = [
     label: 'app',
     required: true,
   },
+  {
+    src: join(ROOT, 'node_modules', '@capacitor', 'push-notifications'),
+    folderName: 'CapacitorPushNotifications',
+    label: 'push-notifications',
+    required: true,
+  },
+  {
+    src: join(ROOT, 'node_modules', '@capacitor', 'local-notifications'),
+    folderName: 'CapacitorLocalNotifications',
+    label: 'local-notifications',
+    required: true,
+  },
 ]
 
 const RAZORPAY_TEMPLATE = join(ROOT, 'scripts', 'capacitor-razorpay-spm')

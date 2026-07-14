@@ -44,6 +44,18 @@ const REWRITES = [
     folder: 'CapacitorApp',
     label: 'app',
   },
+  {
+    shared: '../../../node_modules/@capacitor/push-notifications',
+    local: '../local-plugins/CapacitorPushNotifications',
+    folder: 'CapacitorPushNotifications',
+    label: 'push-notifications',
+  },
+  {
+    shared: '../../../node_modules/@capacitor/local-notifications',
+    local: '../local-plugins/CapacitorLocalNotifications',
+    folder: 'CapacitorLocalNotifications',
+    label: 'local-notifications',
+  },
 ]
 
 const LOCAL_RAZORPAY = '../local-plugins/CapacitorRazorpay'

@@ -72,14 +72,20 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchAutoHide: true,
-      launchShowDuration: 1800,
+      launchShowDuration: 0,
       backgroundColor: selected.backgroundColor,
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
     },
     PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
+      // Do NOT include alert/banner/list — Cap would post a system notification
+      // in the foreground on top of our LocalNotifications (duplicate tray).
+      // Background/killed still uses the FCM `notification` payload (OS tray).
+      presentationOptions: ['badge', 'sound'],
+    },
+    LocalNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert', 'banner', 'list'],
     },
   },
 }
