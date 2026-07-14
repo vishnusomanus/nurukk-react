@@ -5,6 +5,7 @@ import {
   getNotificationHref,
   notificationIcon,
 } from '@/utils/notificationNavigation'
+import { humanizeNotificationText } from '@/utils/orderTracking'
 import { cn } from '@/utils/cn'
 
 type NotificationListItemProps = {
@@ -46,7 +47,7 @@ export function NotificationListItem({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <p className={cn('text-sm leading-snug text-on-surface', unread && 'font-bold')}>
-            {notification.title ?? 'Update'}
+            {humanizeNotificationText(notification.title ?? 'Update')}
           </p>
           {notification.created_at ? (
             <span className="shrink-0 text-[11px] font-medium text-on-surface-variant">
@@ -61,7 +62,7 @@ export function NotificationListItem({
               compact ? 'line-clamp-2' : 'line-clamp-3',
             )}
           >
-            {notification.body}
+            {humanizeNotificationText(notification.body)}
           </p>
         ) : null}
       </div>

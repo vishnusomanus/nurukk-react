@@ -1,3 +1,5 @@
+import { humanizeNotificationText } from '@/utils/orderTracking'
+
 export type PushAlertPayload = {
   title: string
   body: string
@@ -64,15 +66,21 @@ export function emitForegroundPushAlert(
   }
   markNotificationSurfaced(payload.notificationUuid)
 
+  const normalized: PushAlertPayload = {
+    ...payload,
+    title: humanizeNotificationText(payload.title),
+    body: humanizeNotificationText(payload.body),
+  }
+
   if (!options.skipTray) {
     void import('@/native/systemTrayNotifications')
-      .then((m) => m.showSystemTrayNotification(payload))
+      .then((m) => m.showSystemTrayNotification(normalized))
       .catch((err) => console.warn('[tray] failed to load', err))
   }
 
   if (!payload.highPriority) return
 
   for (const listener of alertListeners) {
-    listener(payload)
+    listener(normalized)
   }
 }

@@ -165,6 +165,37 @@ function canTrackFromStatus(
   return false
 }
 
+/** Shared labels for order status snake_case values in UI + notification copy. */
+export const ORDER_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  accepted: 'Accepted',
+  preparing: 'Preparing',
+  packed: 'Packed',
+  ready_for_delivery: 'Ready for delivery',
+  at_pickup: 'At pickup',
+  picked_up: 'Picked up',
+  out_for_delivery: 'Out for delivery',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+}
+
 export function formatOrderStatusLabel(status: string) {
-  return String(status).replace(/_/g, ' ')
+  const key = String(status ?? '')
+    .toLowerCase()
+    .trim()
+  if (!key) return 'Unknown'
+  if (ORDER_STATUS_LABELS[key]) return ORDER_STATUS_LABELS[key]
+  return key
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/** Replace known status slugs (e.g. out_for_delivery) in notification title/body. */
+export function humanizeNotificationText(text: string): string {
+  if (!text) return text
+  return text.replace(/\b[a-z]+(?:_[a-z]+)+\b/gi, (match) => {
+    const key = match.toLowerCase()
+    if (ORDER_STATUS_LABELS[key]) return ORDER_STATUS_LABELS[key]
+    return match
+  })
 }

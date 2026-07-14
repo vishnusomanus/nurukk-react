@@ -254,7 +254,7 @@ export function DeliveryOrdersPage() {
                     className={primaryCtaClassName()}
                   >
                     <span className="material-symbols-outlined">storefront</span>
-                    {reachedPickup.isPending ? 'Updating…' : 'Reached pickup'}
+                    {reachedPickup.isPending ? 'Updating…' : 'Reached shop'}
                   </button>
                 ) : order.status === 'at_pickup' ? (
                   <button

@@ -7,6 +7,7 @@ import { router } from '@/routes'
 import { useAuthStore } from '@/store/authStore'
 import { isSellerRole, normalizeRole } from '@/utils/authRole'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
+import { humanizeNotificationText } from '@/utils/orderTracking'
 import { cn } from '@/utils/cn'
 
 function vibrate(pattern: number | number[] = [80, 40, 80]) {
@@ -140,7 +141,9 @@ export function PushAlertHost() {
               <p className="text-[10px] font-semibold tracking-[0.14em] uppercase opacity-80">
                 {alert.highPriority ? 'Urgent' : 'Notification'}
               </p>
-              <h2 className="mt-1 text-lg font-bold leading-snug">{alert.title || 'Update'}</h2>
+              <h2 className="mt-1 text-lg font-bold leading-snug">
+                {humanizeNotificationText(alert.title || 'Update')}
+              </h2>
             </div>
             <span
               className="material-symbols-outlined text-[28px] opacity-90"
@@ -152,7 +155,9 @@ export function PushAlertHost() {
         </div>
 
         <div className="space-y-4 px-5 py-5">
-          <p className="text-sm leading-relaxed text-on-surface-variant">{alert.body}</p>
+          <p className="text-sm leading-relaxed text-on-surface-variant">
+            {humanizeNotificationText(alert.body)}
+          </p>
           {error ? (
             <p className="rounded-2xl bg-error-container/25 px-3 py-2 text-sm text-error">{error}</p>
           ) : null}
