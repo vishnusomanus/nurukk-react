@@ -39,6 +39,18 @@ function playAlertTone() {
   }
 }
 
+function ctaClass(tone: 'primary' | 'danger' | 'ghost' | 'secondary' = 'primary') {
+  return cn(
+    'flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-60',
+    tone === 'primary' &&
+      'bg-primary text-on-primary shadow-[0_12px_24px_-10px_rgba(13,99,27,0.55)]',
+    tone === 'secondary' &&
+      'bg-secondary text-on-secondary shadow-[0_12px_24px_-10px_rgba(150,73,0,0.4)]',
+    tone === 'danger' && 'bg-error-container text-on-error-container',
+    tone === 'ghost' && 'bg-surface-container-high text-on-surface',
+  )
+}
+
 export function PushAlertHost() {
   const [alert, setAlert] = useState<PushAlertPayload | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -98,26 +110,52 @@ export function PushAlertHost() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/55 p-4 sm:items-center"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/45 p-3 backdrop-blur-[2px] sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={alert.title || 'Alert'}
     >
+      <button
+        type="button"
+        className="absolute inset-0"
+        aria-label="Dismiss"
+        onClick={() => setAlert(null)}
+      />
       <div
         className={cn(
-          'w-full max-w-md overflow-hidden rounded-3xl bg-surface text-on-surface shadow-2xl',
-          alert.highPriority && 'ring-2 ring-primary/40',
+          'relative w-full max-w-md overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-surface text-on-surface shadow-[0_24px_60px_-20px_rgba(15,40,20,0.45)]',
+          alert.highPriority && 'ring-2 ring-primary/30',
         )}
       >
-        <div className="bg-primary px-5 py-4 text-on-primary">
-          <p className="text-[11px] font-semibold tracking-wide uppercase opacity-80">
-            {alert.highPriority ? 'Urgent' : 'Notification'}
-          </p>
-          <h2 className="mt-1 text-lg font-bold leading-snug">{alert.title || 'Update'}</h2>
+        <div
+          className={cn(
+            'px-5 py-4 text-on-primary',
+            alert.highPriority
+              ? 'bg-gradient-to-br from-primary to-primary-container'
+              : 'bg-gradient-to-br from-on-surface to-on-surface-variant',
+          )}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.14em] uppercase opacity-80">
+                {alert.highPriority ? 'Urgent' : 'Notification'}
+              </p>
+              <h2 className="mt-1 text-lg font-bold leading-snug">{alert.title || 'Update'}</h2>
+            </div>
+            <span
+              className="material-symbols-outlined text-[28px] opacity-90"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              {showDeliveryActions ? 'local_shipping' : showSellerActions ? 'receipt_long' : 'notifications'}
+            </span>
+          </div>
         </div>
-        <div className="space-y-4 px-5 py-4">
+
+        <div className="space-y-4 px-5 py-5">
           <p className="text-sm leading-relaxed text-on-surface-variant">{alert.body}</p>
-          {error ? <p className="text-sm text-error">{error}</p> : null}
+          {error ? (
+            <p className="rounded-2xl bg-error-container/25 px-3 py-2 text-sm text-error">{error}</p>
+          ) : null}
 
           <div className="flex flex-col gap-2">
             {showSellerActions ? (
@@ -126,7 +164,7 @@ export function PushAlertHost() {
                   type="button"
                   disabled={busy}
                   onClick={() => acceptSeller.mutate(orderUuid)}
-                  className="flex h-12 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-on-primary disabled:opacity-60"
+                  className={ctaClass('primary')}
                 >
                   Accept order
                 </button>
@@ -134,7 +172,7 @@ export function PushAlertHost() {
                   type="button"
                   disabled={busy}
                   onClick={() => rejectSeller.mutate(orderUuid)}
-                  className="flex h-12 items-center justify-center rounded-2xl bg-error-container text-sm font-bold text-on-error-container disabled:opacity-60"
+                  className={ctaClass('danger')}
                 >
                   Reject
                 </button>
@@ -145,7 +183,7 @@ export function PushAlertHost() {
                     setAlert(null)
                     void router.navigate(`/seller/orders/${orderUuid}`)
                   }}
-                  className="flex h-11 items-center justify-center rounded-2xl text-sm font-semibold text-primary"
+                  className="flex h-11 items-center justify-center text-sm font-semibold text-primary"
                 >
                   View order
                 </button>
@@ -158,7 +196,7 @@ export function PushAlertHost() {
                   type="button"
                   disabled={busy}
                   onClick={() => acceptDelivery.mutate(orderUuid)}
-                  className="flex h-12 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-on-primary disabled:opacity-60"
+                  className={ctaClass('primary')}
                 >
                   Accept delivery
                 </button>
@@ -169,7 +207,7 @@ export function PushAlertHost() {
                     setAlert(null)
                     void router.navigate('/delivery')
                   }}
-                  className="flex h-12 items-center justify-center rounded-2xl bg-surface-container-high text-sm font-bold"
+                  className={ctaClass('ghost')}
                 >
                   View route
                 </button>
@@ -177,7 +215,7 @@ export function PushAlertHost() {
                   type="button"
                   disabled={busy}
                   onClick={() => setAlert(null)}
-                  className="flex h-11 items-center justify-center rounded-2xl text-sm font-semibold text-on-surface-variant"
+                  className="flex h-11 items-center justify-center text-sm font-semibold text-on-surface-variant"
                 >
                   Dismiss
                 </button>
@@ -185,11 +223,7 @@ export function PushAlertHost() {
             ) : null}
 
             {!showSellerActions && !showDeliveryActions ? (
-              <button
-                type="button"
-                onClick={() => setAlert(null)}
-                className="flex h-12 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-on-primary"
-              >
+              <button type="button" onClick={() => setAlert(null)} className={ctaClass('primary')}>
                 OK
               </button>
             ) : null}

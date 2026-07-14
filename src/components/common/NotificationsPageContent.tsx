@@ -67,19 +67,19 @@ export function NotificationsPageContent() {
   )
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="space-y-4 lg:space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-1 rounded-xl bg-surface-container-lowest p-1 shadow-[0_2px_12px_rgba(15,40,20,0.06)] sm:gap-2 sm:bg-transparent sm:p-0 sm:shadow-none">
+        <div className="flex gap-1.5 rounded-full bg-surface-container-high/80 p-1">
           {(['all', 'unread'] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setFilter(tab)}
               className={cn(
-                'flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold capitalize transition-colors sm:flex-none sm:rounded-full sm:text-label-md',
+                'flex-1 rounded-full px-4 py-2.5 text-sm font-bold capitalize transition-all sm:flex-none',
                 filter === tab
-                  ? 'bg-primary text-on-primary'
-                  : 'text-on-surface-variant hover:text-on-surface sm:bg-surface-container-high',
+                  ? 'bg-primary text-on-primary shadow-[0_6px_16px_-6px_rgba(13,99,27,0.5)]'
+                  : 'text-on-surface-variant',
               )}
             >
               {tab}
@@ -92,28 +92,34 @@ export function NotificationsPageContent() {
           type="button"
           disabled={markAll.isPending || unread === 0}
           onClick={() => markAll.mutate()}
-          className="self-start text-sm font-semibold text-primary disabled:opacity-50 sm:self-auto sm:text-label-md"
+          className="self-start rounded-full px-3 py-2 text-sm font-bold text-primary disabled:opacity-45 sm:self-auto"
         >
           {markAll.isPending ? 'Updating…' : 'Mark all as read'}
         </button>
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl bg-surface-container-lowest p-10 text-center text-sm text-on-surface-variant shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant lg:bg-surface lg:shadow-none">
-          Loading notifications…
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-[4.5rem] animate-pulse rounded-[1.25rem] bg-surface-container" />
+          ))}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-2xl border border-error/30 bg-error/5 p-4 text-sm text-error lg:p-6">
+        <div className="rounded-2xl bg-error-container/25 px-4 py-3 text-sm text-error">
           {getApiErrorMessage(error, 'Could not load notifications')}
         </div>
       ) : null}
 
       {!isLoading && !error && notifications.length === 0 ? (
-        <div className="rounded-2xl bg-surface-container-lowest py-14 text-center shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant lg:bg-surface lg:shadow-none">
-          <span className="material-symbols-outlined mb-3 text-[40px] text-outline">notifications_off</span>
-          <p className="text-base font-semibold text-on-surface lg:text-body-lg">
+        <div className="rounded-[1.75rem] bg-surface px-6 py-14 text-center shadow-[0_4px_20px_-10px_rgba(15,40,20,0.14)]">
+          <div className="mx-auto mb-3 flex size-14 items-center justify-center rounded-full bg-primary-container/15 text-primary">
+            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+              notifications_off
+            </span>
+          </div>
+          <p className="text-base font-bold text-on-surface">
             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
           </p>
           <p className="mt-1 text-sm text-on-surface-variant">
@@ -123,7 +129,7 @@ export function NotificationsPageContent() {
       ) : null}
 
       {notifications.length > 0 ? (
-        <div className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:space-y-3 lg:overflow-visible lg:bg-transparent lg:shadow-none">
+        <div className="space-y-2.5">
           {notifications.map((notification) => (
             <NotificationListItem
               key={notification.uuid}
@@ -136,12 +142,12 @@ export function NotificationsPageContent() {
       ) : null}
 
       {hasNextPage ? (
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center pt-1">
           <button
             type="button"
             disabled={isFetchingNextPage}
             onClick={() => void fetchNextPage()}
-            className="rounded-xl border border-outline px-6 py-2.5 text-sm font-semibold text-on-surface-variant disabled:opacity-50 lg:text-label-md"
+            className="rounded-full border border-outline-variant/50 bg-surface px-6 py-2.5 text-sm font-bold text-on-surface-variant disabled:opacity-50"
           >
             {isFetchingNextPage ? 'Loading…' : 'Load more'}
           </button>
