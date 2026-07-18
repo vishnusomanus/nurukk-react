@@ -48,7 +48,10 @@ export function useHighPriorityNotificationPoll() {
 
       const type = String(row.type ?? '')
       const highPriority =
-        type === 'new_order' || type === 'delivery_available' || type === 'delivery_assigned'
+        type === 'new_order' ||
+        type === 'delivery_available' ||
+        type === 'delivery_assigned' ||
+        type === 'order_chat_message'
       const orderUuid =
         typeof row.data?.order_uuid === 'string' ? row.data.order_uuid : undefined
 

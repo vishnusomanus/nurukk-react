@@ -87,6 +87,8 @@ function ContactCard({
   navigateLabel,
   callLabel,
   showActions,
+  onChat,
+  chatLabel = 'Chat',
 }: {
   tone: 'primary' | 'secondary'
   icon: string
@@ -99,6 +101,8 @@ function ContactCard({
   navigateLabel: string
   callLabel: string
   showActions: boolean
+  onChat?: () => void
+  chatLabel?: string
 }) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-surface-container-low p-4">
@@ -111,7 +115,7 @@ function ContactCard({
       <p className="text-sm font-bold text-on-surface">{title}</p>
       {phone ? <p className="mt-0.5 text-sm font-medium text-on-surface">{phone}</p> : null}
       <p className="mt-1 text-sm leading-relaxed text-on-surface-variant">{detail}</p>
-      {showActions && (mapsUrl || telUrl) ? (
+      {showActions && (mapsUrl || telUrl || onChat) ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {mapsUrl ? (
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={chipAction('primary')}>
@@ -124,6 +128,12 @@ function ContactCard({
               <span className="material-symbols-outlined text-[18px]">call</span>
               {callLabel}
             </a>
+          ) : null}
+          {onChat ? (
+            <button type="button" onClick={onChat} className={chipAction('ghost')}>
+              <span className="material-symbols-outlined text-[18px]">chat</span>
+              {chatLabel}
+            </button>
           ) : null}
         </div>
       ) : showActions ? (
@@ -142,6 +152,7 @@ export function DeliveryOrderCard({
   action,
   disabled = false,
   feeOnly = false,
+  onChat,
 }: {
   order: DeliveryOrder
   variant?: 'available' | 'assigned'
@@ -149,6 +160,7 @@ export function DeliveryOrderCard({
   action?: React.ReactNode
   disabled?: boolean
   feeOnly?: boolean
+  onChat?: () => void
 }) {
   const stage = resolveContactStage(order.status, variant)
   const sellerName =
@@ -267,6 +279,7 @@ export function DeliveryOrderCard({
               navigateLabel="Navigate"
               callLabel="Call"
               showActions
+              onChat={onChat}
             />
           ) : null}
         </div>

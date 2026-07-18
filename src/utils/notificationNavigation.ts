@@ -21,6 +21,9 @@ export function getNotificationHref(
   const r = normalizeRole(role)
 
   if (isBuyerRole(r)) {
+    if (notification.type === 'order_chat_message') {
+      return `/buyer/orders/${orderUuid}/success?chat=1`
+    }
     return `/buyer/orders/${orderUuid}/success`
   }
 
@@ -29,6 +32,9 @@ export function getNotificationHref(
   }
 
   if (r === 'delivery_agent' || r === 'seller_delivery') {
+    if (notification.type === 'order_chat_message') {
+      return `/delivery?order=${orderUuid}&chat=1`
+    }
     return '/delivery'
   }
 
@@ -42,6 +48,7 @@ export function getNotificationHref(
 export function notificationIcon(type?: string) {
   const value = String(type ?? '').toLowerCase()
 
+  if (value.includes('chat') || value.includes('message')) return 'chat'
   if (value.includes('delivered')) return 'check_circle'
   if (value.includes('cancel') || value.includes('reject')) return 'cancel'
   if (value.includes('picked') || value.includes('courier') || value.includes('delivery')) {

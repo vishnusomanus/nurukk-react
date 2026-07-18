@@ -1,6 +1,8 @@
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buyerService, paymentService } from '@/api/services'
+import { canOpenOrderChat } from '@/api/services/orderChatService'
 import type { OnlinePaymentMethod } from '@/constants/paymentMethods'
 import { BuyerPageHeader } from '@/components/buyer/BuyerPageHeader'
 import { ProductImage } from '@/components/buyer/ProductImage'
@@ -8,6 +10,7 @@ import { OrderRateForm } from '@/components/buyer/OrderRateForm'
 import { DeliveryRateForm } from '@/components/buyer/DeliveryRateForm'
 import { OrderStatusHeroIcon } from '@/components/buyer/OrderStatusHeroIcon'
 import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
+import { OrderChatSheet } from '@/components/common/OrderChatSheet'
 import { useAuthStore } from '@/store/authStore'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
@@ -38,9 +41,20 @@ const softCard =
 export function OrderSuccessPage() {
   const { orderUuid = '' } = useParams()
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
   const paymentOutcome = (location.state as { paymentOutcome?: string } | null)?.paymentOutcome
+  const [chatOpen, setChatOpen] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('chat') === '1' && orderUuid) {
+      setChatOpen(true)
+      const next = new URLSearchParams(searchParams)
+      next.delete('chat')
+      setSearchParams(next, { replace: true })
+    }
+  }, [orderUuid, searchParams, setSearchParams])
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['buyer', 'order', orderUuid],
@@ -123,6 +137,10 @@ export function OrderSuccessPage() {
       ? order.tracking.delivery_completed_duration_label
       : undefined)
   const canCancel = canBuyerCancelOrder(order, tracking)
+  const showDeliveryChat =
+    Boolean(orderUuid) &&
+    Boolean(order?.delivery_agent || tracking.delivery_agent_name || tracking.delivery_assigned) &&
+    canOpenOrderChat(currentStatus)
   const addressLine = order?.address?.address_line ?? order?.address?.line1
   const needsOnlinePayment =
     order?.payment_method &&
@@ -197,11 +215,32 @@ export function OrderSuccessPage() {
                 </p>
                 <h1 className="mt-0.5 text-xl font-bold text-primary lg:text-headline-xl">{statusTitle}</h1>
                 <p className="mt-1 text-sm text-on-surface-variant lg:text-body-lg">{statusSubtitle}</p>
-                {tracking.delivery_agent_name ? (
-                  <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 text-xs font-semibold text-on-surface">
-                    <span className="material-symbols-outlined text-[16px]">delivery_dining</span>
-                    {tracking.delivery_agent_name}
-                  </p>
+                {tracking.delivery_agent_name || order?.delivery_agent?.name ? (
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                    <p className="inline-flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 text-xs font-semibold text-on-surface">
+                      <span className="material-symbols-outlined text-[16px]">delivery_dining</span>
+                      {order?.delivery_agent?.name ?? tracking.delivery_agent_name}
+                    </p>
+                    {showDeliveryChat ? (
+                      <button
+                        type="button"
+                        onClick={() => setChatOpen(true)}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-bold text-on-primary transition-transform active:scale-[0.98]"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">chat</span>
+                        Chat with courier
+                      </button>
+                    ) : null}
+                  </div>
+                ) : showDeliveryChat ? (
+                  <button
+                    type="button"
+                    onClick={() => setChatOpen(true)}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-bold text-on-primary"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">chat</span>
+                    Chat with courier
+                  </button>
                 ) : null}
               </div>
               {active && liveTracking ? (
@@ -489,6 +528,19 @@ export function OrderSuccessPage() {
           </div>
         </div>
       ) : null}
+
+      <OrderChatSheet
+        open={chatOpen}
+        orderUuid={orderUuid || null}
+        title="Courier chat"
+        subtitle={
+          order?.delivery_agent?.name ??
+          tracking.delivery_agent_name ??
+          order?.order_number ??
+          undefined
+        }
+        onClose={() => setChatOpen(false)}
+      />
     </div>
   )
 }

@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { deliveryService } from '@/api/services'
+import { canOpenOrderChat } from '@/api/services/orderChatService'
 import {
   DeliveryEmptyState,
   DeliveryOrderCard,
   type DeliveryOrder,
 } from '@/components/delivery/DeliveryOrderCard'
+import { OrderChatSheet } from '@/components/common/OrderChatSheet'
 import { DeliveryPageShell } from '@/components/delivery/DeliveryPageShell'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/store/authStore'
@@ -65,10 +68,25 @@ const TABS: Array<{ id: DeliveryTab; label: string; icon: string }> = [
 
 export function DeliveryOrdersPage() {
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
   const userRole = useAuthStore((s) => s.user?.role)
   const [tab, setTab] = useState<DeliveryTab>('available')
   const [page, setPage] = useState(1)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [chatOrderUuid, setChatOrderUuid] = useState<string | null>(null)
+
+  useEffect(() => {
+    const orderUuid = searchParams.get('order')
+    const openChat = searchParams.get('chat') === '1'
+    if (orderUuid && openChat) {
+      setTab('assigned')
+      setChatOrderUuid(orderUuid)
+      const next = new URLSearchParams(searchParams)
+      next.delete('chat')
+      next.delete('order')
+      setSearchParams(next, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   const { data: profileData } = useQuery({
     queryKey: ['delivery', 'profile'],
@@ -339,6 +357,11 @@ export function DeliveryOrdersPage() {
                 feeOnly={isPlatformAgent}
                 highlighted={tab === 'available' && isPlatformAgent}
                 disabled={actionPending}
+                onChat={
+                  tab === 'assigned' && canOpenOrderChat(order.status)
+                    ? () => setChatOrderUuid(order.uuid)
+                    : undefined
+                }
                 action={
                   button ? (
                     <div className={isStickyPrimary ? 'hidden lg:block' : undefined}>{button}</div>
@@ -361,6 +384,17 @@ export function DeliveryOrdersPage() {
           </div>
         </div>
       ) : null}
+
+      <OrderChatSheet
+        open={Boolean(chatOrderUuid)}
+        orderUuid={chatOrderUuid}
+        title="Customer chat"
+        subtitle={
+          orders.find((row) => row.uuid === chatOrderUuid)?.order_number ??
+          (chatOrderUuid ? `Order ${chatOrderUuid.slice(0, 8)}` : undefined)
+        }
+        onClose={() => setChatOrderUuid(null)}
+      />
     </DeliveryPageShell>
   )
 }
