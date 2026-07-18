@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { deliveryService } from '@/api/services'
 import {
   DeliveryEmptyState,
@@ -9,10 +9,43 @@ import {
 import { DeliveryPageShell } from '@/components/delivery/DeliveryPageShell'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuthStore } from '@/store/authStore'
+import {
+  deliveryActionIcon,
+  deliveryActionLabel,
+  orderStatusFromDeliveryResponse,
+  resolveAssignedDeliveryAction,
+  type DeliveryAgentAction,
+} from '@/utils/deliveryAgentAction'
 import { extractRows } from '@/utils/extractRows'
 import { extractPaginationMeta } from '@/utils/extractPaginationMeta'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { cn } from '@/utils/cn'
+
+function patchAssignedOrderStatus(queryClient: QueryClient, uuid: string, status: string) {
+  queryClient.setQueriesData({ queryKey: ['delivery', 'orders'] }, (current: unknown) => {
+    if (!current || typeof current !== 'object') return current
+    const payload = current as { data?: unknown }
+    const rows = extractRows(payload.data)
+    if (rows.length === 0) return current
+
+    const nextRows = rows.map((row) =>
+      String(row.uuid ?? '') === uuid ? { ...row, status } : row,
+    )
+
+    if (Array.isArray(payload.data)) {
+      return { ...payload, data: nextRows }
+    }
+
+    if (payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
+      const nested = payload.data as { data?: unknown }
+      if (Array.isArray(nested.data)) {
+        return { ...payload, data: { ...nested, data: nextRows } }
+      }
+    }
+
+    return current
+  })
+}
 
 function primaryCtaClassName(tone: 'primary' | 'secondary' = 'primary') {
   return cn(
@@ -57,9 +90,10 @@ export function DeliveryOrdersPage() {
   })
 
   const hasActiveDelivery = useMemo(() => {
+    const rows = extractRows(activeCheckData?.data)
+    if (rows.length > 0) return true
     const meta = extractPaginationMeta(activeCheckData)
-    if (meta?.total != null && meta.total > 0) return true
-    return extractRows(activeCheckData?.data).length > 0
+    return Boolean(meta?.total && meta.total > 0)
   }, [activeCheckData])
 
   useEffect(() => {
@@ -85,22 +119,30 @@ export function DeliveryOrdersPage() {
     refetchInterval: tab === 'available' && isPlatformAgent && !hasActiveDelivery ? 15_000 : false,
   })
 
+  const applyStageSuccess = (uuid: string, response: unknown, nextTab?: DeliveryTab) => {
+    const status = orderStatusFromDeliveryResponse(response)
+    if (status) {
+      patchAssignedOrderStatus(queryClient, uuid, status)
+    }
+    void queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
+    if (nextTab) setTab(nextTab)
+  }
+
   const accept = useMutation({
     mutationFn: (uuid: string) => deliveryService.acceptOrder(uuid),
     onMutate: () => setActionError(null),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
-      setTab('assigned')
+    onSuccess: (response, uuid) => {
+      applyStageSuccess(uuid, response, 'assigned')
     },
-    onError: (err) => setActionError(getApiErrorMessage(err, 'Could not accept this order. It may have been taken.')),
+    onError: (err) =>
+      setActionError(getApiErrorMessage(err, 'Could not accept this order. It may have been taken.')),
   })
 
   const deliver = useMutation({
     mutationFn: (uuid: string) => deliveryService.markDelivered(uuid),
     onMutate: () => setActionError(null),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
-      setTab('available')
+    onSuccess: (response, uuid) => {
+      applyStageSuccess(uuid, response, 'available')
     },
     onError: (err) => setActionError(getApiErrorMessage(err, 'Failed to mark order as delivered')),
   })
@@ -108,33 +150,83 @@ export function DeliveryOrdersPage() {
   const reachedPickup = useMutation({
     mutationFn: (uuid: string) => deliveryService.markReachedPickup(uuid),
     onMutate: () => setActionError(null),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
+    onSuccess: (response, uuid) => {
+      applyStageSuccess(uuid, response)
     },
-    onError: (err) => setActionError(getApiErrorMessage(err, 'Failed to update delivery status')),
+    onError: (err) => {
+      void queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
+      setActionError(getApiErrorMessage(err, 'Failed to update delivery status'))
+    },
   })
 
   const collectPackage = useMutation({
     mutationFn: (uuid: string) => deliveryService.markPackageCollected(uuid),
     onMutate: () => setActionError(null),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
+    onSuccess: (response, uuid) => {
+      applyStageSuccess(uuid, response)
     },
-    onError: (err) => setActionError(getApiErrorMessage(err, 'Failed to update delivery status')),
+    onError: (err) => {
+      void queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
+      setActionError(getApiErrorMessage(err, 'Failed to update delivery status'))
+    },
   })
 
   const reached = useMutation({
     mutationFn: (uuid: string) => deliveryService.markReachedCustomer(uuid),
     onMutate: () => setActionError(null),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
+    onSuccess: (response, uuid) => {
+      applyStageSuccess(uuid, response)
     },
-    onError: (err) => setActionError(getApiErrorMessage(err, 'Failed to update delivery status')),
+    onError: (err) => {
+      void queryClient.invalidateQueries({ queryKey: ['delivery', 'orders'] })
+      setActionError(getApiErrorMessage(err, 'Failed to update delivery status'))
+    },
   })
+
+  const actionPending =
+    accept.isPending ||
+    deliver.isPending ||
+    reached.isPending ||
+    reachedPickup.isPending ||
+    collectPackage.isPending
+
+  const runAssignedAction = (action: DeliveryAgentAction, uuid: string) => {
+    switch (action) {
+      case 'accept':
+        accept.mutate(uuid)
+        break
+      case 'reached_pickup':
+        reachedPickup.mutate(uuid)
+        break
+      case 'collect_package':
+        collectPackage.mutate(uuid)
+        break
+      case 'reached_customer':
+        reached.mutate(uuid)
+        break
+      case 'mark_delivered':
+        deliver.mutate(uuid)
+        break
+    }
+  }
+
+  const renderActionButton = (action: DeliveryAgentAction, uuid: string) => (
+    <button
+      type="button"
+      disabled={actionPending}
+      onClick={() => runAssignedAction(action, uuid)}
+      className={primaryCtaClassName(action === 'mark_delivered' ? 'secondary' : 'primary')}
+    >
+      <span className="material-symbols-outlined">{deliveryActionIcon(action)}</span>
+      {deliveryActionLabel(action, actionPending)}
+    </button>
+  )
 
   const orders = extractRows(data?.data) as DeliveryOrder[]
   const meta = extractPaginationMeta(data)
   const showPagination = tab === 'assigned' || !isPlatformAgent
+  const stickyOrder = tab === 'assigned' ? orders[0] : null
+  const stickyAction = stickyOrder ? resolveAssignedDeliveryAction(stickyOrder.status) : null
 
   return (
     <DeliveryPageShell pathname="/delivery">
@@ -185,7 +277,14 @@ export function DeliveryOrdersPage() {
       {hasActiveDelivery ? (
         <div className="flex items-start gap-3 rounded-2xl bg-secondary-container/20 px-4 py-3 text-sm text-on-surface">
           <span className="material-symbols-outlined text-secondary">info</span>
-          <span>Complete your active delivery to unlock the available queue.</span>
+          <span className="flex-1">
+            Complete your active delivery to unlock the available queue.
+            {stickyAction ? (
+              <span className="mt-1 block text-on-surface-variant">
+                Next step: {deliveryActionLabel(stickyAction, false)}.
+              </span>
+            ) : null}
+          </span>
         </div>
       ) : null}
 
@@ -220,81 +319,47 @@ export function DeliveryOrdersPage() {
           }
         />
       ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <DeliveryOrderCard
-              key={order.uuid}
-              order={order}
-              variant={tab}
-              feeOnly={isPlatformAgent}
-              highlighted={tab === 'available' && isPlatformAgent}
-              disabled={
-                accept.isPending ||
-                deliver.isPending ||
-                reached.isPending ||
-                reachedPickup.isPending ||
-                collectPackage.isPending
-              }
-              action={
-                tab === 'available' ? (
-                  <button
-                    type="button"
-                    disabled={accept.isPending}
-                    onClick={() => accept.mutate(order.uuid)}
-                    className={primaryCtaClassName()}
-                  >
-                    <span className="material-symbols-outlined">check_circle</span>
-                    {accept.isPending ? 'Accepting…' : 'Accept delivery'}
-                  </button>
-                ) : order.status === 'ready_for_delivery' ? (
-                  <button
-                    type="button"
-                    disabled={reachedPickup.isPending}
-                    onClick={() => reachedPickup.mutate(order.uuid)}
-                    className={primaryCtaClassName()}
-                  >
-                    <span className="material-symbols-outlined">storefront</span>
-                    {reachedPickup.isPending ? 'Updating…' : 'Reached shop'}
-                  </button>
-                ) : order.status === 'at_pickup' ? (
-                  <button
-                    type="button"
-                    disabled={collectPackage.isPending}
-                    onClick={() => collectPackage.mutate(order.uuid)}
-                    className={primaryCtaClassName()}
-                  >
-                    <span className="material-symbols-outlined">inventory_2</span>
-                    {collectPackage.isPending ? 'Updating…' : 'Package collected'}
-                  </button>
-                ) : order.status === 'picked_up' ? (
-                  <button
-                    type="button"
-                    disabled={reached.isPending}
-                    onClick={() => reached.mutate(order.uuid)}
-                    className={primaryCtaClassName()}
-                  >
-                    <span className="material-symbols-outlined">location_on</span>
-                    {reached.isPending ? 'Updating…' : 'Reached customer'}
-                  </button>
-                ) : order.status === 'out_for_delivery' ? (
-                  <button
-                    type="button"
-                    disabled={deliver.isPending}
-                    onClick={() => deliver.mutate(order.uuid)}
-                    className={primaryCtaClassName('secondary')}
-                  >
-                    <span className="material-symbols-outlined">done_all</span>
-                    {deliver.isPending ? 'Updating…' : 'Mark delivered'}
-                  </button>
-                ) : null
-              }
-            />
-          ))}
+        <div className={cn('space-y-4', stickyAction && 'pb-24 lg:pb-0')}>
+          {orders.map((order, index) => {
+            const assignedAction =
+              tab === 'assigned' ? resolveAssignedDeliveryAction(order.status) : null
+            const isStickyPrimary = Boolean(stickyAction && index === 0)
+            const button =
+              tab === 'available'
+                ? renderActionButton('accept', order.uuid)
+                : assignedAction
+                  ? renderActionButton(assignedAction, order.uuid)
+                  : null
+
+            return (
+              <DeliveryOrderCard
+                key={order.uuid}
+                order={order}
+                variant={tab}
+                feeOnly={isPlatformAgent}
+                highlighted={tab === 'available' && isPlatformAgent}
+                disabled={actionPending}
+                action={
+                  button ? (
+                    <div className={isStickyPrimary ? 'hidden lg:block' : undefined}>{button}</div>
+                  ) : null
+                }
+              />
+            )
+          })}
         </div>
       )}
 
       {showPagination && meta && meta.last_page > 1 ? (
         <Pagination meta={meta} onPageChange={setPage} />
+      ) : null}
+
+      {stickyOrder && stickyAction ? (
+        <div className="pointer-events-none fixed inset-x-0 z-40 px-4 lg:hidden bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))]">
+          <div className="pointer-events-auto mx-auto max-w-lg rounded-[1.5rem] bg-surface/95 p-3 shadow-[0_12px_32px_-12px_rgba(15,40,20,0.35)] ring-1 ring-outline-variant/30 backdrop-blur-md">
+            {renderActionButton(stickyAction, stickyOrder.uuid)}
+          </div>
+        </div>
       ) : null}
     </DeliveryPageShell>
   )

@@ -1,4 +1,5 @@
 import type { DeliveryHistoryOrder, DeliveryOrder } from '@/api/services/deliveryService'
+import { normalizeDeliveryStatus } from '@/utils/deliveryAgentAction'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatOrderDateTime } from '@/utils/formatRelativeTime'
 import { buildGoogleMapsUrl, buildTelUrl } from '@/utils/googleMaps'
@@ -23,8 +24,10 @@ function formatPickupAddress(order: DeliveryOrder) {
 }
 
 function statusTone(status?: string) {
-  const value = String(status ?? '').toLowerCase()
-  if (value.includes('deliver')) return 'bg-primary-container/25 text-primary'
+  const value = normalizeDeliveryStatus(status)
+  if (value.includes('deliver') && value !== 'ready_for_delivery') {
+    return 'bg-primary-container/25 text-primary'
+  }
   if (value === 'ready_for_delivery') return 'bg-secondary-container/25 text-secondary'
   if (value.includes('ready') || value === 'at_pickup') return 'bg-tertiary-container/20 text-tertiary'
   if (value.includes('cancel')) return 'bg-error-container/30 text-error'
@@ -32,21 +35,34 @@ function statusTone(status?: string) {
 }
 
 function formatStatus(status?: string, variant?: 'available' | 'assigned') {
-  const value = String(status ?? 'unknown').toLowerCase()
+  const value = normalizeDeliveryStatus(status) || 'unknown'
   if (variant === 'assigned' && value === 'ready_for_delivery') return 'Heading to pickup'
   if (value === 'at_pickup') return 'At shop'
-  if (value === 'picked_up') return 'En route to customer'
-  if (value === 'out_for_delivery') return 'At customer'
+  if (value === 'picked_up' || value === 'package_collected' || value === 'collected') {
+    return 'En route to customer'
+  }
+  if (value === 'out_for_delivery' || value === 'reached_customer' || value === 'at_customer') {
+    return 'At customer'
+  }
   if (value === 'delivered') return 'Delivered'
   return formatOrderStatusLabel(value)
 }
 
 function resolveContactStage(status?: string, variant?: 'available' | 'assigned'): ContactStage {
   if (variant === 'available') return 'available'
-  const value = String(status ?? '').toLowerCase()
+  const value = normalizeDeliveryStatus(status)
   if (value === 'delivered') return 'complete'
   // Unlock customer only after package is collected.
-  if (value === 'picked_up' || value === 'out_for_delivery') return 'delivery'
+  if (
+    value === 'picked_up' ||
+    value === 'package_collected' ||
+    value === 'collected' ||
+    value === 'out_for_delivery' ||
+    value === 'reached_customer' ||
+    value === 'at_customer'
+  ) {
+    return 'delivery'
+  }
   return 'pickup'
 }
 
@@ -95,7 +111,7 @@ function ContactCard({
       <p className="text-sm font-bold text-on-surface">{title}</p>
       {phone ? <p className="mt-0.5 text-sm font-medium text-on-surface">{phone}</p> : null}
       <p className="mt-1 text-sm leading-relaxed text-on-surface-variant">{detail}</p>
-      {showActions ? (
+      {showActions && (mapsUrl || telUrl) ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {mapsUrl ? (
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={chipAction('primary')}>
@@ -110,6 +126,10 @@ function ContactCard({
             </a>
           ) : null}
         </div>
+      ) : showActions ? (
+        <p className="mt-3 text-xs text-on-surface-variant">
+          Navigation and call options appear when the store shares a phone or address.
+        </p>
       ) : null}
     </div>
   )
@@ -126,7 +146,7 @@ export function DeliveryOrderCard({
   order: DeliveryOrder
   variant?: 'available' | 'assigned'
   highlighted?: boolean
-  action: React.ReactNode
+  action?: React.ReactNode
   disabled?: boolean
   feeOnly?: boolean
 }) {
@@ -284,7 +304,7 @@ export function DeliveryOrderCard({
           ) : null}
         </div>
 
-        <div className="pt-1">{action}</div>
+        {action ? <div className="pt-1">{action}</div> : null}
       </div>
     </article>
   )
