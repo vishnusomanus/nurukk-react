@@ -11,7 +11,7 @@ import { RemoteImage } from '@/components/buyer/ProductImage'
 import { triggerCartFly } from '@/store/cartFlyStore'
 import { useAddToCart } from '@/hooks/useAddToCart'
 import { useAuthStore } from '@/store/authStore'
-import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
+import { useDeliveryScopeParams, useDeliveryScopeReady } from '@/hooks/useDeliveryScopeParams'
 import { extractRows } from '@/utils/extractRows'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { getProductImage } from '@/utils/productImage'
@@ -50,17 +50,19 @@ export function ProductDetailPage() {
   const [qty, setQty] = useState(1)
   const [activeImage, setActiveImage] = useState(0)
   const deliveryScope = useDeliveryScopeParams()
+  const deliveryScopeReady = useDeliveryScopeReady()
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading: productLoading, error } = useQuery({
     queryKey: ['buyer', 'product', productUuid, deliveryScope.latitude, deliveryScope.longitude],
     queryFn: () => buyerService.getProduct(productUuid, deliveryScope),
-    enabled: !!productUuid,
+    enabled: deliveryScopeReady && !!productUuid,
   })
+  const isLoading = !deliveryScopeReady || productLoading
 
   const { data: relatedData } = useQuery({
     queryKey: ['buyer', 'product', productUuid, 'related', deliveryScope.latitude, deliveryScope.longitude],
     queryFn: () => buyerService.getRelatedProducts(productUuid, deliveryScope),
-    enabled: !!productUuid,
+    enabled: deliveryScopeReady && !!productUuid,
   })
 
   const { data: ratingsData, isLoading: ratingsLoading } = useQuery({

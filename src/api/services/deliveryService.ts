@@ -6,11 +6,25 @@ export type DeliveryProfile = {
   uuid: string
   type?: 'platform_agent' | 'seller_employee'
   display_name?: string
-  phone?: string
-  vehicle_type?: string
+  phone?: string | null
+  vehicle_type?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  service_radius_km?: number | null
   is_available?: boolean
   is_active?: boolean
+  seller_id?: number | null
   [key: string]: unknown
+}
+
+export type UpdateDeliveryProfilePayload = {
+  display_name?: string
+  phone?: string | null
+  vehicle_type?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  service_radius_km?: number | null
+  is_available?: boolean
 }
 
 export async function registerAgent(payload: {
@@ -27,7 +41,7 @@ export async function getProfile() {
   return data
 }
 
-export async function updateProfile(payload: Partial<DeliveryProfile>) {
+export async function updateProfile(payload: UpdateDeliveryProfilePayload) {
   const { data } = await apiClient.patch<GenericSuccess<DeliveryProfile>>('/v1/delivery/profile', payload)
   return data
 }

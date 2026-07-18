@@ -14,7 +14,7 @@ import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { extractPaginationMeta } from '@/utils/extractPaginationMeta'
 import { getCategoryNavIcon } from '@/utils/categoryNav'
 import { useDeliveryLocation } from '@/context/DeliveryLocationProvider'
-import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
+import { useDeliveryScopeParams, useDeliveryScopeReady } from '@/hooks/useDeliveryScopeParams'
 import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import {
   filterProductsByDietary,
@@ -60,6 +60,7 @@ export function CategoryListingView({
   const trimmedSearch = searchQuery?.trim() ?? ''
   const isSearchMode = searchQuery !== undefined
   const deliveryScope = useDeliveryScopeParams()
+  const deliveryScopeReady = useDeliveryScopeReady()
   const { stored } = useDeliveryLocation()
   const noStoresInRange = Boolean(stored && !stored.serviceable)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -118,7 +119,7 @@ export function CategoryListingView({
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => nextSearchProductPage(lastPage),
-    enabled: isSearchMode && trimmedSearch.length > 0,
+    enabled: deliveryScopeReady && isSearchMode && trimmedSearch.length > 0,
   })
 
   const categoryQueryResult = useInfiniteQuery({
@@ -137,7 +138,7 @@ export function CategoryListingView({
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => nextPageFromMeta(lastPage),
-    enabled: !isSearchMode && !!categoryUuid,
+    enabled: deliveryScopeReady && !isSearchMode && !!categoryUuid,
   })
 
   const browseQueryResult = useInfiniteQuery({
@@ -159,7 +160,7 @@ export function CategoryListingView({
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => nextPageFromMeta(lastPage),
-    enabled: !isSearchMode && !categoryUuid,
+    enabled: deliveryScopeReady && !isSearchMode && !categoryUuid,
   })
 
   const activeQuery = isSearchMode
@@ -168,13 +169,15 @@ export function CategoryListingView({
       ? categoryQueryResult
       : browseQueryResult
 
-  const { isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = activeQuery
+  const { isLoading: queryLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    activeQuery
+  const isLoading = !deliveryScopeReady || queryLoading
 
   const sellers = isSearchMode ? (searchQueryResult.data?.pages[0]?.data?.sellers ?? []) : []
   const sellerTotal = isSearchMode
     ? (searchQueryResult.data?.pages[0]?.meta?.sellers?.total ?? sellers.length)
     : 0
-  const sellersLoading = isSearchMode && searchQueryResult.isLoading
+  const sellersLoading = isSearchMode && (!deliveryScopeReady || searchQueryResult.isLoading)
 
   const products = useMemo(() => {
     const rows: BuyerProduct[] = isSearchMode

@@ -39,6 +39,13 @@ export function useDeliveryScopeActive() {
   return params.latitude != null && params.longitude != null
 }
 
+/** True once we have coords, or location detection has finished (success or fail). */
+export function useDeliveryScopeReady() {
+  const { stored, locating } = useDeliveryLocation()
+  const hasScope = stored?.latitude != null && stored?.longitude != null
+  return hasScope || !locating
+}
+
 export function useDeliveryScopeLabel() {
   const { stored } = useDeliveryLocation()
   const maxKm = stored?.max_delivery_radius_km ?? 15

@@ -15,7 +15,7 @@ import { BrandLogo } from '@/components/brand/BrandLogo'
 import { HomeBannerSlider } from '@/components/buyer/HomeBannerSlider'
 import { APP_NAME } from '@/constants/app'
 import { useDeliveryLocation } from '@/context/DeliveryLocationProvider'
-import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
+import { useDeliveryScopeParams, useDeliveryScopeReady } from '@/hooks/useDeliveryScopeParams'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { getCategoryImageUrl } from '@/utils/categoryImage'
 import { cn } from '@/utils/cn'
@@ -67,13 +67,16 @@ export function BuyerHomePage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const deliveryScope = useDeliveryScopeParams()
+  const deliveryScopeReady = useDeliveryScopeReady()
   const { stored } = useDeliveryLocation()
   const noStoresInRange = Boolean(stored && !stored.serviceable)
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading: homeLoading, error } = useQuery({
     queryKey: ['buyer', 'home', deliveryScope.latitude, deliveryScope.longitude],
     queryFn: () => buyerService.getHome(deliveryScope),
+    enabled: deliveryScopeReady,
   })
+  const isLoading = !deliveryScopeReady || homeLoading
 
   const home = data?.data
   const categories = home?.categories ?? []
@@ -84,7 +87,7 @@ export function BuyerHomePage() {
   const recent = home?.recently_purchased ?? []
   const cutVegCategory = categories.find(isCutVegetableCategory)
 
-  const { data: cutVegData, isLoading: cutVegLoading } = useQuery({
+  const { data: cutVegData, isLoading: cutVegQueryLoading } = useQuery({
     queryKey: [
       'buyer',
       'home',
@@ -98,8 +101,9 @@ export function BuyerHomePage() {
         ...deliveryScope,
         per_page: 12,
       }),
-    enabled: !!cutVegCategory?.uuid,
+    enabled: deliveryScopeReady && !!cutVegCategory?.uuid,
   })
+  const cutVegLoading = !deliveryScopeReady || cutVegQueryLoading
   const cutVegProducts = cutVegData?.data ?? []
   const showCutVegSection = !!cutVegCategory && (cutVegLoading || cutVegProducts.length > 0)
 

@@ -49,9 +49,14 @@ function toStored(result: DeliveryCheckResult, meta: DeliveryLocationMeta): Stor
   }
 }
 
+function hasDeliveryCoords(stored: StoredDeliveryCheck | null) {
+  return stored?.latitude != null && stored?.longitude != null
+}
+
 export function DeliveryLocationProvider({ children }: { children: ReactNode }) {
   const [stored, setStored] = useState<StoredDeliveryCheck | null>(() => getStoredDeliveryCheck())
-  const [locating, setLocating] = useState(false)
+  // Start locating when nothing is cached so product queries wait instead of fetching unscoped first.
+  const [locating, setLocating] = useState(() => !hasDeliveryCoords(getStoredDeliveryCheck()))
   const [error, setError] = useState<string | null>(null)
   const started = useRef(false)
 

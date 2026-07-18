@@ -10,7 +10,7 @@ import {
   SellerStoreSidebar,
 } from '@/components/buyer/SellerStoreSidebar'
 import { SellerStoreProductCard } from '@/components/buyer/SellerStoreProductCard'
-import { useDeliveryScopeParams } from '@/hooks/useDeliveryScopeParams'
+import { useDeliveryScopeParams, useDeliveryScopeReady } from '@/hooks/useDeliveryScopeParams'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 
 function storeLocationLabel(city?: string, pincode?: string) {
@@ -32,13 +32,15 @@ function collectCategories(products: import('@/api/services/buyerService').Buyer
 export function BuyerSellerStorePage() {
   const { sellerUuid } = useParams()
   const deliveryScope = useDeliveryScopeParams()
+  const deliveryScopeReady = useDeliveryScopeReady()
   const [activeCategoryUuid, setActiveCategoryUuid] = useState<string | null>(null)
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading: storeLoading, error } = useQuery({
     queryKey: ['buyer', 'seller-store', sellerUuid, deliveryScope.latitude, deliveryScope.longitude],
     queryFn: () => buyerService.getSellerStore(sellerUuid!, deliveryScope),
-    enabled: Boolean(sellerUuid),
+    enabled: deliveryScopeReady && Boolean(sellerUuid),
   })
+  const isLoading = !deliveryScopeReady || storeLoading
 
   const store = data?.data?.store
   const products = data?.data?.products ?? []
