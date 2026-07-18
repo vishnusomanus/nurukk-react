@@ -135,6 +135,8 @@ export function activeStatusLabel(
   status: string,
   options?: {
     deliveryAssigned?: boolean
+    /** When true, never append ETA — use a separate line in the UI instead. */
+    compact?: boolean
     tracking?: ReturnType<typeof resolveOrderTracking>
     order?: { status?: string; tracking?: { delivery_assigned?: boolean; is_live_delivery?: boolean } }
   },
@@ -149,7 +151,7 @@ export function activeStatusLabel(
       status,
       tracking: options?.deliveryAssigned ? { delivery_assigned: true } : undefined,
     })
-  const showEta = shouldShowDeliveryEta(orderLike)
+  const showEta = !options?.compact && shouldShowDeliveryEta(orderLike)
 
   if (tracking.status_label) {
     if (showEta && tracking.eta_label) {

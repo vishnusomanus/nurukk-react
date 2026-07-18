@@ -19,6 +19,7 @@ import {
   orderLabel,
   ORDER_DATE_RANGE_OPTIONS,
   reorderOrderItems,
+  shouldShowDeliveryEta,
   useOrderSavingsSummary,
   type BuyerOrderTab,
   type OrderDateRange,
@@ -136,7 +137,7 @@ function OrdersDateFilter({
   )
 }
 
-function StatusPill({
+function OrderStatusBlock({
   order,
   active,
 }: {
@@ -144,33 +145,44 @@ function StatusPill({
   active: boolean
 }) {
   const cancelled = isCancelledOrderStatus(order.status)
+  const tracking = resolveOrderTracking(order)
+  const statusText = activeStatusLabel(order.status, {
+    tracking,
+    order,
+    compact: true,
+  })
+  const etaText =
+    active && shouldShowDeliveryEta(order) && tracking.eta_label ? tracking.eta_label : null
 
   if (active) {
     return (
-      <div className="flex max-w-[58%] items-center gap-1.5 rounded-full bg-primary-container/10 px-2.5 py-1 text-primary-container">
-        <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary-container" />
-        <span className="truncate text-[11px] font-semibold lg:text-xs">
-          {activeStatusLabel(order.status, { tracking: resolveOrderTracking(order), order })}
-        </span>
+      <div className="w-full min-w-0 rounded-2xl bg-primary-container/10 px-3 py-2.5">
+        <div className="flex items-start gap-2">
+          <span className="mt-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-primary" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm leading-snug font-bold text-primary">{statusText}</p>
+            {etaText ? (
+              <p className="mt-0.5 text-xs leading-snug text-on-surface-variant">{etaText}</p>
+            ) : null}
+          </div>
+        </div>
       </div>
     )
   }
 
   if (cancelled) {
     return (
-      <div className="flex items-center gap-1 rounded-full bg-error-container px-2.5 py-1 text-error">
-        <span className="material-symbols-outlined text-[14px]">cancel</span>
-        <span className="text-[11px] font-semibold lg:text-xs">Cancelled</span>
+      <div className="flex w-full items-center gap-2 rounded-2xl bg-error-container/40 px-3 py-2.5 text-error">
+        <span className="material-symbols-outlined text-[18px]">cancel</span>
+        <p className="text-sm font-bold">Cancelled</p>
       </div>
     )
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-full bg-surface-container-high px-2.5 py-1 text-on-surface-variant">
-      <span className="material-symbols-outlined text-[14px]">check_circle</span>
-      <span className="truncate text-[11px] font-semibold capitalize lg:text-xs">
-        {order.status.replace(/_/g, ' ')}
-      </span>
+    <div className="flex w-full items-center gap-2 rounded-2xl bg-surface-container-high/80 px-3 py-2.5 text-on-surface-variant">
+      <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
+      <p className="text-sm font-bold capitalize">{order.status.replace(/_/g, ' ')}</p>
     </div>
   )
 }
@@ -188,8 +200,8 @@ function OrderCard({
   onReorder: (uuid: string) => void
   reordering: boolean
 }) {
-  const visibleItems = items.slice(0, 3)
-  const extraCount = Math.max(items.length - 3, 0)
+  const visibleItems = items.slice(0, 4)
+  const extraCount = Math.max(items.length - 4, 0)
   const dateLabel = orderDateLabel(order)
   const showTrackOrder = active && canTrackBuyerOrder(order)
   const cancelled = isCancelledOrderStatus(order.status)
@@ -198,75 +210,84 @@ function OrderCard({
     items.length > 0
       ? `${items.length} item${items.length === 1 ? '' : 's'}`
       : null
+  const itemNames = items
+    .slice(0, 2)
+    .map((item) => item.product_name || item.product?.name)
+    .filter(Boolean)
+    .join(', ')
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:shadow-none">
-      <Link to={detailTo} className="block p-4 active:bg-surface-container-low/40 lg:p-5">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-[15px] font-bold text-on-surface lg:text-base">
-                {orderLabel(order)}
-              </h3>
-            </div>
-            {dateLabel ? (
+    <article className="overflow-hidden rounded-[1.35rem] bg-surface-container-lowest shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:shadow-none">
+      <Link to={detailTo} className="block active:bg-surface-container-low/40">
+        <div className="space-y-3 p-4 lg:p-5">
+          {/* Header: order id + total */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-base font-bold text-on-surface">{orderLabel(order)}</h3>
               <p className="mt-0.5 text-xs text-on-surface-variant">
-                {dateLabel}
-                {itemSummary ? ` · ${itemSummary}` : ''}
+                {[dateLabel, itemSummary].filter(Boolean).join(' · ')}
               </p>
-            ) : itemSummary ? (
-              <p className="mt-0.5 text-xs text-on-surface-variant">{itemSummary}</p>
-            ) : null}
-          </div>
-          <div className="flex shrink-0 flex-col items-end gap-1.5">
-            <StatusPill order={order} active={active} />
-            <p className="text-[15px] font-bold text-on-surface lg:text-base">
+            </div>
+            <p className="shrink-0 text-base font-extrabold text-on-surface">
               {formatCurrency(order.total)}
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center overflow-hidden -space-x-2.5">
-            {visibleItems.length > 0 ? (
-              <>
-                {visibleItems.map((item, index) => (
-                  <div
-                    key={`${item.product?.uuid ?? item.product_name ?? index}`}
-                    className="h-11 w-11 overflow-hidden rounded-xl border-2 border-surface-container-lowest bg-surface-container lg:h-12 lg:w-12"
-                  >
-                    <ProductImage
-                      product={item.product}
-                      className={cn(
-                        'h-full w-full object-cover',
-                        !active && !cancelled && 'grayscale-[15%]',
-                      )}
-                    />
+          {/* Status on its own full-width line */}
+          <OrderStatusBlock order={order} active={active} />
+
+          {/* Content: thumbnails + names */}
+          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex shrink-0 items-center -space-x-2.5">
+                {visibleItems.length > 0 ? (
+                  <>
+                    {visibleItems.map((item, index) => (
+                      <div
+                        key={`${item.product?.uuid ?? item.product_name ?? index}`}
+                        className="h-12 w-12 overflow-hidden rounded-xl border-2 border-surface-container-lowest bg-surface-container"
+                      >
+                        <ProductImage
+                          product={item.product}
+                          className={cn(
+                            'h-full w-full object-cover',
+                            !active && !cancelled && 'grayscale-[15%]',
+                          )}
+                        />
+                      </div>
+                    ))}
+                    {extraCount > 0 ? (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-surface-container-lowest bg-surface-container-high text-[11px] font-bold text-on-surface-variant">
+                        +{extraCount}
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container-high text-outline">
+                    <span className="material-symbols-outlined text-[22px]">shopping_bag</span>
                   </div>
-                ))}
-                {extraCount > 0 ? (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-surface-container-lowest bg-surface-container-high text-[11px] font-bold text-on-surface-variant lg:h-12 lg:w-12">
-                    +{extraCount}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-container-high text-outline lg:h-12 lg:w-12">
-                <span className="material-symbols-outlined text-[20px]">shopping_bag</span>
+                )}
               </div>
-            )}
+              <div className="min-w-0 flex-1">
+                {itemNames ? (
+                  <p className="truncate text-sm font-medium text-on-surface">{itemNames}</p>
+                ) : (
+                  <p className="text-sm text-on-surface-variant">Order items</p>
+                )}
+                <p className="mt-0.5 text-xs font-semibold text-primary">View order</p>
+              </div>
+            </div>
+            <span className="material-symbols-outlined shrink-0 text-outline">chevron_right</span>
           </div>
-          <span className="material-symbols-outlined text-outline lg:hidden">chevron_right</span>
-          <span className="hidden text-sm font-semibold text-primary lg:inline">View details</span>
         </div>
       </Link>
 
       {showTrackOrder || (!active && !cancelled) ? (
-        <div className="flex gap-2 border-t border-outline-variant/40 px-3 py-2.5 lg:px-5 lg:py-3">
+        <div className="flex gap-2 border-t border-outline-variant/35 px-3 py-3 lg:px-5">
           {showTrackOrder ? (
             <Link
               to={detailTo}
-              className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-bold text-on-primary transition-transform active:scale-[0.98]"
+              className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary text-sm font-bold text-on-primary transition-transform active:scale-[0.98]"
             >
               <span className="material-symbols-outlined text-[18px]">local_shipping</span>
               Track order
@@ -276,7 +297,7 @@ function OrderCard({
             <>
               <Link
                 to={`/buyer/orders/${order.uuid}/invoice`}
-                className="hidden h-10 flex-1 items-center justify-center rounded-xl border border-outline-variant text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-low lg:flex"
+                className="flex h-11 flex-1 items-center justify-center rounded-full border border-outline-variant text-sm font-semibold text-on-surface-variant transition-colors active:bg-surface-container-low lg:hover:bg-surface-container-low"
               >
                 Invoice
               </Link>
@@ -284,7 +305,7 @@ function OrderCard({
                 type="button"
                 disabled={reordering}
                 onClick={() => onReorder(order.uuid)}
-                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary/8 text-sm font-bold text-primary transition-transform active:scale-[0.98] disabled:opacity-50 lg:bg-primary lg:text-on-primary"
+                className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary text-sm font-bold text-on-primary transition-transform active:scale-[0.98] disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-[18px]">replay</span>
                 {reordering ? 'Adding…' : 'Reorder'}
@@ -459,7 +480,7 @@ export function BuyerOrdersPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-3 lg:space-y-4">
+        <div className="-mx-1 space-y-3 lg:mx-0 lg:space-y-4">
           {filteredOrders.map((order) => (
             <OrderCard
               key={order.uuid}
