@@ -26,6 +26,17 @@ const alertListeners = new Set<PushAlertListener>()
 const surfacedAt = new Map<string, number>()
 const SURFACED_TTL_MS = 3 * 60_000
 
+/** Order UUID whose chat sheet is currently open — suppress chat message popups. */
+let activeOrderChatUuid: string | null = null
+
+export function setActiveOrderChat(orderUuid: string | null) {
+  activeOrderChatUuid = orderUuid
+}
+
+export function isOrderChatActive(orderUuid?: string | null): boolean {
+  return Boolean(orderUuid && activeOrderChatUuid && orderUuid === activeOrderChatUuid)
+}
+
 function pruneSurfaced() {
   const cutoff = Date.now() - SURFACED_TTL_MS
   for (const [id, at] of surfacedAt) {
@@ -64,6 +75,16 @@ export function emitForegroundPushAlert(
   if (wasNotificationSurfaced(payload.notificationUuid)) {
     return
   }
+
+  // Already viewing this order's chat — messages appear in the thread; skip popup/tray.
+  if (
+    payload.type === 'order_chat_message' &&
+    isOrderChatActive(payload.orderUuid)
+  ) {
+    markNotificationSurfaced(payload.notificationUuid)
+    return
+  }
+
   markNotificationSurfaced(payload.notificationUuid)
 
   const normalized: PushAlertPayload = {

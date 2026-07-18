@@ -6,6 +6,7 @@ import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle'
 import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import { getApiErrorMessage } from '@/utils/apiErrorMessage'
 import { cn } from '@/utils/cn'
+import { setActiveOrderChat } from '@/native/pushAlertBus'
 
 function formatMessageTime(value?: string) {
   if (!value) return ''
@@ -31,6 +32,15 @@ export function OrderChatSheet({
   const [draft, setDraft] = useState('')
   const listRef = useRef<HTMLDivElement | null>(null)
   const { handleProps, sheetStyle } = useSwipeToClose(onClose, { enabled: open })
+
+  useEffect(() => {
+    if (open && orderUuid) {
+      setActiveOrderChat(orderUuid)
+      return () => setActiveOrderChat(null)
+    }
+    setActiveOrderChat(null)
+    return undefined
+  }, [open, orderUuid])
 
   const chatQuery = useQuery({
     queryKey: ['order-chat', orderUuid],
