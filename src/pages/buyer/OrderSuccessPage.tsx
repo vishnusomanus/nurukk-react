@@ -10,6 +10,7 @@ import { OrderRateForm } from '@/components/buyer/OrderRateForm'
 import { DeliveryRateForm } from '@/components/buyer/DeliveryRateForm'
 import { OrderStatusHeroIcon } from '@/components/buyer/OrderStatusHeroIcon'
 import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
+import { OrderLiveTrackingMap } from '@/components/buyer/OrderLiveTrackingMap'
 import { OrderChatSheet } from '@/components/common/OrderChatSheet'
 import { useAuthStore } from '@/store/authStore'
 import { formatCurrency } from '@/utils/formatCurrency'
@@ -69,10 +70,12 @@ export function OrderSuccessPage() {
     queryFn: () => buyerService.trackOrder(orderUuid),
     enabled: !!orderUuid,
     refetchInterval: (query) => {
-      const status = String(
-        query.state.data?.data?.current_status ?? order?.status ?? '',
-      ).toLowerCase()
-      return isActiveOrderStatus(status) ? 15_000 : false
+      const track = query.state.data?.data
+      const status = String(track?.current_status ?? order?.status ?? '').toLowerCase()
+      if (!isActiveOrderStatus(status)) return false
+      // Faster refresh while courier GPS is available for the live map.
+      if (track?.has_live_location || track?.is_live_delivery) return 8_000
+      return 15_000
     },
   })
 
@@ -141,6 +144,27 @@ export function OrderSuccessPage() {
     Boolean(orderUuid) &&
     Boolean(order?.delivery_agent || tracking.delivery_agent_name || tracking.delivery_assigned) &&
     canOpenOrderChat(currentStatus)
+
+  const trackPayload = trackData?.data
+  const agentLat = Number(trackPayload?.agent_latitude)
+  const agentLng = Number(trackPayload?.agent_longitude)
+  const dropoffLat = Number(trackPayload?.dropoff_latitude)
+  const dropoffLng = Number(trackPayload?.dropoff_longitude)
+  const agentPosition =
+    Number.isFinite(agentLat) && Number.isFinite(agentLng)
+      ? { lat: agentLat, lng: agentLng }
+      : null
+  const dropoffPosition =
+    Number.isFinite(dropoffLat) && Number.isFinite(dropoffLng)
+      ? { lat: dropoffLat, lng: dropoffLng }
+      : null
+  const showLiveMap =
+    liveTracking &&
+    (Boolean(trackPayload?.has_live_location && agentPosition) || Boolean(dropoffPosition)) &&
+    ['picked_up', 'package_collected', 'collected', 'out_for_delivery', 'reached_customer', 'at_customer'].includes(
+      currentStatus.toLowerCase(),
+    )
+
   const addressLine = order?.address?.address_line ?? order?.address?.line1
   const needsOnlinePayment =
     order?.payment_method &&
@@ -250,6 +274,34 @@ export function OrderSuccessPage() {
                 </div>
               ) : null}
             </section>
+
+            {showLiveMap ? (
+              <section className={cn(softCard, 'space-y-3 lg:col-span-12')}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-primary">near_me</span>
+                    <h2 className="text-[15px] font-bold text-on-surface lg:text-base">Live tracking</h2>
+                  </div>
+                  {trackPayload?.has_live_location ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-container/20 px-2.5 py-1 text-[11px] font-bold text-primary">
+                      <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+                      Live
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-on-surface-variant">
+                      Waiting for courier GPS
+                    </span>
+                  )}
+                </div>
+                <OrderLiveTrackingMap
+                  agent={agentPosition}
+                  dropoff={dropoffPosition}
+                  agentLabel={
+                    order?.delivery_agent?.name ?? tracking.delivery_agent_name ?? 'Courier'
+                  }
+                />
+              </section>
+            ) : null}
 
             {needsOnlinePayment ? (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-950 shadow-[0_2px_12px_rgba(15,40,20,0.04)] lg:col-span-12 lg:rounded-xl">

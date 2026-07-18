@@ -225,6 +225,12 @@ export type OrderTrackData = {
   delivery_started_at?: string
   delivery_completed_at?: string
   is_live_delivery?: boolean
+  has_live_location?: boolean
+  agent_latitude?: number | null
+  agent_longitude?: number | null
+  dropoff_latitude?: number | null
+  dropoff_longitude?: number | null
+  location_updated_at?: string | null
   timeline?: { status: string; at: string }[]
   [key: string]: unknown
 }

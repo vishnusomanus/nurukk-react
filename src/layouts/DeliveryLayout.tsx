@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'
 import { isProfileNotFoundError } from '@/utils/apiErrorMessage'
 import { resolveBreadcrumbBack } from '@/utils/breadcrumbBack'
 import { cn } from '@/utils/cn'
+import { useDeliveryLiveLocationSharing } from '@/hooks/useDeliveryLiveLocationSharing'
 
 const DESKTOP_NAV = [
   { to: '/delivery', label: 'Deliveries', icon: 'local_shipping', end: true },
@@ -45,6 +46,9 @@ export function DeliveryLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const userRole = useAuthStore((s) => s.user?.role)
+  const token = useAuthStore((s) => s.token)
+
+  useDeliveryLiveLocationSharing(Boolean(token))
 
   const { isLoading, isError, error } = useQuery({
     queryKey: ['delivery', 'profile'],

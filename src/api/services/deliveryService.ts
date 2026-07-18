@@ -46,6 +46,13 @@ export async function updateProfile(payload: UpdateDeliveryProfilePayload) {
   return data
 }
 
+export async function pingLocation(payload: { latitude: number; longitude: number }) {
+  const { data } = await apiClient.post<
+    GenericSuccess<{ latitude: number; longitude: number; location_updated_at?: string | null }>
+  >('/v1/delivery/location', payload)
+  return data
+}
+
 export async function listAssignedOrders(params?: { page?: number; per_page?: number }) {
   const { data } = await apiClient.get<GenericSuccess<Paginated<BuyerOrder> | BuyerOrder[]>>(
     '/v1/delivery/orders',
