@@ -237,13 +237,19 @@ export function HomePage() {
             <span className="font-bold tracking-tight text-primary">{APP_NAME}</span>
           </div>
           <div className="flex items-center gap-4">
-            <a className="text-xs font-bold tracking-wide text-primary transition-opacity hover:opacity-70" href="#">
+            <Link
+              to="/terms"
+              className="text-xs font-bold tracking-wide text-primary transition-opacity hover:opacity-70"
+            >
               Terms &amp; Conditions
-            </a>
+            </Link>
             <span className="h-1 w-1 rounded-full bg-primary/20" />
-            <a className="text-xs font-bold tracking-wide text-primary transition-opacity hover:opacity-70" href="#">
+            <Link
+              to="/privacy"
+              className="text-xs font-bold tracking-wide text-primary transition-opacity hover:opacity-70"
+            >
               Privacy Policy
-            </a>
+            </Link>
           </div>
           <p className="text-xs tracking-[0.18em] text-on-surface-variant/50 uppercase">{appCopyright()}</p>
         </div>

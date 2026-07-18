@@ -13,7 +13,8 @@ const shopLinks = [
 const supportLinks = [
   { label: 'Sustainability', to: '/buyer/profile' },
   { label: 'Shipping Info', to: '/buyer/profile' },
-  { label: 'Privacy Policy', to: '/buyer/profile' },
+  { label: 'Privacy Policy', to: '/privacy' },
+  { label: 'Terms & Conditions', to: '/terms' },
   { label: 'Contact', to: '/buyer/profile' },
 ]
 

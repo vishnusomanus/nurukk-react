@@ -102,11 +102,17 @@ export function AuthShell({
               By continuing, you agree to our
             </p>
             <div className="flex items-center justify-center gap-4 text-sm">
-              <Link to="#" className="font-bold text-emerald-800 transition-opacity hover:opacity-70 dark:text-emerald-300">
+              <Link
+                to="/terms"
+                className="font-bold text-emerald-800 transition-opacity hover:opacity-70 dark:text-emerald-300"
+              >
                 Terms &amp; Conditions
               </Link>
               <span className="h-1 w-1 rounded-full bg-emerald-800/20" />
-              <Link to="#" className="font-bold text-emerald-800 transition-opacity hover:opacity-70 dark:text-emerald-300">
+              <Link
+                to="/privacy"
+                className="font-bold text-emerald-800 transition-opacity hover:opacity-70 dark:text-emerald-300"
+              >
                 Privacy Policy
               </Link>
             </div>

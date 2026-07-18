@@ -191,13 +191,19 @@ export function PremiumLoginTemplate({
           {!roleChoice ? (
             <p className="text-xs text-on-surface-variant/70">
               By continuing, you agree to our{' '}
-              <a className="font-semibold text-primary/90 underline-offset-2 hover:underline" href="#">
+              <Link
+                to="/terms"
+                className="font-semibold text-primary/90 underline-offset-2 hover:underline"
+              >
                 Terms
-              </a>{' '}
+              </Link>{' '}
               &amp;{' '}
-              <a className="font-semibold text-primary/90 underline-offset-2 hover:underline" href="#">
+              <Link
+                to="/privacy"
+                className="font-semibold text-primary/90 underline-offset-2 hover:underline"
+              >
                 Privacy
-              </a>
+              </Link>
             </p>
           ) : (
             <p className="text-xs text-on-surface-variant/70">

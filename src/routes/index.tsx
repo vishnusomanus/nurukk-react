@@ -11,6 +11,10 @@ import { wrap } from '@/routes/wrap'
 
 const HomePage = lazy(() => import('@/pages/HomePage').then((m) => ({ default: m.HomePage })))
 const OtpPage = lazy(() => import('@/pages/OtpPage').then((m) => ({ default: m.OtpPage })))
+const TermsPage = lazy(() => import('@/pages/legal/TermsPage').then((m) => ({ default: m.TermsPage })))
+const PrivacyPage = lazy(() =>
+  import('@/pages/legal/PrivacyPage').then((m) => ({ default: m.PrivacyPage })),
+)
 
 const role = import.meta.env.VITE_APP_ROLE ?? 'all'
 
@@ -25,6 +29,8 @@ const authRoutes: RouteObject[] = [
     element: <Navigate to={isMultiPortalApp ? '/' : getAppLoginPath(APP_ROLE)} replace />,
   },
   { path: '/otp', element: wrap(<OtpPage />) },
+  { path: '/terms', element: wrap(<TermsPage />) },
+  { path: '/privacy', element: wrap(<PrivacyPage />) },
 ]
 
 const protectedChildren: RouteObject[] = []
