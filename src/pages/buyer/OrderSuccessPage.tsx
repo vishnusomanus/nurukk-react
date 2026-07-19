@@ -11,6 +11,7 @@ import { DeliveryRateForm } from '@/components/buyer/DeliveryRateForm'
 import { OrderStatusHeroIcon } from '@/components/buyer/OrderStatusHeroIcon'
 import { OrderSummaryCard } from '@/components/buyer/OrderSummaryCard'
 import { OrderLiveTrackingMap } from '@/components/buyer/OrderLiveTrackingMap'
+import { OrderTimeline, condenseBuyerTimeline } from '@/components/buyer/OrderTimeline'
 import { OrderChatSheet } from '@/components/common/OrderChatSheet'
 import { useAuthStore } from '@/store/authStore'
 import { formatCurrency } from '@/utils/formatCurrency'
@@ -24,17 +25,6 @@ import {
 import { formatOrderStatusLabel, resolveOrderTracking } from '@/utils/orderTracking'
 import { openPaymentGateway } from '@/utils/paymentCheckout'
 import { cn } from '@/utils/cn'
-
-function formatTimelineDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleString('en-IN', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-}
 
 const softCard =
   'rounded-2xl bg-surface-container-lowest p-4 shadow-[0_2px_12px_rgba(15,40,20,0.06)] lg:rounded-xl lg:border lg:border-outline-variant/30 lg:p-5 lg:shadow-none'
@@ -130,6 +120,11 @@ export function OrderSuccessPage() {
 
   const items = order?.items ?? []
   const timeline = trackData?.data?.timeline ?? []
+  const timelineEntries = timeline.map((entry) => ({
+    status: String(entry.status),
+    at: String(entry.at),
+  }))
+  const condensedTimeline = condenseBuyerTimeline(timelineEntries)
   const active = isActiveOrderStatus(currentStatus)
   const cancelled = isCancelledOrderStatus(currentStatus)
   const liveTracking = canTrackBuyerOrder({ status: currentStatus, tracking })
@@ -158,12 +153,18 @@ export function OrderSuccessPage() {
     Number.isFinite(dropoffLat) && Number.isFinite(dropoffLng)
       ? { lat: dropoffLat, lng: dropoffLng }
       : null
+  const liveMapStatuses = [
+    'picked_up',
+    'package_collected',
+    'collected',
+    'out_for_delivery',
+    'reached_customer',
+    'at_customer',
+  ]
   const showLiveMap =
     liveTracking &&
-    (Boolean(trackPayload?.has_live_location && agentPosition) || Boolean(dropoffPosition)) &&
-    ['picked_up', 'package_collected', 'collected', 'out_for_delivery', 'reached_customer', 'at_customer'].includes(
-      currentStatus.toLowerCase(),
-    )
+    liveMapStatuses.includes(currentStatus.toLowerCase()) &&
+    (Boolean(agentPosition) || Boolean(dropoffPosition) || Boolean(trackPayload?.has_live_location))
 
   const addressLine = order?.address?.address_line ?? order?.address?.line1
   const needsOnlinePayment =
@@ -334,57 +335,28 @@ export function OrderSuccessPage() {
             <div className="space-y-3 lg:col-span-7 lg:space-y-4">
               {/* Timeline */}
               <section className={softCard}>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px] text-primary">timeline</span>
-                  <h2 className="text-[15px] font-bold text-on-surface lg:text-base">Order timeline</h2>
-                </div>
-                {timeline.length > 0 ? (
-                  <ol className="relative space-y-0 pl-1">
-                    {timeline.map((entry, index) => {
-                      const isLatest = index === timeline.length - 1
-                      return (
-                        <li key={`${entry.status}-${entry.at}-${index}`} className="relative flex gap-3 pb-4 last:pb-0">
-                          {index < timeline.length - 1 ? (
-                            <span className="absolute top-3 left-[7px] h-[calc(100%-6px)] w-px bg-outline-variant/60" />
-                          ) : null}
-                          <span
-                            className={cn(
-                              'relative z-[1] mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2',
-                              isLatest
-                                ? 'border-primary bg-primary ring-4 ring-primary/15'
-                                : 'border-outline-variant bg-surface-container-lowest',
-                            )}
-                          />
-                          <div className="min-w-0 flex-1 pt-0.5">
-                            <p
-                              className={cn(
-                                'text-sm font-semibold',
-                                isLatest ? 'text-primary' : 'text-on-surface',
-                              )}
-                            >
-                              {formatOrderStatusLabel(String(entry.status))}
-                            </p>
-                            <p className="text-xs text-on-surface-variant">{formatTimelineDate(entry.at)}</p>
-                          </div>
-                        </li>
-                      )
-                    })}
-                  </ol>
-                ) : (
-                  <div className="flex items-center gap-3 rounded-xl bg-surface-container-low/80 px-3 py-3">
-                    <span className="material-symbols-outlined text-primary">
-                      {cancelled ? 'cancel' : active ? 'hourglass_top' : 'check_circle'}
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <span className="material-symbols-outlined text-[20px]">route</span>
                     </span>
                     <div>
-                      <p className="text-sm font-semibold text-on-surface">
-                        {tracking.status_label ?? formatOrderStatusLabel(currentStatus)}
-                      </p>
-                      <p className="text-xs text-on-surface-variant">
-                        {active ? 'Updates will appear here as the order moves.' : 'No timeline events yet.'}
+                      <h2 className="text-[15px] font-bold text-on-surface lg:text-base">Order progress</h2>
+                      <p className="text-[11px] text-on-surface-variant">
+                        {condensedTimeline.length > 0
+                          ? `${condensedTimeline.length} key update${condensedTimeline.length === 1 ? '' : 's'}`
+                          : 'Tracking your order'}
                       </p>
                     </div>
                   </div>
-                )}
+                </div>
+                <OrderTimeline
+                  entries={timelineEntries}
+                  currentStatus={currentStatus}
+                  emptyLabel={tracking.status_label ?? formatOrderStatusLabel(currentStatus)}
+                  cancelled={cancelled}
+                  active={active}
+                />
               </section>
 
               {/* Meta + address */}

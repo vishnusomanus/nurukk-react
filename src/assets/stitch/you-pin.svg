@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="72" viewBox="0 0 56 72">
+  <defs>
+    <filter id="s" x="-20%" y="-10%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <g filter="url(#s)">
+    <path d="M28 68 C28 68 8 48 8 28 a20 20 0 1 1 40 0 C48 48 28 68 28 68z" fill="#22c55e"/>
+    <circle cx="28" cy="28" r="10" fill="#fff"/>
+  </g>
+  <rect x="10" y="2" width="36" height="18" rx="9" fill="#dcfce7" stroke="#86efac"/>
+  <text x="28" y="15" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#166534">You</text>
+</svg>
