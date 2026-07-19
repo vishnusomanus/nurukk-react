@@ -1,0 +1,1 @@
+import{j as r}from"./index-CXoDaX02.js";import{u as m}from"./authStore-BP4OJkcV.js";import{n as o,g as i}from"./authRole-BklClZ-o.js";import{N as t,O as l}from"./cn-BPXEaYhb.js";function x({roles:s}){const e=m(a=>a.user);if(!e)return r.jsx(t,{to:"/",replace:!0});const u=o(e.role);return s.map(o).includes(u)?r.jsx(l,{}):r.jsx(t,{to:i(e.role),replace:!0})}export{x as R};

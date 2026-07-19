@@ -1,0 +1,1 @@
+function n(t,r){const e=`${r??""} ${t??""}`.toLowerCase();return e.includes("leaf")||e.includes("green")?"eco":e.includes("root")?"agriculture":e.includes("cut")||e.includes("kit")?"content_cut":e.includes("organic")?"workspace_premium":e.includes("exotic")?"star":"potted_plant"}export{n as g};

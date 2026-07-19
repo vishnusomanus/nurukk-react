@@ -1,0 +1,1 @@
+import{a as n}from"./client-D44-OCo7.js";async function o(t){const{data:a}=await n.get("/v1/admin/support",{params:t});return a}async function r(t){const{data:a}=await n.get(`/v1/admin/support/${t}`);return a}async function s(t,a){const{data:p}=await n.patch(`/v1/admin/support/${t}`,a);return p}export{r as g,o as l,s as u};
