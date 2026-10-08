@@ -1,0 +1,1 @@
+function c(n,e,t){const a=Math.max(1,Math.ceil(Math.max(0,n)/t)||1);return{current_page:Math.min(Math.max(1,e),a),per_page:t,total:Math.max(0,n),last_page:a}}function r(n,e,t){const a=(e-1)*t;return n.slice(a,a+t)}export{c as b,r as p};

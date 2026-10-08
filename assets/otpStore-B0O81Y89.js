@@ -1,0 +1,1 @@
+import{c as p,p as i}from"./authStore-BP4OJkcV.js";const a=p()(i(n=>({pending:null,setPending:e=>n({pending:e}),clearPending:()=>n({pending:null})}),{name:"veg-otp-pending",partialize:n=>({pending:n.pending})}));export{a as u};
