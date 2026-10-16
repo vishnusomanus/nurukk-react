@@ -1,0 +1,1 @@
+import{j as t}from"./index-CXoDaX02.js";import{c}from"./cn-BPXEaYhb.js";function s(){return"/nurukk-react/app-icons/brand.png"}function p({size:a="lg",className:o,alt:r}){const n=a==="sm"?"h-10 w-auto":a==="md"?"h-20 w-auto":"h-36 w-auto";return t.jsx("img",{src:s(),alt:r??"nurukk",className:c(n,"max-w-[220px] object-contain",o),draggable:!1})}export{p as B};
