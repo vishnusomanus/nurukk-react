@@ -1,0 +1,1 @@
+const r="@example.local";function n(t){const e=String(t??"").trim().toLowerCase();return e.length>0&&e.endsWith(r)}function i(t){return!t||n(t)?"":t.trim()}function a(t){const e=t.trim();return e?{email:e}:{}}export{i as d,a as e};

@@ -1,0 +1,1 @@
+function r(e){return e?.available_roles?.includes("seller")===!0}function n(e){const l=e?.available_roles??[];return l.includes("buyer")||l.includes("customer")}function a(e){return r(e)&&n(e)}export{r as c,a as h};
